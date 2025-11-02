@@ -1,10 +1,10 @@
-const CACHE_NAME = 'embutidos-cache-v1';
+const CACHE_NAME = 'embutidos-cache-v2'; // súbelo para forzar refresh
 const ASSETS = [
-  './',
-  './index.html',
-  './manifest.webmanifest',
-  './icon-192.png',
-  './icon-512.png'
+  '/MeatApp/',
+  '/MeatApp/Calc.html',
+  '/MeatApp/manifest.webmanifest',
+  '/MeatApp/icon-192.png',
+  '/MeatApp/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -44,3 +44,4 @@ self.addEventListener('fetch', (event) => {
     }).catch(() => cached))
   );
 });
+
