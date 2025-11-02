@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Calculadora Embutidos</title>
+
+<link rel="manifest" href="manifest.webmanifest">
+
+<style>
+  :root { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  body { margin:0; padding:16px; background:#0f172a; color:#e2e8f0; }
+  .app { max-width:1000px; margin:0 auto; }
+  h1 { font-size:1.1rem; margin:0 0 12px; }
+  .card { background:#111827; border:1px solid #1f2937; border-radius:14px; padding:16px; }
+  label { display:block; font-size:.95rem; margin:0 0 6px; color:#cbd5e1; }
+  select, input[type="number"], input[type="text"]{
+    width:100%; font-size:1.05rem; padding:10px; border-radius:10px;
+    border:1px solid #334155; background:#0b1220; color:#e2e8f0; box-sizing:border-box;
+  }
+  .row { display:flex; gap:20px; flex-wrap:wrap; }
+  .row > div { flex:1; min-width:240px; max-width:486px; }
+  .hint { color:#94a3b8; font-size:.85rem; margin-top:4px; }
+  .total {
+    margin-top:10px; font-size:1.35rem; font-weight:700;
+    background:#0b1220; border:1px dashed #334155; padding:12px; border-radius:12px; text-align:center;
+  }
+  .formula { font-size:.95rem; color:#cbd5e1; text-align:center; margin-top:8px; white-space:pre-line; }
+  .yield { font-size:.92rem; color:#a3b2c7; text-align:center; margin-top:6px; }
+  .actions { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; align-items:center; }
+  .actions.center { justify-content:flex-start; }
+  button {
+    padding:10px 12px; font-size:1rem; border-radius:10px;
+    border:1px solid #334155; background:#0b1220; color:#e2e8f0;
+    display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+  }
+  button.primary { background:#2563eb; border-color:#2563eb; color:white; }
+  button.danger  { background:#dc2626; border-color:#dc2626; color:white; margin-left:auto; }
+  button[disabled]{ opacity:.6; cursor:not-allowed; }
+  .btn-icon{ width:18px; height:18px; display:inline-block; }
+
+  #gsBtn{ background:#ff9a00; border-color:#ff9a00; color:#111827; }
+  #gsBtn:hover{ filter:brightness(0.95); }
+
+  table { width:100%; border-collapse:collapse; margin-top:16px; font-size:.95rem; }
+  th, td { border-bottom:1px solid #1f2937; padding:8px; text-align:left; }
+  tfoot td { font-weight:700; }
+  .tiny { font-size:.8rem; color:#94a3b8; }
+  .badge { font-size:.8rem; padding:2px 8px; border:1px solid #334155; border-radius:999px; }
+
+  .promo-wrap { margin-top:16px; display:none; }
+  .promo-img { width:100%; max-width:100%; border-radius:12px; display:block; opacity:0; transition:opacity .4s ease; }
+  .promo-img.fade-in { opacity:1; }
+
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Calculadora de costo (precio × gramos)</h1>
+  <div class="card">
+
+    <!-- Cliente -->
+    <div class="row" style="margin-bottom:10px">
+      <div>
+        <label for="cliente">Cliente</label>
+        <input id="cliente" type="text" placeholder="Nombre del cliente" />
+      </div>
+    </div>
+
+    <!-- Producto, Presentación, Picante y Peso -->
+    <div class="row">
+      <div>
+        <label for="producto">Producto</label>
+        <select id="producto">
+          <option value="">— Selecciona un producto —</option>
+          <option value="brat">Chorizo Bratwurst</option>
+          <option value="tex">Chorizo Tex-Mex</option>
+          <option value="criollo">Criollo argentino</option>
+          <option value="carib">Chorizo Caribeño</option>
+          <option value="tico">Costarricense casero</option>
+          <option value="bacon">Bacon Ahumado</option>
+        </select>
+      </div>
+
+      <div id="presentacionWrap">
+        <label for="presentacion">Presentación</label>
+        <select id="presentacion">
+          <option value="">— Selecciona presentación —</option>
+          <option value="Chorizo">Chorizo</option>
+          <option value="Salchicha">Salchicha</option>
+          <option value="Torta para hamburguesa">Torta para hamburguesa</option>
+        </select>
+      </div>
+
+      <div id="picanteWrap">
+        <label for="picante">Picante</label>
+        <select id="picante">
+          <option value="">— Selecciona picante —</option>
+          <option value="Sin picante">Sin picante</option>
+          <option value="Poco picante">Poco picante</option>
+          <option value="Picante medio">Picante medio</option>
+          <option value="Picante">Picante</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="peso">Peso (gramos)</label>
+        <input id="peso" type="number" step="1" min="0" placeholder="0" />
+        <div class="hint">Ej. 1000 g</div>
+      </div>
+    </div>
+
+    <!-- Botón AGREGAR -->
+    <div class="actions center" style="margin-top:12px">
+      <button class="primary" id="addBtn" type="button">Agregar</button>
+    </div>
+
+    <!-- Vista previa -->
+    <div class="formula" id="formula">—</div>
+    <div class="yield" id="yieldInfo"></div>
+    <div class="total" id="total">Total: —</div>
+
+    <!-- Acciones -->
+    <div class="actions">
+      <button id="gsBtn" type="button">
+        <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M6 2h10l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 2v16h12V8h-4V4H6zm2 6h8v2H8v-2zm0 4h8v2H8v-2z"/>
+        </svg>
+        Enviar a Google Sheets
+      </button>
+
+      <button id="clearBtn" class="danger" type="button">Limpiar</button>
+      <span class="badge" id="status"></span>
+      <span class="tiny">Los datos quedan guardados en este dispositivo (localStorage).</span>
+    </div>
+
+    <!-- Orden -->
+    <table id="poTable" style="display:none">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Client</th>
+          <th>Product</th>
+          <th>Presentation</th>
+          <th>Spice</th>
+          <th>Weight (g)</th>
+          <th>Rendimiento</th>
+          <th>Given price</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="poBody"></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="7">Total general</td>
+          <td id="grandTotal">—</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <!-- Imagen -->
+    <div id="promoWrap" class="promo-wrap">
+      <img id="promoImg" class="promo-img" alt="Producto" />
+      <div id="promoMsg" class="tiny" style="margin-top:6px;"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
+
+  /************* PARÁMETROS EDITABLES *************/
+  const CONFIG = {
+    WHATSAPP_NUMBER: "50660228322",
+    WEBHOOK: "https://script.google.com/macros/s/AKfycbwj3QEUtIL6huScLyibzAyNnKu31-SFWesoGoIfd-s4ouHObanqXJiewLOPynaHNPOM/exec",
+    PRICES: { brat:7.5, tex:7.5, criollo:7.5, carib:7.5, tico:7.5, bacon:10 },
+    NAMES: {
+      brat:'Chorizo Bratwurst', tex:'Chorizo Tex-Mex', criollo:'Criollo argentino',
+      carib:'Chorizo Caribeño', tico:'Costarricense casero', bacon:'Bacon Ahumado'
+    },
+    IMAGE_IDS: {
+      bacon:"1IniSWUDGUeLwlvoqWWHGTADaDMabI1Y1",
+      brat:"1qvMQJcJdNSxdJgimziNVlcDA3ii-s9ba",
+      carib:"1zw6vX4DuCZJzl4Dpnvz-kqXW6IDc8Rsp",
+      tex:"16bEeq7IpY836XTrqfhp53ciwWq-3Qz6M",
+      criollo:"REEMPLAZA_ID_CRIOLLO",
+      tico:"REEMPLAZA_ID_TICO"
+    },
+    YIELDS: {
+      "Chorizo": { type:'length', perKgCm: 25, unitLabel: "cm de tira" },
+      "Salchicha": { type:'count', perKg: 6, unitLabel: "salchichas" },
+      "Torta para hamburguesa": { type:'count', perKg: 8, unitLabel: "tortas" }
+    }
+  };
+  /*************************************************/
+
+  const clienteEl = $('cliente');
+  const productoEl = $('producto');
+  const presentacionWrap = $('presentacionWrap');
+  const presentacionEl = $('presentacion');
+  const picanteWrap = $('picanteWrap');
+  const picanteEl = $('picante');
+
+  const pesoEl     = $('peso');
+  const totalEl    = $('total');
+  const formulaEl  = $('formula');
+  const yieldEl    = $('yieldInfo');
+  const addBtn     = $('addBtn');
+  const statusEl   = $('status');
+  const poTable    = $('poTable');
+  const poBody     = $('poBody');
+  const grandTotalEl = $('grandTotal');
+  const gsBtn      = $('gsBtn');
+  const clearBtn   = $('clearBtn');
+
+  const promoWrap = $('promoWrap');
+  const promoImg  = $('promoImg');
+  const promoMsg  = $('promoMsg');
+
+  const IMAGE_PROXY_BASE = CONFIG.WEBHOOK + "?img=1&id=";
+  const LS_KEY = 'embutidos_po_final_v7';
+
+  function todayISO(){
+    const d = new Date();
+    const pad = n => String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  }
+  const fmt0 = (n)=> new Intl.NumberFormat(undefined,{maximumFractionDigits:0}).format(n);
+  const fmtCRC = (n)=> '₡' + new Intl.NumberFormat(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+
+  function loadProductImage(key) {
+    promoImg.classList.remove('fade-in');
+    promoImg.removeAttribute('src');
+    const fileId = CONFIG.IMAGE_IDS[key];
+    if (!fileId || /^REEMPLAZA_ID_/i.test(fileId)) { promoWrap.style.display='none'; promoMsg.textContent=""; return; }
+    const t = Date.now();
+    const candidates = [
+      `${IMAGE_PROXY_BASE}${fileId}&t=${t}`,
+      `https://lh3.googleusercontent.com/d/${fileId}=w1600`,
+      `https://drive.google.com/uc?export=view&id=${fileId}`,
+      `https://drive.google.com/thumbnail?id=${fileId}&sz=w1600`
+    ];
+    promoWrap.style.display='block'; promoMsg.textContent="Cargando imagen…";
+    let i=0; (function tryNext(){
+      if(i>=candidates.length){ promoMsg.textContent="No se pudo cargar la imagen."; return; }
+      const url=candidates[i++]; const probe=new Image(); probe.referrerPolicy='no-referrer';
+      probe.onload=()=>{ promoImg.onload=()=>{ promoImg.classList.add('fade-in'); }; promoImg.referrerPolicy='no-referrer'; promoImg.src=url; promoMsg.textContent=""; };
+      probe.onerror=tryNext; probe.src=url;
+    })();
+  }
+
+  function toggleControls(){
+    if (productoEl.value === 'bacon') {
+      presentacionWrap.classList.add('hidden'); presentacionEl.value = "";
+      picanteWrap.classList.add('hidden'); picanteEl.value = "";
+    } else {
+      presentacionWrap.classList.remove('hidden');
+      picanteWrap.classList.remove('hidden');
+    }
+  }
+
+  // Rendimiento entero, sin decimales
+  function computeRendimiento(presentation, grams){
+    grams = Number(grams) || 0;
+    if (!presentation || grams <= 0) return 0;
+    const y = CONFIG.YIELDS[presentation];
+    if (!y) return 0;
+    if (y.type === 'length') return Math.ceil((grams/1000) * y.perKgCm);
+    return Math.ceil((grams/1000) * y.perKg);
+  }
+
+  function calcYieldText(presentation, grams){
+    const r = computeRendimiento(presentation, grams);
+    if (!r) return '';
+    if (presentation === 'Chorizo') return `Rendimiento: ~ ${r} cm de tira`;
+    if (presentation === 'Salchicha') return `Rendimiento: ~ ${r} salchichas`;
+    if (presentation === 'Torta para hamburguesa') return `Rendimiento: ~ ${r} tortas`;
+    return '';
+  }
+
+  function recalcPreview(){
+    const key = productoEl.value;
+    const grams = parseInt(pesoEl.value) || 0;
+
+    toggleControls();
+
+    if (!key) {
+      formulaEl.textContent = '—';
+      yieldEl.textContent = '';
+      totalEl.textContent = 'Total: —';
+      promoWrap.style.display = 'none'; promoMsg.textContent = "";
+      return;
+    }
+
+    const pricePerGram = CONFIG.PRICES[key] || 0;
+    const total = pricePerGram * grams;
+    formulaEl.textContent = `${CONFIG.NAMES[key]}: ₡${pricePerGram} × ${fmt0(grams)} g`;
+
+    if (key !== 'bacon') {
+      const pres = presentacionEl.value;
+      yieldEl.textContent = calcYieldText(pres, grams);
+    } else {
+      yieldEl.textContent = '';
+    }
+
+    totalEl.textContent = `Total: ${isFinite(total) ? fmtCRC(total) : '—'}`;
+    loadProductImage(key);
+  }
+
+  productoEl.addEventListener('change', recalcPreview);
+  presentacionEl.addEventListener('change', recalcPreview);
+  picanteEl.addEventListener('change', recalcPreview);
+  pesoEl.addEventListener('input', recalcPreview);
+
+  function loadPO(){
+    try { return JSON.parse(localStorage.getItem(LS_KEY)) || { items: [] }; }
+    catch { return { items: [] }; }
+  }
+  function savePO(state){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+
+  let state = loadPO();
+
+  function renderPO(){
+    poBody.innerHTML = '';
+    if (!state.items.length) {
+      poTable.style.display = 'none';
+      grandTotalEl.textContent = '—';
+      return;
+    }
+    poTable.style.display = 'table';
+    let grand = 0;
+    state.items.forEach((it, idx) => {
+      grand += it.total;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${idx+1}</td>
+        <td>${it.client}</td>
+        <td>${it.name}</td>
+        <td>${it.presentation || '—'}</td>
+        <td>${it.spice || '—'}</td>
+        <td>${fmt0(it.grams)}</td>
+        <td>${fmt0(it.rendimiento || computeRendimiento(it.presentation, it.grams))}</td>
+        <td>${fmtCRC(it.total)}</td>
+        <td><button data-i="${idx}" class="delBtn" type="button">✕</button></td>
+      `;
+      poBody.appendChild(tr);
+    });
+    grandTotalEl.textContent = fmtCRC(grand);
+
+    document.querySelectorAll('.delBtn').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        const i = parseInt(e.target.getAttribute('data-i'));
+        if (!isNaN(i)) {
+          state.items.splice(i, 1);
+          savePO(state);
+          renderPO();
+        }
+      });
+    });
+  }
+
+  function flash(msg){
+    statusEl.textContent = msg;
+    setTimeout(()=>statusEl.textContent='', 1800);
+  }
+
+  function addItem(){
+    try {
+      const client = (clienteEl.value || '').trim();
+      if (!client) { flash('Ingresa el cliente'); return; }
+
+      const key = productoEl.value;
+      if (!key) { flash('Selecciona un producto'); return; }
+
+      let presentation = (presentacionEl.value || '').trim();
+      let spice = (picanteEl.value || '').trim();
+
+      if (key !== 'bacon' && !presentation) { flash('Selecciona la presentación'); return; }
+      if (key !== 'bacon' && !spice) { flash('Selecciona el picante'); return; }
+      if (key === 'bacon') { presentation = ''; spice = ''; }
+
+      const grams = parseInt(pesoEl.value) || 0;
+      if (grams <= 0) { flash('Ingresa gramos > 0'); return; }
+
+      const date = todayISO();
+      const pricePerGram = CONFIG.PRICES[key] || 0;
+      const total = pricePerGram * grams;
+      const rendimiento = computeRendimiento(presentation, grams); // ENTERO
+
+      state.items.push({
+        date, client, key, name: CONFIG.NAMES[key], presentation, spice, grams, rendimiento, pricePerGram, total
+      });
+      savePO(state);
+      renderPO();
+      pesoEl.value = '';
+      recalcPreview();
+      flash('Agregado');
+    } catch (err) {
+      console.error(err);
+      alert('Ocurrió un error al agregar. Revisa la consola.');
+    }
+  }
+
+  function isMobileDevice(){
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    const touch = (('ontouchstart' in window) || (navigator.maxTouchPoints > 1));
+    const mobi = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobi/i.test(ua);
+    const coarse = window.matchMedia && window.matchMedia('(pointer:coarse)').matches;
+    return mobi || (touch && coarse);
+  }
+
+  function poAsText(){
+    if (!state.items.length) return 'Pedido vacío';
+    const first = state.items[0];
+    let lines = [`✅ Confirmación de Pedido`, `Cliente: ${first.client}`, 'Pedido:'];
+    state.items.forEach((it, i)=>{
+      const presTxt = it.presentation ? ` (${it.presentation})` : '';
+      const spiceTxt = it.spice ? ` | ${it.spice}` : '';
+      lines.push(`${i+1}. ${it.name}${presTxt}${spiceTxt} — ${it.grams} g × ₡${it.pricePerGram} = ${fmtCRC(it.total)}`);
+
+      if (it.presentation) {
+        const r = it.rendimiento || computeRendimiento(it.presentation, it.grams);
+        if (it.presentation === 'Chorizo') lines.push(`   • Rendimiento: ~ ${fmt0(r)} cm de tira`);
+        if (it.presentation === 'Salchicha') lines.push(`   • Rendimiento: ~ ${fmt0(r)} salchichas`);
+        if (it.presentation === 'Torta para hamburguesa') lines.push(`   • Rendimiento: ~ ${fmt0(r)} tortas`);
+      }
+    });
+    lines.push(`Estado: Pendiente`);
+    lines.push(`Total general: ${fmtCRC(state.items.reduce((a,b)=>a+b.total,0))}`);
+    return lines.join('\n');
+  }
+
+  function clearList(){
+    state.items = [];
+    savePO(state);
+    renderPO();
+    flash('Lista limpiada');
+  }
+
+  function setGsLoading(on){
+    if(on){
+      gsBtn.disabled = true;
+      gsBtn._origText = gsBtn.innerHTML;
+      gsBtn.innerHTML = `<svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" fill="currentColor" opacity=".15"/>
+        <path fill="currentColor" d="M12 2a10 10 0 0 1 10 10h-2A8 8 0 0 0 12 4V2z"/>
+      </svg> Enviando…`;
+    } else {
+      gsBtn.disabled = false;
+      if(gsBtn._origText) gsBtn.innerHTML = gsBtn._origText;
+    }
+  }
+
+  // Sheets → (WhatsApp solo si móvil) → limpiar
+  function sendToGoogleSheets(){
+    if (!state.items.length) { flash('Pedido vacío'); return; }
+    setGsLoading(true);
+
+    const rows = state.items.map(it => ({
+      date: it.date,
+      client: it.client,
+      product: it.name,
+      presentation: it.presentation,      // <-- se guardará en columna "Formato"
+      spice: it.spice,
+      weight: it.grams,
+      rendimiento: it.rendimiento,        // <-- entero sin decimales
+      givenPrice: it.total
+    }));
+    const body = new URLSearchParams({ payload: JSON.stringify({ rows }) });
+
+    const maybeOpenWhatsApp = () => {
+      if (!isMobileDevice()) return;     // en desktop NO abrir WhatsApp
+      const txt = poAsText();
+      const url = `https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=` + encodeURIComponent(txt);
+      window.open(url, '_blank');
+    };
+
+    fetch(CONFIG.WEBHOOK, { method: 'POST', body })
+      .then(async r => {
+        const text = await r.text();
+        if (!r.ok || /^ERROR:/i.test(text)) { throw new Error(text || ('HTTP ' + r.status)); }
+        flash('Enviado a Sheets');
+        maybeOpenWhatsApp();
+        clearList();
+      })
+      .catch(() => {
+        return fetch(CONFIG.WEBHOOK, { method: 'POST', body, mode: 'no-cors' })
+          .then(() => { flash('Enviado a Sheets (modo compatible)'); maybeOpenWhatsApp(); clearList(); })
+          .catch(() => {
+            try {
+              const form = new FormData();
+              form.append('payload', JSON.stringify({ rows }));
+              const ok = navigator.sendBeacon(CONFIG.WEBHOOK, form);
+              if (ok) { flash('Enviado a Sheets (beacon)'); maybeOpenWhatsApp(); clearList(); }
+              else { throw new Error('sendBeacon no envió'); }
+            } catch (err3) {
+              console.error(err3);
+              alert('Error al enviar a Sheets.');
+              flash('Error: no se pudo enviar');
+            }
+          });
+      })
+      .finally(() => setGsLoading(false));
+  }
+
+  addBtn.addEventListener('click', addItem);
+  gsBtn.addEventListener('click', sendToGoogleSheets);
+  clearBtn.addEventListener('click', clearList);
+
+  // PWA
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js').catch(console.error);
+    });
+  }
+
+  // Pintado inicial
+  recalcPreview();
+  renderPO();
+})();
+</script>
+</body>
+</html>
