@@ -11,7 +11,7 @@
   :root { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
   body { margin:0; padding:16px; background:#0f172a; color:#e2e8f0; }
   .app { max-width:1000px; margin:0 auto; }
-  h1 { font-size:1.1rem; margin:0 0 12px; }
+  h1 { font-size:1.1rem; margin:0 0 6px; }
   .card { background:#111827; border:1px solid #1f2937; border-radius:14px; padding:16px; }
   label { display:block; font-size:.95rem; margin:0 0 6px; color:#cbd5e1; }
   select, input[type="number"], input[type="text"]{
@@ -53,11 +53,29 @@
   .promo-img.fade-in { opacity:1; }
 
   .hidden { display:none !important; }
+
+  .warning {
+    font-size:.85rem;
+    color:#fbbf24;
+    margin-top:4px;
+    text-align:center;
+  }
+
+  .info-box {
+    margin:4px 0 10px;
+    font-size:.85rem;
+    color:#a5b4fc;
+  }
 </style>
 </head>
 <body>
 <div class="app">
   <h1>Calculadora de costo (precio × gramos)</h1>
+  <!-- Precio base de carne leído desde Sheets -->
+  <div id="meatPriceBox" class="info-box">
+    Precio base de carne hoy: <span id="meatPrice">consultando…</span>
+  </div>
+
   <div class="card">
 
     <!-- Cliente -->
@@ -113,13 +131,15 @@
 
     <!-- Botón AGREGAR -->
     <div class="actions center" style="margin-top:12px">
-      <button class="primary" id="addBtn" type="button">Agregar</button>
+      <button class="primary" id="addBtn" type="button">Agregar a carrito</button>
     </div>
 
     <!-- Vista previa -->
     <div class="formula" id="formula">—</div>
     <div class="yield" id="yieldInfo"></div>
     <div class="total" id="total">Total: —</div>
+    <!-- Warning de carrito -->
+    <div id="cartWarning" class="warning"></div>
 
     <!-- Acciones -->
     <div class="actions">
@@ -177,6 +197,7 @@
   const CONFIG = {
     WHATSAPP_NUMBER: "50660228322",
     WEBHOOK: "https://script.google.com/macros/s/AKfycbwj3QEUtIL6huScLyibzAyNnKu31-SFWesoGoIfd-s4ouHObanqXJiewLOPynaHNPOM/exec",
+    // Estos PRICES son fallback. Idealmente se sobreescriben con datos de Sheets.
     PRICES: { brat:7.5, tex:7.5, criollo:7.5, carib:7.5, tico:7.5, bacon:10 },
     NAMES: {
       brat:'Chorizo Bratwurst', tex:'Chorizo Tex-Mex', criollo:'Criollo argentino',
@@ -187,6 +208,7 @@
       brat:"1qvMQJcJdNSxdJgimziNVlcDA3ii-s9ba",
       carib:"1zw6vX4DuCZJzl4Dpnvz-kqXW6IDc8Rsp",
       tex:"16bEeq7IpY836XTrqfhp53ciwWq-3Qz6M",
+      // 👉 Aquí pegás los nuevos IDs reales cuando los tengas:
       criollo:"REEMPLAZA_ID_CRIOLLO",
       tico:"REEMPLAZA_ID_TICO"
     },
@@ -220,6 +242,9 @@
   const promoWrap = $('promoWrap');
   const promoImg  = $('promoImg');
   const promoMsg  = $('promoMsg');
+
+  const cartWarningEl = $('cartWarning');
+  const meatPriceSpan = $('meatPrice');
 
   const IMAGE_PROXY_BASE = CONFIG.WEBHOOK + "?img=1&id=";
   const LS_KEY = 'embutidos_po_final_v7';
@@ -329,6 +354,7 @@
     if (!state.items.length) {
       poTable.style.display = 'none';
       grandTotalEl.textContent = '—';
+      cartWarningEl.textContent = ''; // si no hay items, no hay warning
       return;
     }
     poTable.style.display = 'table';
@@ -398,7 +424,11 @@
       renderPO();
       pesoEl.value = '';
       recalcPreview();
-      flash('Agregado');
+
+      // Mensaje claro de carrito no enviado
+      cartWarningEl.textContent = '✅ Producto agregado al carrito. Aún NO se ha enviado el pedido. Para enviarlo usa "Enviar Pedido".';
+
+      flash('Agregado al carrito');
     } catch (err) {
       console.error(err);
       alert('Ocurrió un error al agregar. Revisa la consola.');
@@ -507,6 +537,39 @@
       .finally(() => setGsLoading(false));
   }
 
+  // Leer configuración (M1, PRICES) desde Google Sheets vía Apps Script
+  function loadConfigFromSheets(){
+    // Debes programar tu Apps Script para que responda a GET ?cfg=1
+    // con JSON del tipo: { meatPriceCRC: 12345, prices: { brat: 7.5, ... } }
+    const url = CONFIG.WEBHOOK + '?cfg=1';
+
+    fetch(url)
+      .then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(data => {
+        // Mostrar M1 (precio de carne) si viene
+        if (data && typeof data.meatPriceCRC === 'number') {
+          meatPriceSpan.textContent = fmtCRC(data.meatPriceCRC) + ' / kg';
+          CONFIG.MEAT_PRICE = data.meatPriceCRC;
+        } else {
+          meatPriceSpan.textContent = 'no disponible (usando precios locales)';
+        }
+
+        // Sobre-escribir precios si vienen desde Sheets
+        if (data && data.prices && typeof data.prices === 'object') {
+          Object.assign(CONFIG.PRICES, data.prices);
+          recalcPreview();
+          renderPO();
+        }
+      })
+      .catch(err => {
+        console.warn('No se pudo cargar config desde Sheets:', err);
+        meatPriceSpan.textContent = 'no disponible (usando precios locales)';
+      });
+  }
+
   addBtn.addEventListener('click', addItem);
   gsBtn.addEventListener('click', sendToGoogleSheets);
   clearBtn.addEventListener('click', clearList);
@@ -521,8 +584,8 @@
   // Pintado inicial
   recalcPreview();
   renderPO();
+  loadConfigFromSheets(); // cargar M1 y precios desde Sheets al inicio
 })();
 </script>
 </body>
 </html>
-
