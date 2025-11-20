@@ -71,7 +71,8 @@
 <body>
 <div class="app">
   <h1>Calculadora de costo (precio × gramos)</h1>
-  <!-- Precio base de carne leído desde Sheets -->
+
+  <!-- Precio base de carne leído desde Sheets (M1) -->
   <div id="meatPriceBox" class="info-box">
     Precio base de carne hoy: <span id="meatPrice">consultando…</span>
   </div>
@@ -197,20 +198,25 @@
   const CONFIG = {
     WHATSAPP_NUMBER: "50660228322",
     WEBHOOK: "https://script.google.com/macros/s/AKfycbwR9vjMQcVs69CuaZ8MjWeChdPn-u2Fi1Mfnb5xXVAMe9e7eOP42L0pvomKNNw4UU8/exec",
-    // Estos PRICES son fallback. Idealmente se sobreescriben con datos de Sheets.
+    // Estos PRICES son fallback. Idealmente se sobreescriben con M1 (meatPriceCRC) desde Sheets.
     PRICES: { brat:7.5, tex:7.5, criollo:7.5, carib:7.5, tico:7.5, bacon:10 },
     NAMES: {
-      brat:'Chorizo Bratwurst', tex:'Chorizo Tex-Mex', criollo:'Criollo argentino',
-      carib:'Chorizo Caribeño', tico:'Costarricense casero', bacon:'Bacon Ahumado'
+      brat:'Chorizo Bratwurst',
+      tex:'Chorizo Tex-Mex',
+      criollo:'Criollo argentino',
+      carib:'Chorizo Caribeño',
+      tico:'Costarricense casero',
+      bacon:'Bacon Ahumado'
     },
     IMAGE_IDS: {
+      // Bacon: dejamos el que ya tenías, cámbialo si luego tenés otro ID
       bacon:"1IniSWUDGUeLwlvoqWWHGTADaDMabI1Y1",
-      brat:"1qvMQJcJdNSxdJgimziNVlcDA3ii-s9ba",
-      carib:"1zw6vX4DuCZJzl4Dpnvz-kqXW6IDc8Rsp",
-      tex:"16bEeq7IpY836XTrqfhp53ciwWq-3Qz6M",
-      // 👉 Aquí pegás los nuevos IDs reales cuando los tengas:
-      criollo:"REEMPLAZA_ID_CRIOLLO",
-      tico:"REEMPLAZA_ID_TICO"
+      // Nuevas imágenes reales:
+      brat:"1RSbTxobKy7dYfv8B7oYTMAIAXtLwvNRX",           // Bratwurst.png
+      carib:"1dv0BusQ5Toi53GllVXmyR4ZlWKOR2rm3",         // Caribeño.png
+      criollo:"1kd6S8ET-YHN6ypECHSnzgLkhTG1BrNZn",       // Argentino.png (Criollo argentino)
+      tico:"1wLxh_R2cAU-5aEEtfjsUdYabvHqnB8cN",          // Criollo.png (Costarricense casero)
+      tex:"1oO3AYeQYROR1Ll6MP094SwX99e1lSOIh"            // Tex-Mex.png
     },
     YIELDS: {
       "Chorizo": { type:'length', perKgCm: 25, unitLabel: "cm de tira" },
@@ -354,7 +360,7 @@
     if (!state.items.length) {
       poTable.style.display = 'none';
       grandTotalEl.textContent = '—';
-      cartWarningEl.textContent = ''; // si no hay items, no hay warning
+      cartWarningEl.textContent = '';
       return;
     }
     poTable.style.display = 'table';
@@ -415,7 +421,7 @@
       const date = todayISO();
       const pricePerGram = CONFIG.PRICES[key] || 0;
       const total = pricePerGram * grams;
-      const rendimiento = computeRendimiento(presentation, grams); // ENTERO
+      const rendimiento = computeRendimiento(presentation, grams);
 
       state.items.push({
         date, client, key, name: CONFIG.NAMES[key], presentation, spice, grams, rendimiento, pricePerGram, total
@@ -425,9 +431,7 @@
       pesoEl.value = '';
       recalcPreview();
 
-      // Mensaje claro de carrito no enviado
       cartWarningEl.textContent = '✅ Producto agregado al carrito. Aún NO se ha enviado el pedido. Para enviarlo usa "Enviar Pedido".';
-
       flash('Agregado al carrito');
     } catch (err) {
       console.error(err);
@@ -494,16 +498,16 @@
       date: it.date,
       client: it.client,
       product: it.name,
-      presentation: it.presentation,      // <-- se guardará en columna "Formato"
+      presentation: it.presentation,
       spice: it.spice,
       weight: it.grams,
-      rendimiento: it.rendimiento,        // <-- entero sin decimales
+      rendimiento: it.rendimiento,
       givenPrice: it.total
     }));
     const body = new URLSearchParams({ payload: JSON.stringify({ rows }) });
 
     const maybeOpenWhatsApp = () => {
-      if (!isMobileDevice()) return;     // en desktop NO abrir WhatsApp
+      if (!isMobileDevice()) return;
       const txt = poAsText();
       const url = `https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=` + encodeURIComponent(txt);
       window.open(url, '_blank');
@@ -537,10 +541,8 @@
       .finally(() => setGsLoading(false));
   }
 
-  // Leer configuración (M1, PRICES) desde Google Sheets vía Apps Script
+  // 🔁 Leer M1 desde Sheets y usarlo como precio por gramo
   function loadConfigFromSheets(){
-    // Debes programar tu Apps Script para que responda a GET ?cfg=1
-    // con JSON del tipo: { meatPriceCRC: 12345, prices: { brat: 7.5, ... } }
     const url = CONFIG.WEBHOOK + '?cfg=1';
 
     fetch(url)
@@ -549,20 +551,31 @@
         return r.json();
       })
       .then(data => {
-        // Mostrar M1 (precio de carne) si viene
-        if (data && typeof data.meatPriceCRC === 'number') {
-          meatPriceSpan.textContent = fmtCRC(data.meatPriceCRC) + ' / kg';
-          CONFIG.MEAT_PRICE = data.meatPriceCRC;
+        if (data && typeof data.meatPriceCRC === 'number' && data.meatPriceCRC > 0) {
+          const perKg   = data.meatPriceCRC;     // ej: 7500 = ₡7,500 / kg
+          const perGram = perKg / 1000;          // ej: 7.5  = ₡7.5 / g
+
+          meatPriceSpan.textContent = fmtCRC(perKg) + ' / kg';
+          CONFIG.MEAT_PRICE = perKg;
+
+          // Usar este precio por gramo para todos los chorizos (excepto bacon)
+          CONFIG.PRICES.brat    = perGram;
+          CONFIG.PRICES.tex     = perGram;
+          CONFIG.PRICES.criollo = perGram;
+          CONFIG.PRICES.carib   = perGram;
+          CONFIG.PRICES.tico    = perGram;
+          // Bacon mantiene su precio propio en CONFIG.PRICES.bacon
         } else {
           meatPriceSpan.textContent = 'no disponible (usando precios locales)';
         }
 
-        // Sobre-escribir precios si vienen desde Sheets
+        // Si algún día mandás "prices" específicos desde Sheets, también se aplican:
         if (data && data.prices && typeof data.prices === 'object') {
           Object.assign(CONFIG.PRICES, data.prices);
-          recalcPreview();
-          renderPO();
         }
+
+        recalcPreview();
+        renderPO();
       })
       .catch(err => {
         console.warn('No se pudo cargar config desde Sheets:', err);
@@ -584,9 +597,8 @@
   // Pintado inicial
   recalcPreview();
   renderPO();
-  loadConfigFromSheets(); // cargar M1 y precios desde Sheets al inicio
+  loadConfigFromSheets();
 })();
 </script>
 </body>
 </html>
-
