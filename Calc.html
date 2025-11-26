@@ -1,605 +1,800 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Calculadora Embutidos</title>
+  <meta charset="UTF-8" />
+  <title>Calculadora Monte Alto</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- PWA meta básicos -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#003366" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 1rem;
+      background: #111827;
+      color: #f9fafb;
+    }
 
-<link rel="manifest" href="manifest.webmanifest">
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
 
-<style>
-  :root { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
-  body { margin:0; padding:16px; background:#0f172a; color:#e2e8f0; }
-  .app { max-width:1000px; margin:0 auto; }
-  h1 { font-size:1.1rem; margin:0 0 6px; }
-  .card { background:#111827; border:1px solid #1f2937; border-radius:14px; padding:16px; }
-  label { display:block; font-size:.95rem; margin:0 0 6px; color:#cbd5e1; }
-  select, input[type="number"], input[type="text"]{
-    width:100%; font-size:1.05rem; padding:10px; border-radius:10px;
-    border:1px solid #334155; background:#0b1220; color:#e2e8f0; box-sizing:border-box;
-  }
-  .row { display:flex; gap:20px; flex-wrap:wrap; }
-  .row > div { flex:1; min-width:240px; max-width:486px; }
-  .hint { color:#94a3b8; font-size:.85rem; margin-top:4px; }
-  .total {
-    margin-top:10px; font-size:1.35rem; font-weight:700;
-    background:#0b1220; border:1px dashed #334155; padding:12px; border-radius:12px; text-align:center;
-  }
-  .formula { font-size:.95rem; color:#cbd5e1; text-align:center; margin-top:8px; white-space:pre-line; }
-  .yield { font-size:.92rem; color:#a3b2c7; text-align:center; margin-top:6px; }
-  .actions { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; align-items:center; }
-  .actions.center { justify-content:flex-start; }
-  button {
-    padding:10px 12px; font-size:1rem; border-radius:10px;
-    border:1px solid #334155; background:#0b1220; color:#e2e8f0;
-    display:inline-flex; align-items:center; gap:8px; cursor:pointer;
-  }
-  button.primary { background:#2563eb; border-color:#2563eb; color:white; }
-  button.danger  { background:#dc2626; border-color:#dc2626; color:white; margin-left:auto; }
-  button[disabled]{ opacity:.6; cursor:not-allowed; }
-  .btn-icon{ width:18px; height:18px; display:inline-block; }
+    .card {
+      max-width: 480px;
+      margin: 0 auto;
+      background: #1f2937;
+      border-radius: 0.75rem;
+      padding: 1rem 1.25rem 1.5rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
 
-  #gsBtn{ background:#ff9a00; border-color:#ff9a00; color:#111827; }
-  #gsBtn:hover{ filter:brightness(0.95); }
+    label {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-size: 0.9rem;
+      color: #d1d5db;
+    }
 
-  table { width:100%; border-collapse:collapse; margin-top:16px; font-size:.95rem; }
-  th, td { border-bottom:1px solid #1f2937; padding:8px; text-align:left; }
-  tfoot td { font-weight:700; }
-  .tiny { font-size:.8rem; color:#94a3b8; }
-  .badge { font-size:.8rem; padding:2px 8px; border:1px solid #334155; border-radius:999px; }
+    select,
+    input,
+    button,
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid #374151;
+      background: #111827;
+      color: #f9fafb;
+      font-size: 0.95rem;
+      margin-bottom: 0.75rem;
+    }
 
-  .promo-wrap { margin-top:16px; display:none; }
-  .promo-img { width:100%; max-width:100%; border-radius:12px; display:block; opacity:0; transition:opacity .4s ease; }
-  .promo-img.fade-in { opacity:1; }
+    select:focus,
+    input:focus,
+    textarea:focus {
+      outline: 2px solid #2563eb;
+      border-color: transparent;
+    }
 
-  .hidden { display:none !important; }
+    button {
+      cursor: pointer;
+      border: none;
+      font-weight: 600;
+    }
 
-  .warning {
-    font-size:.85rem;
-    color:#fbbf24;
-    margin-top:4px;
-    text-align:center;
-  }
+    button.primary {
+      background: #2563eb;
+    }
 
-  .info-box {
-    margin:4px 0 10px;
-    font-size:.85rem;
-    color:#a5b4fc;
-  }
-</style>
+    button.secondary {
+      background: #374151;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .step {
+      margin-bottom: 1rem;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      background: #111827;
+      border: 1px solid #374151;
+      display: none; /* Se muestran dinámicamente */
+    }
+
+    .step.active {
+      display: block;
+    }
+
+    .step-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #9ca3af;
+      margin-bottom: 0.5rem;
+    }
+
+    .product-image-wrapper {
+      text-align: center;
+      margin: 0.5rem 0 0.75rem;
+    }
+
+    .product-image-wrapper img {
+      max-width: 100%;
+      border-radius: 0.75rem;
+      border: 1px solid #374151;
+    }
+
+    .summary-box {
+      margin-top: 0.75rem;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      background: #030712;
+      border: 1px dashed #4b5563;
+      font-size: 0.9rem;
+    }
+
+    .points {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .points strong {
+      color: #fbbf24;
+    }
+
+    .promo-optin {
+      margin-top: 0.5rem;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      background: #020617;
+      border: 1px solid #4b5563;
+      font-size: 0.85rem;
+    }
+
+    .promo-optin label.inline {
+      display: inline-flex;
+      align-items: center;
+      margin-right: 1rem;
+      font-size: 0.85rem;
+    }
+
+    .promo-optin input[type="radio"] {
+      width: auto;
+      margin-right: 0.25rem;
+      margin-bottom: 0;
+    }
+
+    .small {
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .actions button {
+      flex: 1;
+    }
+
+    .status {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: #a5b4fc;
+      min-height: 1em;
+    }
+
+    .error {
+      color: #fecaca;
+    }
+  </style>
 </head>
 <body>
-<div class="app">
-  <h1>Calculadora de costo (precio × gramos)</h1>
-
-  <!-- Precio base de carne leído desde Sheets (M1) -->
-  <div id="meatPriceBox" class="info-box">
-    Precio base de carne hoy: <span id="meatPrice">consultando…</span>
-  </div>
-
+  <h1>Monte Alto – Calculadora</h1>
   <div class="card">
+    <!-- STEP 1: Producto -->
+    <div class="step active" id="step-producto">
+      <div class="step-title">Paso 1 · Escogé tu embutido</div>
+      <label for="producto">Tipo de embutido</label>
+      <select id="producto">
+        <option value="">Selecciona un producto...</option>
+      </select>
 
-    <!-- Cliente -->
-    <div class="row" style="margin-bottom:10px">
-      <div>
-        <label for="cliente">Cliente</label>
-        <input id="cliente" type="text" placeholder="Nombre del cliente" />
+      <div class="product-image-wrapper" id="product-image-wrapper" style="display:none;">
+        <img id="product-image" src="" alt="Producto Monte Alto" />
       </div>
     </div>
 
-    <!-- Producto, Presentación, Picante y Peso -->
-    <div class="row">
-      <div>
-        <label for="producto">Producto</label>
-        <select id="producto">
-          <option value="">— Selecciona un producto —</option>
-          <option value="brat">Chorizo Bratwurst</option>
-          <option value="tex">Chorizo Tex-Mex</option>
-          <option value="criollo">Criollo argentino</option>
-          <option value="carib">Chorizo Caribeño</option>
-          <option value="tico">Costarricense casero</option>
-          <option value="bacon">Bacon Ahumado</option>
-        </select>
-      </div>
+    <!-- STEP 2: Presentación / gramos / cantidad -->
+    <div class="step" id="step-detalle">
+      <div class="step-title">Paso 2 · Detalle del pedido</div>
 
-      <div id="presentacionWrap">
-        <label for="presentacion">Presentación</label>
-        <select id="presentacion">
-          <option value="">— Selecciona presentación —</option>
-          <option value="Chorizo">Chorizo</option>
-          <option value="Salchicha">Salchicha</option>
-          <option value="Torta para hamburguesa">Torta para hamburguesa</option>
-        </select>
-      </div>
+      <label for="presentacion">Presentación</label>
+      <select id="presentacion">
+        <option value="">Selecciona la presentación...</option>
+      </select>
 
-      <div id="picanteWrap">
-        <label for="picante">Picante</label>
-        <select id="picante">
-          <option value="">— Selecciona picante —</option>
-          <option value="Sin picante">Sin picante</option>
-          <option value="Poco picante">Poco picante</option>
-          <option value="Picante medio">Picante medio</option>
-          <option value="Picante">Picante</option>
-        </select>
-      </div>
+      <label for="gramos">Cantidad (gramos)</label>
+      <input type="number" id="gramos" min="100" step="50" placeholder="Ej: 500" />
 
-      <div>
-        <label for="peso">Peso (gramos)</label>
-        <input id="peso" type="number" step="1" min="0" placeholder="0" />
-        <div class="hint">Ej. 1000 g</div>
+      <label for="cantidad">Número de paquetes</label>
+      <input type="number" id="cantidad" min="1" step="1" value="1" />
+
+      <div class="summary-box" id="resumen-precio">
+        Total estimado: <strong id="total-colones">₡0</strong>
       </div>
     </div>
 
-    <!-- Botón AGREGAR -->
-    <div class="actions center" style="margin-top:12px">
-      <button class="primary" id="addBtn" type="button">Agregar a carrito</button>
+    <!-- STEP 3: Datos del cliente -->
+    <div class="step" id="step-cliente">
+      <div class="step-title">Paso 3 · Tus datos</div>
+
+      <label for="nombre">Nombre</label>
+      <input type="text" id="nombre" placeholder="Tu nombre completo" />
+
+      <label for="telefono">Número de celular</label>
+      <input type="tel" id="telefono" placeholder="Ej: 6022-8322" />
+
+      <div class="points" id="points-info" style="display:none;"></div>
+
+      <div class="promo-optin" id="promo-optin-wrapper" style="display:none;">
+        <div><strong>¿Querés recibir promociones por WhatsApp?</strong></div>
+        <label class="inline">
+          <input type="radio" name="promo_optin" value="SI" /> Sí, acepto (10 puntos de bienvenida)
+        </label>
+        <label class="inline">
+          <input type="radio" name="promo_optin" value="NO" /> No, gracias
+        </label>
+        <div class="small">
+          Usaremos tu número solo para información relacionada con Monte Alto y podés salirte cuando quieras.
+        </div>
+      </div>
+
+      <label for="comentarios">Notas del pedido (opcional)</label>
+      <textarea id="comentarios" rows="2" placeholder="Ej: Entregar en la tarde, poco picante, etc."></textarea>
     </div>
 
-    <!-- Vista previa -->
-    <div class="formula" id="formula">—</div>
-    <div class="yield" id="yieldInfo"></div>
-    <div class="total" id="total">Total: —</div>
-    <!-- Warning de carrito -->
-    <div id="cartWarning" class="warning"></div>
+    <!-- STEP 4: Confirmación y envío -->
+    <div class="step" id="step-confirmacion">
+      <div class="step-title">Paso 4 · Confirmá y enviá</div>
 
-    <!-- Acciones -->
-    <div class="actions">
-      <button id="gsBtn" type="button">
-        <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
-          <path fill="currentColor" d="M6 2h10l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 2v16h12V8h-4V4H6zm2 6h8v2H8v-2zm0 4h8v2H8v-2z"/>
-        </svg>
-        Enviar Pedido
-      </button>
+      <div class="summary-box" id="resumen-final">
+        <!-- Se llena por JS -->
+      </div>
 
-      <button id="clearBtn" class="danger" type="button">Limpiar</button>
-      <span class="badge" id="status"></span>
-      <span class="tiny">Los datos quedan guardados en este dispositivo (localStorage).</span>
+      <div class="actions">
+        <button class="secondary" id="btn-atras">Atrás</button>
+        <button class="primary" id="btn-enviar">Enviar pedido</button>
+      </div>
+
+      <div class="status" id="status"></div>
     </div>
-
-    <!-- Orden -->
-    <table id="poTable" style="display:none">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Client</th>
-          <th>Product</th>
-          <th>Presentation</th>
-          <th>Spice</th>
-          <th>Weight (g)</th>
-          <th>Rendimiento</th>
-          <th>Given price</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="poBody"></tbody>
-      <tfoot>
-        <tr>
-          <td colspan="7">Total general</td>
-          <td id="grandTotal">—</td>
-          <td></td>
-        </tr>
-      </tfoot>
-    </table>
-
-    <!-- Imagen -->
-    <div id="promoWrap" class="promo-wrap">
-      <img id="promoImg" class="promo-img" alt="Producto" />
-      <div id="promoMsg" class="tiny" style="margin-top:6px;"></div>
-    </div>
-
   </div>
-</div>
 
-<script>
-(function(){
-  const $ = (id) => document.getElementById(id);
-
-  /************* PARÁMETROS EDITABLES *************/
-  const CONFIG = {
-    WHATSAPP_NUMBER: "50660228322",
-    WEBHOOK: "https://script.google.com/macros/s/AKfycbylJ-JAdRX_KSZJlFTQc6sv30oYrvMRvLBRiFmxmutUl_1ork6LVlMwtzFEOfXL0Uit/exec",
-    // Estos PRICES son fallback. Idealmente se sobreescriben con M1 (meatPriceCRC) desde Sheets.
-    PRICES: { brat:7.5, tex:7.5, criollo:7.5, carib:7.5, tico:7.5, bacon:10 },
-    NAMES: {
-      brat:'Chorizo Bratwurst',
-      tex:'Chorizo Tex-Mex',
-      criollo:'Criollo argentino',
-      carib:'Chorizo Caribeño',
-      tico:'Costarricense casero',
-      bacon:'Bacon Ahumado'
-    },
-    IMAGE_IDS: {
-      // Bacon: dejamos el que ya tenías, cámbialo si luego tenés otro ID
-      bacon:"1IniSWUDGUeLwlvoqWWHGTADaDMabI1Y1",
-      // Nuevas imágenes reales:
-      brat:"1RSbTxobKy7dYfv8B7oYTMAIAXtLwvNRX",           // Bratwurst.png
-      carib:"1dv0BusQ5Toi53GllVXmyR4ZlWKOR2rm3",         // Caribeño.png
-      criollo:"1kd6S8ET-YHN6ypECHSnzgLkhTG1BrNZn",       // Argentino.png (Criollo argentino)
-      tico:"1wLxh_R2cAU-5aEEtfjsUdYabvHqnB8cN",          // Criollo.png (Costarricense casero)
-      tex:"1oO3AYeQYROR1Ll6MP094SwX99e1lSOIh"            // Tex-Mex.png
-    },
-    YIELDS: {
-      "Chorizo": { type:'length', perKgCm: 25, unitLabel: "cm de tira" },
-      "Salchicha": { type:'count', perKg: 6, unitLabel: "salchichas" },
-      "Torta para hamburguesa": { type:'count', perKg: 8, unitLabel: "tortas" }
-    }
-  };
-  /*************************************************/
-
-  const clienteEl = $('cliente');
-  const productoEl = $('producto');
-  const presentacionWrap = $('presentacionWrap');
-  const presentacionEl = $('presentacion');
-  const picanteWrap = $('picanteWrap');
-  const picanteEl = $('picante');
-
-  const pesoEl     = $('peso');
-  const totalEl    = $('total');
-  const formulaEl  = $('formula');
-  const yieldEl    = $('yieldInfo');
-  const addBtn     = $('addBtn');
-  const statusEl   = $('status');
-  const poTable    = $('poTable');
-  const poBody     = $('poBody');
-  const grandTotalEl = $('grandTotal');
-  const gsBtn      = $('gsBtn');
-  const clearBtn   = $('clearBtn');
-
-  const promoWrap = $('promoWrap');
-  const promoImg  = $('promoImg');
-  const promoMsg  = $('promoMsg');
-
-  const cartWarningEl = $('cartWarning');
-  const meatPriceSpan = $('meatPrice');
-
-  const IMAGE_PROXY_BASE = CONFIG.WEBHOOK + "?img=1&id=";
-  const LS_KEY = 'embutidos_po_final_v7';
-
-  function todayISO(){
-    const d = new Date();
-    const pad = n => String(n).padStart(2,'0');
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-  }
-  const fmt0 = (n)=> new Intl.NumberFormat(undefined,{maximumFractionDigits:0}).format(n);
-  const fmtCRC = (n)=> '₡' + new Intl.NumberFormat(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
-
-  function loadProductImage(key) {
-    promoImg.classList.remove('fade-in');
-    promoImg.removeAttribute('src');
-    const fileId = CONFIG.IMAGE_IDS[key];
-    if (!fileId || /^REEMPLAZA_ID_/i.test(fileId)) { promoWrap.style.display='none'; promoMsg.textContent=""; return; }
-    const t = Date.now();
-    const candidates = [
-      `${IMAGE_PROXY_BASE}${fileId}&t=${t}`,
-      `https://lh3.googleusercontent.com/d/${fileId}=w1600`,
-      `https://drive.google.com/uc?export=view&id=${fileId}`,
-      `https://drive.google.com/thumbnail?id=${fileId}&sz=w1600`
-    ];
-    promoWrap.style.display='block'; promoMsg.textContent="Cargando imagen…";
-    let i=0; (function tryNext(){
-      if(i>=candidates.length){ promoMsg.textContent="No se pudo cargar la imagen."; return; }
-      const url=candidates[i++]; const probe=new Image(); probe.referrerPolicy='no-referrer';
-      probe.onload=()=>{ promoImg.onload=()=>{ promoImg.classList.add('fade-in'); }; promoImg.referrerPolicy='no-referrer'; promoImg.src=url; promoMsg.textContent=""; };
-      probe.onerror=tryNext; probe.src=url;
-    })();
-  }
-
-  function toggleControls(){
-    if (productoEl.value === 'bacon') {
-      presentacionWrap.classList.add('hidden'); presentacionEl.value = "";
-      picanteWrap.classList.add('hidden'); picanteEl.value = "";
-    } else {
-      presentacionWrap.classList.remove('hidden');
-      picanteWrap.classList.remove('hidden');
-    }
-  }
-
-  // Rendimiento entero, sin decimales
-  function computeRendimiento(presentation, grams){
-    grams = Number(grams) || 0;
-    if (!presentation || grams <= 0) return 0;
-    const y = CONFIG.YIELDS[presentation];
-    if (!y) return 0;
-    if (y.type === 'length') return Math.ceil((grams/1000) * y.perKgCm);
-    return Math.ceil((grams/1000) * y.perKg);
-  }
-
-  function calcYieldText(presentation, grams){
-    const r = computeRendimiento(presentation, grams);
-    if (!r) return '';
-    if (presentation === 'Chorizo') return `Rendimiento: ~ ${r} cm de tira`;
-    if (presentation === 'Salchicha') return `Rendimiento: ~ ${r} salchichas`;
-    if (presentation === 'Torta para hamburguesa') return `Rendimiento: ~ ${r} tortas`;
-    return '';
-  }
-
-  function recalcPreview(){
-    const key = productoEl.value;
-    const grams = parseInt(pesoEl.value) || 0;
-
-    toggleControls();
-
-    if (!key) {
-      formulaEl.textContent = '—';
-      yieldEl.textContent = '';
-      totalEl.textContent = 'Total: —';
-      promoWrap.style.display = 'none'; promoMsg.textContent = "";
-      return;
-    }
-
-    const pricePerGram = CONFIG.PRICES[key] || 0;
-    const total = pricePerGram * grams;
-    formulaEl.textContent = `${CONFIG.NAMES[key]}: ₡${pricePerGram} × ${fmt0(grams)} g`;
-
-    if (key !== 'bacon') {
-      const pres = presentacionEl.value;
-      yieldEl.textContent = calcYieldText(pres, grams);
-    } else {
-      yieldEl.textContent = '';
-    }
-
-    totalEl.textContent = `Total: ${isFinite(total) ? fmtCRC(total) : '—'}`;
-    loadProductImage(key);
-  }
-
-  productoEl.addEventListener('change', recalcPreview);
-  presentacionEl.addEventListener('change', recalcPreview);
-  picanteEl.addEventListener('change', recalcPreview);
-  pesoEl.addEventListener('input', recalcPreview);
-
-  function loadPO(){
-    try { return JSON.parse(localStorage.getItem(LS_KEY)) || { items: [] }; }
-    catch { return { items: [] }; }
-  }
-  function savePO(state){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
-
-  let state = loadPO();
-
-  function renderPO(){
-    poBody.innerHTML = '';
-    if (!state.items.length) {
-      poTable.style.display = 'none';
-      grandTotalEl.textContent = '—';
-      cartWarningEl.textContent = '';
-      return;
-    }
-    poTable.style.display = 'table';
-    let grand = 0;
-    state.items.forEach((it, idx) => {
-      grand += it.total;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${idx+1}</td>
-        <td>${it.client}</td>
-        <td>${it.name}</td>
-        <td>${it.presentation || '—'}</td>
-        <td>${it.spice || '—'}</td>
-        <td>${fmt0(it.grams)}</td>
-        <td>${fmt0(it.rendimiento || computeRendimiento(it.presentation, it.grams))}</td>
-        <td>${fmtCRC(it.total)}</td>
-        <td><button data-i="${idx}" class="delBtn" type="button">✕</button></td>
-      `;
-      poBody.appendChild(tr);
-    });
-    grandTotalEl.textContent = fmtCRC(grand);
-
-    document.querySelectorAll('.delBtn').forEach(btn=>{
-      btn.addEventListener('click', (e)=>{
-        const i = parseInt(e.target.getAttribute('data-i'));
-        if (!isNaN(i)) {
-          state.items.splice(i, 1);
-          savePO(state);
-          renderPO();
+  <script>
+    /************************************************************
+     * CONFIG BÁSICO
+     ************************************************************/
+    const CONFIG = {
+      SHEETS_ENDPOINT: "https://script.google.com/macros/s/AKfycbzqWLox1-m6wN-Jn_aZ9SCNOpeZfsrv8NNLvX0Inh1vJX6DmpS5XAsH3EeIqwqUrFs2/exec", // <-- Reemplaza esto
+      POINTS_PER_1000: 10,
+      // Ejemplo de productos. AJUSTA esto a tus productos reales Monte Alto.
+      products: [
+        {
+          id: "chorizo_caribeno",
+          name: "Chorizo Caribeño",
+          imageUrl: "https://via.placeholder.com/400x250?text=Chorizo+Caribeno",
+          presentations: [
+            { id: "pack_500", label: "Paquete 500 g", gramsDefault: 500, pricePerKg: 7800 },
+            { id: "pack_1000", label: "Paquete 1 kg", gramsDefault: 1000, pricePerKg: 7500 }
+          ]
+        },
+        {
+          id: "chorizo_criollo",
+          name: "Chorizo Criollo",
+          imageUrl: "https://via.placeholder.com/400x250?text=Chorizo+Criollo",
+          presentations: [
+            { id: "pack_400", label: "Paquete 400 g", gramsDefault: 400, pricePerKg: 8000 },
+            { id: "pack_800", label: "Paquete 800 g", gramsDefault: 800, pricePerKg: 7800 }
+          ]
         }
-      });
-    });
-  }
-
-  function flash(msg){
-    statusEl.textContent = msg;
-    setTimeout(()=>statusEl.textContent='', 1800);
-  }
-
-  function addItem(){
-    try {
-      const client = (clienteEl.value || '').trim();
-      if (!client) { flash('Ingresa el cliente'); return; }
-
-      const key = productoEl.value;
-      if (!key) { flash('Selecciona un producto'); return; }
-
-      let presentation = (presentacionEl.value || '').trim();
-      let spice = (picanteEl.value || '').trim();
-
-      if (key !== 'bacon' && !presentation) { flash('Selecciona la presentación'); return; }
-      if (key !== 'bacon' && !spice) { flash('Selecciona el picante'); return; }
-      if (key === 'bacon') { presentation = ''; spice = ''; }
-
-      const grams = parseInt(pesoEl.value) || 0;
-      if (grams <= 0) { flash('Ingresa gramos > 0'); return; }
-
-      const date = todayISO();
-      const pricePerGram = CONFIG.PRICES[key] || 0;
-      const total = pricePerGram * grams;
-      const rendimiento = computeRendimiento(presentation, grams);
-
-      state.items.push({
-        date, client, key, name: CONFIG.NAMES[key], presentation, spice, grams, rendimiento, pricePerGram, total
-      });
-      savePO(state);
-      renderPO();
-      pesoEl.value = '';
-      recalcPreview();
-
-      cartWarningEl.textContent = '✅ Producto agregado al carrito. Aún NO se ha enviado el pedido. Para enviarlo usa "Enviar Pedido".';
-      flash('Agregado al carrito');
-    } catch (err) {
-      console.error(err);
-      alert('Ocurrió un error al agregar. Revisa la consola.');
-    }
-  }
-
-  function isMobileDevice(){
-    const ua = navigator.userAgent || navigator.vendor || window.opera;
-    const touch = (('ontouchstart' in window) || (navigator.maxTouchPoints > 1));
-    const mobi = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobi/i.test(ua);
-    const coarse = window.matchMedia && window.matchMedia('(pointer:coarse)').matches;
-    return mobi || (touch && coarse);
-  }
-
-  function poAsText(){
-    if (!state.items.length) return 'Pedido vacío';
-    const first = state.items[0];
-    let lines = [`✅ Confirmación de Pedido`, `Cliente: ${first.client}`, 'Pedido:'];
-    state.items.forEach((it, i)=>{
-      const presTxt = it.presentation ? ` (${it.presentation})` : '';
-      const spiceTxt = it.spice ? ` | ${it.spice}` : '';
-      lines.push(`${i+1}. ${it.name}${presTxt}${spiceTxt} — ${it.grams} g × ₡${it.pricePerGram} = ${fmtCRC(it.total)}`);
-
-      if (it.presentation) {
-        const r = it.rendimiento || computeRendimiento(it.presentation, it.grams);
-        if (it.presentation === 'Chorizo') lines.push(`   • Rendimiento: ~ ${fmt0(r)} cm de tira`);
-        if (it.presentation === 'Salchicha') lines.push(`   • Rendimiento: ~ ${fmt0(r)} salchichas`);
-        if (it.presentation === 'Torta para hamburguesa') lines.push(`   • Rendimiento: ~ ${fmt0(r)} tortas`);
-      }
-    });
-    lines.push(`Estado: Pendiente`);
-    lines.push(`Total general: ${fmtCRC(state.items.reduce((a,b)=>a+b.total,0))}`);
-    return lines.join('\n');
-  }
-
-  function clearList(){
-    state.items = [];
-    savePO(state);
-    renderPO();
-    flash('Lista limpiada');
-  }
-
-  function setGsLoading(on){
-    if(on){
-      gsBtn.disabled = true;
-      gsBtn._origText = gsBtn.innerHTML;
-      gsBtn.innerHTML = `<svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="12" cy="12" r="10" fill="currentColor" opacity=".15"/>
-        <path fill="currentColor" d="M12 2a10 10 0 0 1 10 10h-2A8 8 0 0 0 12 4V2z"/>
-      </svg> Enviando…`;
-    } else {
-      gsBtn.disabled = false;
-      if(gsBtn._origText) gsBtn.innerHTML = gsBtn._origText;
-    }
-  }
-
-  // Sheets → (WhatsApp solo si móvil) → limpiar
-  function sendToGoogleSheets(){
-    if (!state.items.length) { flash('Pedido vacío'); return; }
-    setGsLoading(true);
-
-    const rows = state.items.map(it => ({
-      date: it.date,
-      client: it.client,
-      product: it.name,
-      presentation: it.presentation,
-      spice: it.spice,
-      weight: it.grams,
-      rendimiento: it.rendimiento,
-      givenPrice: it.total
-    }));
-    const body = new URLSearchParams({ payload: JSON.stringify({ rows }) });
-
-    const maybeOpenWhatsApp = () => {
-      if (!isMobileDevice()) return;
-      const txt = poAsText();
-      const url = `https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=` + encodeURIComponent(txt);
-      window.open(url, '_blank');
+      ]
     };
 
-    fetch(CONFIG.WEBHOOK, { method: 'POST', body })
-      .then(async r => {
-        const text = await r.text();
-        if (!r.ok || /^ERROR:/i.test(text)) { throw new Error(text || ('HTTP ' + r.status)); }
-        flash('Enviado a Sheets');
-        maybeOpenWhatsApp();
-        clearList();
-      })
-      .catch(() => {
-        return fetch(CONFIG.WEBHOOK, { method: 'POST', body, mode: 'no-cors' })
-          .then(() => { flash('Enviado a Sheets (modo compatible)'); maybeOpenWhatsApp(); clearList(); })
-          .catch(() => {
-            try {
-              const form = new FormData();
-              form.append('payload', JSON.stringify({ rows }));
-              const ok = navigator.sendBeacon(CONFIG.WEBHOOK, form);
-              if (ok) { flash('Enviado a Sheets (beacon)'); maybeOpenWhatsApp(); clearList(); }
-              else { throw new Error('sendBeacon no envió'); }
-            } catch (err3) {
-              console.error(err3);
-              alert('Error al enviar a Sheets.');
-              flash('Error: no se pudo enviar');
-            }
-          });
-      })
-      .finally(() => setGsLoading(false));
-  }
+    /************************************************************
+     * ESTADO GLOBAL
+     ************************************************************/
+    let sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    let currentStep = "producto";
+    let stepStartTime = performance.now();
 
-  // 🔁 Leer M1 desde Sheets y usarlo como precio por gramo
-  function loadConfigFromSheets(){
-    const url = CONFIG.WEBHOOK + '?cfg=1';
+    let state = {
+      productoId: "",
+      presentacionId: "",
+      gramos: 0,
+      cantidad: 1,
+      totalColones: 0,
+      nombre: "",
+      telefono: "",
+      comentarios: "",
+      isNewCustomer: null,
+      existingPoints: 0,
+      promoOptIn: null, // "SI" | "NO" | null
+      welcomeBonus: 0,
+      totalPointsThisOrder: 0
+    };
 
-    fetch(url)
-      .then(r => {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      })
-      .then(data => {
-        if (data && typeof data.meatPriceCRC === 'number' && data.meatPriceCRC > 0) {
-          const perKg   = data.meatPriceCRC;     // ej: 7500 = ₡7,500 / kg
-          const perGram = perKg / 1000;          // ej: 7.5  = ₡7.5 / g
+    /************************************************************
+     * UTILIDADES
+     ************************************************************/
+    function formatMoneyCRC(value) {
+      return "₡" + value.toLocaleString("es-CR");
+    }
 
-          meatPriceSpan.textContent = fmtCRC(perKg) + ' / kg';
-          CONFIG.MEAT_PRICE = perKg;
+    function logEvent(eventType, data = {}) {
+      const payload = {
+        action: "logEvent",
+        sessionId,
+        eventType,
+        timestamp: new Date().toISOString(),
+        data: JSON.stringify(data || {})
+      };
 
-          // Usar este precio por gramo para todos los chorizos (excepto bacon)
-          CONFIG.PRICES.brat    = perGram;
-          CONFIG.PRICES.tex     = perGram;
-          CONFIG.PRICES.criollo = perGram;
-          CONFIG.PRICES.carib   = perGram;
-          CONFIG.PRICES.tico    = perGram;
-          // Bacon mantiene su precio propio en CONFIG.PRICES.bacon
-        } else {
-          meatPriceSpan.textContent = 'no disponible (usando precios locales)';
-        }
-
-        // Si algún día mandás "prices" específicos desde Sheets, también se aplican:
-        if (data && data.prices && typeof data.prices === 'object') {
-          Object.assign(CONFIG.PRICES, data.prices);
-        }
-
-        recalcPreview();
-        renderPO();
-      })
-      .catch(err => {
-        console.warn('No se pudo cargar config desde Sheets:', err);
-        meatPriceSpan.textContent = 'no disponible (usando precios locales)';
+      // Log sencillo hacia Apps Script
+      fetch(CONFIG.SHEETS_ENDPOINT, {
+        method: "POST",
+        mode: "no-cors", // para que no bloquee por CORS
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      }).catch((err) => {
+        // Silenciar errores de log para no afectar al usuario
+        console.warn("Log error (ignorado):", err);
       });
-  }
+    }
 
-  addBtn.addEventListener('click', addItem);
-  gsBtn.addEventListener('click', sendToGoogleSheets);
-  clearBtn.addEventListener('click', clearList);
+    function enterStep(stepName) {
+      const now = performance.now();
+      const duration = now - stepStartTime;
+      // Registrar duración del step anterior
+      if (currentStep) {
+        logEvent("step_duration", {
+          step: currentStep,
+          durationMs: Math.round(duration)
+        });
+      }
+      currentStep = stepName;
+      stepStartTime = now;
+      logEvent("step_enter", { step: stepName });
 
-  // PWA
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./service-worker.js').catch(console.error);
+      // Mostrar/ocultar bloques
+      const steps = ["producto", "detalle", "cliente", "confirmacion"];
+      steps.forEach((s) => {
+        const el = document.getElementById(`step-${s}`);
+        if (el) {
+          el.classList.toggle("active", s === stepName);
+        }
+      });
+    }
+
+    function getSelectedProduct() {
+      return CONFIG.products.find((p) => p.id === state.productoId) || null;
+    }
+
+    function getSelectedPresentation() {
+      const product = getSelectedProduct();
+      if (!product) return null;
+      return product.presentations.find((pr) => pr.id === state.presentacionId) || null;
+    }
+
+    function calculateTotal() {
+      const presentacion = getSelectedPresentation();
+      const gramos = Number(state.gramos) || 0;
+      const cantidad = Number(state.cantidad) || 1;
+      if (!presentacion || gramos <= 0 || cantidad <= 0) {
+        state.totalColones = 0;
+        return 0;
+      }
+      const kg = gramos / 1000;
+      const total = Math.round(presentacion.pricePerKg * kg * cantidad);
+      state.totalColones = total;
+      return total;
+    }
+
+    function calculatePointsForAmount(amountColones) {
+      if (!amountColones || amountColones <= 0) return 0;
+      const blocks = Math.floor(amountColones / 1000);
+      return blocks * CONFIG.POINTS_PER_1000;
+    }
+
+    /************************************************************
+     * INICIALIZACIÓN UI
+     ************************************************************/
+    function populateProducts() {
+      const select = document.getElementById("producto");
+      CONFIG.products.forEach((p) => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = p.name;
+        select.appendChild(opt);
+      });
+    }
+
+    function populatePresentations() {
+      const select = document.getElementById("presentacion");
+      select.innerHTML = '<option value="">Selecciona la presentación...</option>';
+      const product = getSelectedProduct();
+      if (!product) return;
+      product.presentations.forEach((pr) => {
+        const opt = document.createElement("option");
+        opt.value = pr.id;
+        opt.textContent = pr.label;
+        select.appendChild(opt);
+      });
+    }
+
+    function updateProductImage() {
+      const wrapper = document.getElementById("product-image-wrapper");
+      const img = document.getElementById("product-image");
+      const product = getSelectedProduct();
+      if (!product || !product.imageUrl) {
+        wrapper.style.display = "none";
+        img.src = "";
+        return;
+      }
+      img.src = product.imageUrl;
+      wrapper.style.display = "block";
+    }
+
+    function updatePriceSummary() {
+      const total = calculateTotal();
+      const totalEl = document.getElementById("total-colones");
+      totalEl.textContent = formatMoneyCRC(total);
+
+      // Recalcular puntos de esta compra
+      const basePoints = calculatePointsForAmount(total);
+      const welcomeBonus = state.welcomeBonus || 0;
+      state.totalPointsThisOrder = basePoints + welcomeBonus;
+
+      // Actualizar info de puntos en el bloque de cliente si ya lo vimos
+      const pointsInfoEl = document.getElementById("points-info");
+      if (state.telefono) {
+        const totalAcumulado = (state.existingPoints || 0) + state.totalPointsThisOrder;
+        let msg = "";
+        if ((state.existingPoints || 0) === 0) {
+          msg += "¡Felicidades! Esta compra genera tus primeros puntos acumulables. ";
+        }
+        msg += `Esta compra genera <strong>${state.totalPointsThisOrder}</strong> puntos. `;
+        msg += `Tus puntos acumulados serían aproximadamente <strong>${totalAcumulado}</strong>.`;
+        pointsInfoEl.innerHTML = msg;
+        pointsInfoEl.style.display = "block";
+      }
+    }
+
+    function updateFinalSummary() {
+      const product = getSelectedProduct();
+      const presentacion = getSelectedPresentation();
+      const resumenFinal = document.getElementById("resumen-final");
+      const basePoints = calculatePointsForAmount(state.totalColones);
+      const welcomeBonus = state.welcomeBonus || 0;
+      const totalOrderPoints = state.totalPointsThisOrder || (basePoints + welcomeBonus);
+      const totalAcumulado = (state.existingPoints || 0) + totalOrderPoints;
+
+      let promoText = "";
+      if (state.isNewCustomer && state.promoOptIn === "SI") {
+        promoText = `<li>Recibís <strong>10 puntos de bienvenida</strong> por aceptar promociones.</li>`;
+      }
+
+      const html = `
+        <p><strong>Revisá tu pedido:</strong></p>
+        <ul>
+          <li>Producto: <strong>${product ? product.name : "-"}</strong></li>
+          <li>Presentación: <strong>${presentacion ? presentacion.label : "-"}</strong></li>
+          <li>Cantidad: <strong>${state.cantidad}</strong> x <strong>${state.gramos} g</strong></li>
+          <li>Total estimado: <strong>${formatMoneyCRC(state.totalColones)}</strong></li>
+        </ul>
+        <p><strong>Tus datos:</strong></p>
+        <ul>
+          <li>Nombre: <strong>${state.nombre || "-"}</strong></li>
+          <li>Celular: <strong>${state.telefono || "-"}</strong></li>
+        </ul>
+        <p><strong>Puntos:</strong></p>
+        <ul>
+          <li>Puntos generados por esta compra: <strong>${totalOrderPoints}</strong></li>
+          ${promoText}
+          <li>Puntos acumulados aproximados luego de este pedido: <strong>${totalAcumulado}</strong></li>
+        </ul>
+      `;
+      resumenFinal.innerHTML = html;
+    }
+
+    /************************************************************
+     * BACKEND (Apps Script) – FETCH HELPERS
+     ************************************************************/
+    async function fetchCustomerInfo(phone) {
+      const payload = {
+        action: "getCustomerInfo",
+        phone: phone
+      };
+
+      logEvent("fetch_customer_info", { phone });
+
+      try {
+        const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        // si Apps Script responde JSON
+        const data = await res.json();
+        return data;
+      } catch (err) {
+        console.error("Error consultando info del cliente:", err);
+        return { success: false };
+      }
+    }
+
+    async function sendOrder() {
+      const statusEl = document.getElementById("status");
+      statusEl.textContent = "Enviando pedido...";
+      statusEl.classList.remove("error");
+
+      const payload = {
+        action: "saveOrder",
+        sessionId,
+        productoId: state.productoId,
+        presentacionId: state.presentacionId,
+        gramos: state.gramos,
+        cantidad: state.cantidad,
+        totalColones: state.totalColones,
+        nombre: state.nombre,
+        telefono: state.telefono,
+        comentarios: state.comentarios,
+        isNewCustomer: state.isNewCustomer,
+        promoOptIn: state.promoOptIn,
+        pointsThisOrder: state.totalPointsThisOrder
+      };
+
+      logEvent("send_order_attempt", payload);
+
+      try {
+        const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        let data = {};
+        try {
+          data = await res.json();
+        } catch (e) {
+          // Si no devuelve JSON igual asumimos éxito si status ok
+          data = { success: res.ok };
+        }
+
+        if (!data.success) {
+          throw new Error(data.message || "Error desconocido en el servidor");
+        }
+
+        logEvent("send_order_success", { telefono: state.telefono, totalColones: state.totalColones });
+
+        statusEl.textContent = "Pedido enviado con éxito. Te contactaremos por WhatsApp para confirmar. 🙌";
+
+        // Aquí también podés generar el link de WhatsApp:
+        const mensaje = encodeURIComponent(
+          `Hola, soy ${state.nombre} (${state.telefono}). Quiero pedir:\n` +
+          `- ${getSelectedProduct()?.name || ""}\n` +
+          `- ${getSelectedPresentation()?.label || ""}\n` +
+          `- ${state.cantidad} x ${state.gramos} g\n` +
+          `Total estimado: ${formatMoneyCRC(state.totalColones)}\n\n` +
+          `Comentarios: ${state.comentarios || "Ninguno"}`
+        );
+        const waUrl = `https://wa.me/50660228322?text=${mensaje}`; // <-- Cambia al número de Monte Alto
+        window.open(waUrl, "_blank");
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = "Hubo un problema al enviar el pedido. Intenta de nuevo.";
+        statusEl.classList.add("error");
+        logEvent("send_order_error", { error: String(err) });
+      }
+    }
+
+    /************************************************************
+     * EVENTOS UI
+     ************************************************************/
+    function setupEvents() {
+      const productoSelect = document.getElementById("producto");
+      const presentacionSelect = document.getElementById("presentacion");
+      const gramosInput = document.getElementById("gramos");
+      const cantidadInput = document.getElementById("cantidad");
+      const nombreInput = document.getElementById("nombre");
+      const telefonoInput = document.getElementById("telefono");
+      const comentariosInput = document.getElementById("comentarios");
+      const btnEnviar = document.getElementById("btn-enviar");
+      const btnAtras = document.getElementById("btn-atras");
+      const promoWrapper = document.getElementById("promo-optin-wrapper");
+      const pointsInfoEl = document.getElementById("points-info");
+
+      productoSelect.addEventListener("change", () => {
+        state.productoId = productoSelect.value || "";
+        logEvent("producto_change", { productoId: state.productoId });
+
+        if (!state.productoId) {
+          updateProductImage();
+          return;
+        }
+
+        updateProductImage();
+        populatePresentations();
+
+        // Al escoger producto, revelamos el siguiente paso
+        enterStep("detalle");
+      });
+
+      presentacionSelect.addEventListener("change", () => {
+        state.presentacionId = presentacionSelect.value || "";
+        const presentacion = getSelectedPresentation();
+        logEvent("presentacion_change", { presentacionId: state.presentacionId });
+
+        if (presentacion && (!gramosInput.value || Number(gramosInput.value) === 0)) {
+          gramosInput.value = presentacion.gramsDefault;
+          state.gramos = presentacion.gramsDefault;
+        }
+
+        updatePriceSummary();
+      });
+
+      gramosInput.addEventListener("input", () => {
+        state.gramos = Number(gramosInput.value) || 0;
+        logEvent("gramos_input", { gramos: state.gramos });
+        updatePriceSummary();
+      });
+
+      cantidadInput.addEventListener("input", () => {
+        state.cantidad = Number(cantidadInput.value) || 1;
+        logEvent("cantidad_input", { cantidad: state.cantidad });
+        updatePriceSummary();
+      });
+
+      nombreInput.addEventListener("input", () => {
+        state.nombre = nombreInput.value.trim();
+      });
+
+      telefonoInput.addEventListener("change", async () => {
+        state.telefono = telefonoInput.value.trim();
+        if (!state.telefono) return;
+
+        const data = await fetchCustomerInfo(state.telefono);
+        if (!data || !data.success) {
+          // No se pudo consultar, asumimos 0 puntos y que es nuevo
+          state.isNewCustomer = true;
+          state.existingPoints = 0;
+        } else {
+          state.isNewCustomer = !!data.isNewCustomer;
+          state.existingPoints = Number(data.points || 0);
+        }
+
+        // Si no tiene puntos (o es nuevo), mensaje especial
+        let msg = "";
+        if ((state.existingPoints || 0) === 0) {
+          msg += "¡Felicidades! Esta compra generará tus primeros puntos acumulables. ";
+        } else {
+          msg += `Actualmente llevás aproximadamente <strong>${state.existingPoints}</strong> puntos acumulados. `;
+        }
+
+        // Recalcular puntos con posible bonus
+        const basePoints = calculatePointsForAmount(state.totalColones);
+
+        state.welcomeBonus = 0;
+        state.totalPointsThisOrder = basePoints;
+
+        pointsInfoEl.innerHTML = msg;
+        pointsInfoEl.style.display = "block";
+
+        // Si es nuevo cliente, mostrar el opt-in de promos
+        if (state.isNewCustomer) {
+          promoWrapper.style.display = "block";
+        } else {
+          promoWrapper.style.display = "none";
+          state.promoOptIn = null;
+        }
+
+        updatePriceSummary();
+      });
+
+      // Radios de promo opt-in
+      document.querySelectorAll('input[name="promo_optin"]').forEach((radio) => {
+        radio.addEventListener("change", () => {
+          state.promoOptIn = radio.value;
+          // Si acepta promos y es nuevo cliente -> 10 puntos de bienvenida
+          if (state.isNewCustomer && state.promoOptIn === "SI") {
+            state.welcomeBonus = 10;
+          } else {
+            state.welcomeBonus = 0;
+          }
+          logEvent("promo_optin_change", {
+            promoOptIn: state.promoOptIn,
+            welcomeBonus: state.welcomeBonus
+          });
+          updatePriceSummary();
+        });
+      });
+
+      comentariosInput.addEventListener("input", () => {
+        state.comentarios = comentariosInput.value.trim();
+      });
+
+      btnEnviar.addEventListener("click", async () => {
+        // Validaciones básicas
+        if (!state.productoId || !state.presentacionId || !state.gramos || !state.cantidad) {
+          alert("Revisá que el producto, presentación, gramos y cantidad estén completos.");
+          return;
+        }
+        if (!state.nombre || !state.telefono) {
+          alert("Por favor ingresá tu nombre y número de celular.");
+          return;
+        }
+        if (state.isNewCustomer && state.promoOptIn === null) {
+          alert("Confirmá si querés o no recibir promociones por WhatsApp.");
+          return;
+        }
+
+        updateFinalSummary();
+        logEvent("send_order_click", {
+          productoId: state.productoId,
+          presentacionId: state.presentacionId,
+          gramos: state.gramos,
+          cantidad: state.cantidad,
+          totalColones: state.totalColones,
+          nombre: state.nombre,
+          telefono: state.telefono,
+          promoOptIn: state.promoOptIn
+        });
+
+        await sendOrder();
+      });
+
+      btnAtras.addEventListener("click", () => {
+        // Volver al paso de cliente
+        enterStep("cliente");
+      });
+
+      // Cuando termina de llenar detalle del pedido, pasamos a cliente
+      // Podés decidir exactamente cuándo; aquí lo hacemos si total > 0 y cambia algo
+      ["change", "blur"].forEach((evName) => {
+        gramosInput.addEventListener(evName, () => {
+          if (state.totalColones > 0 && currentStep === "detalle") {
+            enterStep("cliente");
+          }
+        });
+        cantidadInput.addEventListener(evName, () => {
+          if (state.totalColones > 0 && currentStep === "detalle") {
+            enterStep("cliente");
+          }
+        });
+      });
+
+      // Cuando se cambia algo en datos de cliente y ya está listo todo, podemos mostrar confirmación
+      comentariosInput.addEventListener("blur", () => {
+        if (state.nombre && state.telefono && state.totalColones > 0) {
+          updateFinalSummary();
+          enterStep("confirmacion");
+        }
+      });
+      nombreInput.addEventListener("blur", () => {
+        if (state.nombre && state.telefono && state.totalColones > 0) {
+          updateFinalSummary();
+          enterStep("confirmacion");
+        }
+      });
+      telefonoInput.addEventListener("blur", () => {
+        if (state.nombre && state.telefono && state.totalColones > 0) {
+          updateFinalSummary();
+          enterStep("confirmacion");
+        }
+      });
+    }
+
+    /************************************************************
+     * START
+     ************************************************************/
+    window.addEventListener("load", () => {
+      populateProducts();
+      setupEvents();
+      logEvent("page_view", { url: location.href });
+      enterStep("producto");
+      updatePriceSummary();
     });
-  }
-
-  // Pintado inicial
-  recalcPreview();
-  renderPO();
-  loadConfigFromSheets();
-})();
-</script>
+  </script>
 </body>
 </html>
-
