@@ -2,9 +2,8 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Calculadora Monte Alto</title>
+  <title>Monte Alto – Calculadora</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- PWA meta básicos -->
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="theme-color" content="#003366" />
   <style>
@@ -22,7 +21,7 @@
     }
 
     .card {
-      max-width: 480px;
+      max-width: 640px;
       margin: 0 auto;
       background: #1f2937;
       border-radius: 0.75rem;
@@ -84,7 +83,7 @@
       border-radius: 0.5rem;
       background: #111827;
       border: 1px solid #374151;
-      display: none; /* Se muestran dinámicamente */
+      display: none;
     }
 
     .step.active {
@@ -97,6 +96,16 @@
       letter-spacing: 0.04em;
       color: #9ca3af;
       margin-bottom: 0.5rem;
+    }
+
+    .row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .row > div {
+      flex: 1 1 160px;
     }
 
     .product-image-wrapper {
@@ -117,15 +126,6 @@
       background: #030712;
       border: 1px dashed #4b5563;
       font-size: 0.9rem;
-    }
-
-    .points {
-      margin-top: 0.5rem;
-      font-size: 0.9rem;
-    }
-
-    .points strong {
-      color: #fbbf24;
     }
 
     .promo-optin {
@@ -159,10 +159,11 @@
       display: flex;
       gap: 0.5rem;
       margin-top: 0.75rem;
+      flex-wrap: wrap;
     }
 
     .actions button {
-      flex: 1;
+      flex: 1 1 160px;
     }
 
     .status {
@@ -172,8 +173,65 @@
       min-height: 1em;
     }
 
-    .error {
+    .status.error {
       color: #fecaca;
+    }
+
+    /* Carrito */
+    #cart-panel {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      background: #030712;
+      border: 1px solid #374151;
+    }
+
+    #cart-panel h2 {
+      font-size: 0.95rem;
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #9ca3af;
+    }
+
+    table.cart-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+    }
+
+    table.cart-table th,
+    table.cart-table td {
+      padding: 0.25rem 0.35rem;
+      text-align: left;
+    }
+
+    table.cart-table th {
+      border-bottom: 1px solid #4b5563;
+      font-weight: 600;
+      color: #d1d5db;
+    }
+
+    table.cart-table td {
+      border-bottom: 1px solid #111827;
+      color: #e5e7eb;
+    }
+
+    .cart-total {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .points-inline {
+      font-size: 0.85rem;
+      color: #fbbf24;
+    }
+
+    .muted {
+      color: #6b7280;
+      font-size: 0.85rem;
     }
   </style>
 </head>
@@ -183,47 +241,51 @@
     <!-- STEP 1: Producto -->
     <div class="step active" id="step-producto">
       <div class="step-title">Paso 1 · Escogé tu embutido</div>
+
       <label for="producto">Tipo de embutido</label>
       <select id="producto">
         <option value="">Selecciona un producto...</option>
       </select>
 
-      <div class="product-image-wrapper" id="product-image-wrapper" style="display:none;">
-        <img id="product-image" src="" alt="Producto Monte Alto" />
+      <div class="row">
+        <div>
+          <label for="presentacion">Presentación</label>
+          <select id="presentacion">
+            <option value="">Selecciona la presentación...</option>
+          </select>
+        </div>
+        <div>
+          <label for="cantidad">Número de paquetes</label>
+          <input type="number" id="cantidad" min="1" step="1" value="1" />
+        </div>
+      </div>
+
+      <div class="summary-box" id="resumen-linea">
+        Subtotal de esta selección: <strong id="subtotal-linea">₡0</strong>
+      </div>
+
+      <div class="actions">
+        <button class="secondary" id="btn-agregar-carrito">Agregar al carrito</button>
+        <button class="primary" id="btn-comprar-ya">Comprar de una vez</button>
       </div>
     </div>
 
-    <!-- STEP 2: Presentación / gramos / cantidad -->
-    <div class="step" id="step-detalle">
-      <div class="step-title">Paso 2 · Detalle del pedido</div>
-
-      <label for="presentacion">Presentación</label>
-      <select id="presentacion">
-        <option value="">Selecciona la presentación...</option>
-      </select>
-
-      <label for="gramos">Cantidad (gramos)</label>
-      <input type="number" id="gramos" min="100" step="50" placeholder="Ej: 500" />
-
-      <label for="cantidad">Número de paquetes</label>
-      <input type="number" id="cantidad" min="1" step="1" value="1" />
-
-      <div class="summary-box" id="resumen-precio">
-        Total estimado: <strong id="total-colones">₡0</strong>
-      </div>
-    </div>
-
-    <!-- STEP 3: Datos del cliente -->
+    <!-- STEP 2: Datos y confirmación -->
     <div class="step" id="step-cliente">
-      <div class="step-title">Paso 3 · Tus datos</div>
+      <div class="step-title">Paso 2 · Tus datos y confirmación</div>
 
-      <label for="nombre">Nombre</label>
-      <input type="text" id="nombre" placeholder="Tu nombre completo" />
+      <div class="row">
+        <div>
+          <label for="nombre">Nombre</label>
+          <input type="text" id="nombre" placeholder="Tu nombre completo" />
+        </div>
+        <div>
+          <label for="telefono">Número de celular</label>
+          <input type="tel" id="telefono" placeholder="Ej: 6022-8322" />
+        </div>
+      </div>
 
-      <label for="telefono">Número de celular</label>
-      <input type="tel" id="telefono" placeholder="Ej: 6022-8322" />
-
-      <div class="points" id="points-info" style="display:none;"></div>
+      <div id="points-info" class="summary-box" style="display:none;"></div>
 
       <div class="promo-optin" id="promo-optin-wrapper" style="display:none;">
         <div><strong>¿Querés recibir promociones por WhatsApp?</strong></div>
@@ -240,22 +302,47 @@
 
       <label for="comentarios">Notas del pedido (opcional)</label>
       <textarea id="comentarios" rows="2" placeholder="Ej: Entregar en la tarde, poco picante, etc."></textarea>
-    </div>
-
-    <!-- STEP 4: Confirmación y envío -->
-    <div class="step" id="step-confirmacion">
-      <div class="step-title">Paso 4 · Confirmá y enviá</div>
 
       <div class="summary-box" id="resumen-final">
         <!-- Se llena por JS -->
       </div>
 
       <div class="actions">
-        <button class="secondary" id="btn-atras">Atrás</button>
-        <button class="primary" id="btn-enviar">Enviar pedido</button>
+        <button class="secondary" id="btn-volver-productos">Volver a selección de productos</button>
+        <button class="primary" id="btn-confirmar">Confirmar compra y enviar pedido</button>
       </div>
 
       <div class="status" id="status"></div>
+    </div>
+
+    <!-- PANEL FIJO: Imagen + Carrito -->
+    <div id="cart-panel">
+      <h2>Carrito actual</h2>
+      <div class="row">
+        <div class="product-image-wrapper" id="product-image-wrapper" style="flex: 1 1 220px; display:none;">
+          <img id="product-image" src="" alt="Producto Monte Alto" />
+          <div class="muted" id="product-image-caption"></div>
+        </div>
+        <div style="flex: 2 1 260px;">
+          <table class="cart-table" id="cart-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Presentación</th>
+                <th>Cant.</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody id="cart-body">
+              <tr><td colspan="4" class="muted">Todavía no hay productos en el carrito.</td></tr>
+            </tbody>
+          </table>
+          <div class="cart-total" id="cart-total">
+            Total de la compra: <strong>₡0</strong>
+            <span class="points-inline" id="cart-points"></span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -264,17 +351,17 @@
      * CONFIG BÁSICO
      ************************************************************/
     const CONFIG = {
-      SHEETS_ENDPOINT: "https://script.google.com/macros/s/AKfycbzqWLox1-m6wN-Jn_aZ9SCNOpeZfsrv8NNLvX0Inh1vJX6DmpS5XAsH3EeIqwqUrFs2/exec", // <-- Reemplaza esto
+      SHEETS_ENDPOINT: "https://script.google.com/macros/s/AKfycbzqWLox1-m6wN-Jn_aZ9SCNOpeZfsrv8NNLvX0Inh1vJX6DmpS5XAsH3EeIqwqUrFs2/exec", // <-- Reemplazar por tu Web App URL
       POINTS_PER_1000: 10,
-      // Ejemplo de productos. AJUSTA esto a tus productos reales Monte Alto.
+      // Ajustá estos productos a tu catálogo real
       products: [
         {
           id: "chorizo_caribeno",
           name: "Chorizo Caribeño",
           imageUrl: "https://via.placeholder.com/400x250?text=Chorizo+Caribeno",
           presentations: [
-            { id: "pack_500", label: "Paquete 500 g", gramsDefault: 500, pricePerKg: 7800 },
-            { id: "pack_1000", label: "Paquete 1 kg", gramsDefault: 1000, pricePerKg: 7500 }
+            { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 7800 },
+            { id: "kilo", label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 7500 }
           ]
         },
         {
@@ -282,10 +369,11 @@
           name: "Chorizo Criollo",
           imageUrl: "https://via.placeholder.com/400x250?text=Chorizo+Criollo",
           presentations: [
-            { id: "pack_400", label: "Paquete 400 g", gramsDefault: 400, pricePerKg: 8000 },
-            { id: "pack_800", label: "Paquete 800 g", gramsDefault: 800, pricePerKg: 7800 }
+            { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 8000 },
+            { id: "kilo", label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 7800 }
           ]
         }
+        // Aquí podés agregar más embutidos
       ]
     };
 
@@ -296,27 +384,29 @@
     let currentStep = "producto";
     let stepStartTime = performance.now();
 
-    let state = {
-      productoId: "",
-      presentacionId: "",
-      gramos: 0,
-      cantidad: 1,
-      totalColones: 0,
+    const state = {
+      currentProductId: "",
+      currentPresentationId: "",
+      currentQuantity: 1,
+
       nombre: "",
       telefono: "",
       comentarios: "",
+
       isNewCustomer: null,
       existingPoints: 0,
-      promoOptIn: null, // "SI" | "NO" | null
+      promoOptIn: null,
       welcomeBonus: 0,
-      totalPointsThisOrder: 0
+      pointsThisOrder: 0
     };
+
+    let cart = []; // { productId, productName, presentationId, presentationLabel, grams, quantity, lineTotal }
 
     /************************************************************
      * UTILIDADES
      ************************************************************/
     function formatMoneyCRC(value) {
-      return "₡" + value.toLocaleString("es-CR");
+      return "₡" + (value || 0).toLocaleString("es-CR");
     }
 
     function logEvent(eventType, data = {}) {
@@ -328,24 +418,17 @@
         data: JSON.stringify(data || {})
       };
 
-      // Log sencillo hacia Apps Script
       fetch(CONFIG.SHEETS_ENDPOINT, {
         method: "POST",
-        mode: "no-cors", // para que no bloquee por CORS
-        headers: {
-          "Content-Type": "application/json"
-        },
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
-      }).catch((err) => {
-        // Silenciar errores de log para no afectar al usuario
-        console.warn("Log error (ignorado):", err);
-      });
+      }).catch(err => console.warn("Log error (ignorado):", err));
     }
 
     function enterStep(stepName) {
       const now = performance.now();
       const duration = now - stepStartTime;
-      // Registrar duración del step anterior
       if (currentStep) {
         logEvent("step_duration", {
           step: currentStep,
@@ -356,38 +439,32 @@
       stepStartTime = now;
       logEvent("step_enter", { step: stepName });
 
-      // Mostrar/ocultar bloques
-      const steps = ["producto", "detalle", "cliente", "confirmacion"];
-      steps.forEach((s) => {
+      ["producto", "cliente"].forEach(s => {
         const el = document.getElementById(`step-${s}`);
-        if (el) {
-          el.classList.toggle("active", s === stepName);
-        }
+        if (el) el.classList.toggle("active", s === stepName);
       });
     }
 
     function getSelectedProduct() {
-      return CONFIG.products.find((p) => p.id === state.productoId) || null;
+      return CONFIG.products.find(p => p.id === state.currentProductId) || null;
     }
 
     function getSelectedPresentation() {
-      const product = getSelectedProduct();
-      if (!product) return null;
-      return product.presentations.find((pr) => pr.id === state.presentacionId) || null;
+      const p = getSelectedProduct();
+      if (!p) return null;
+      return p.presentations.find(pr => pr.id === state.currentPresentationId) || null;
     }
 
-    function calculateTotal() {
-      const presentacion = getSelectedPresentation();
-      const gramos = Number(state.gramos) || 0;
-      const cantidad = Number(state.cantidad) || 1;
-      if (!presentacion || gramos <= 0 || cantidad <= 0) {
-        state.totalColones = 0;
-        return 0;
-      }
-      const kg = gramos / 1000;
-      const total = Math.round(presentacion.pricePerKg * kg * cantidad);
-      state.totalColones = total;
-      return total;
+    function calculateLineSubtotal() {
+      const presentation = getSelectedPresentation();
+      const qty = Number(state.currentQuantity) || 1;
+      if (!presentation || qty <= 0) return 0;
+      const kg = presentation.grams / 1000;
+      return Math.round(presentation.pricePerKg * kg * qty);
+    }
+
+    function getCartTotal() {
+      return cart.reduce((sum, item) => sum + (item.lineTotal || 0), 0);
     }
 
     function calculatePointsForAmount(amountColones) {
@@ -397,11 +474,11 @@
     }
 
     /************************************************************
-     * INICIALIZACIÓN UI
+     * UI: PRODUCTOS, IMAGEN, CARRITO
      ************************************************************/
     function populateProducts() {
       const select = document.getElementById("producto");
-      CONFIG.products.forEach((p) => {
+      CONFIG.products.forEach(p => {
         const opt = document.createElement("option");
         opt.value = p.id;
         opt.textContent = p.name;
@@ -414,7 +491,7 @@
       select.innerHTML = '<option value="">Selecciona la presentación...</option>';
       const product = getSelectedProduct();
       if (!product) return;
-      product.presentations.forEach((pr) => {
+      product.presentations.forEach(pr => {
         const opt = document.createElement("option");
         opt.value = pr.id;
         opt.textContent = pr.label;
@@ -425,87 +502,79 @@
     function updateProductImage() {
       const wrapper = document.getElementById("product-image-wrapper");
       const img = document.getElementById("product-image");
+      const caption = document.getElementById("product-image-caption");
       const product = getSelectedProduct();
       if (!product || !product.imageUrl) {
         wrapper.style.display = "none";
         img.src = "";
+        caption.textContent = "";
         return;
       }
       img.src = product.imageUrl;
+      caption.textContent = product.name;
       wrapper.style.display = "block";
     }
 
-    function updatePriceSummary() {
-      const total = calculateTotal();
-      const totalEl = document.getElementById("total-colones");
-      totalEl.textContent = formatMoneyCRC(total);
-
-      // Recalcular puntos de esta compra
-      const basePoints = calculatePointsForAmount(total);
-      const welcomeBonus = state.welcomeBonus || 0;
-      state.totalPointsThisOrder = basePoints + welcomeBonus;
-
-      // Actualizar info de puntos en el bloque de cliente si ya lo vimos
-      const pointsInfoEl = document.getElementById("points-info");
-      if (state.telefono) {
-        const totalAcumulado = (state.existingPoints || 0) + state.totalPointsThisOrder;
-        let msg = "";
-        if ((state.existingPoints || 0) === 0) {
-          msg += "¡Felicidades! Esta compra genera tus primeros puntos acumulables. ";
-        }
-        msg += `Esta compra genera <strong>${state.totalPointsThisOrder}</strong> puntos. `;
-        msg += `Tus puntos acumulados serían aproximadamente <strong>${totalAcumulado}</strong>.`;
-        pointsInfoEl.innerHTML = msg;
-        pointsInfoEl.style.display = "block";
-      }
+    function updateLineSummary() {
+      const subtotal = calculateLineSubtotal();
+      document.getElementById("subtotal-linea").textContent = formatMoneyCRC(subtotal);
     }
 
-    function updateFinalSummary() {
-      const product = getSelectedProduct();
-      const presentacion = getSelectedPresentation();
-      const resumenFinal = document.getElementById("resumen-final");
-      const basePoints = calculatePointsForAmount(state.totalColones);
-      const welcomeBonus = state.welcomeBonus || 0;
-      const totalOrderPoints = state.totalPointsThisOrder || (basePoints + welcomeBonus);
-      const totalAcumulado = (state.existingPoints || 0) + totalOrderPoints;
+    function updateCartUI() {
+      const tbody = document.getElementById("cart-body");
+      const totalEl = document.getElementById("cart-total");
+      const pointsInline = document.getElementById("cart-points");
 
-      let promoText = "";
-      if (state.isNewCustomer && state.promoOptIn === "SI") {
-        promoText = `<li>Recibís <strong>10 puntos de bienvenida</strong> por aceptar promociones.</li>`;
+      tbody.innerHTML = "";
+      if (cart.length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 4;
+        td.className = "muted";
+        td.textContent = "Todavía no hay productos en el carrito.";
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      } else {
+        cart.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${item.productName}</td>
+            <td>${item.presentationLabel}</td>
+            <td>${item.quantity}</td>
+            <td>${formatMoneyCRC(item.lineTotal)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
       }
 
-      const html = `
-        <p><strong>Revisá tu pedido:</strong></p>
-        <ul>
-          <li>Producto: <strong>${product ? product.name : "-"}</strong></li>
-          <li>Presentación: <strong>${presentacion ? presentacion.label : "-"}</strong></li>
-          <li>Cantidad: <strong>${state.cantidad}</strong> x <strong>${state.gramos} g</strong></li>
-          <li>Total estimado: <strong>${formatMoneyCRC(state.totalColones)}</strong></li>
-        </ul>
-        <p><strong>Tus datos:</strong></p>
-        <ul>
-          <li>Nombre: <strong>${state.nombre || "-"}</strong></li>
-          <li>Celular: <strong>${state.telefono || "-"}</strong></li>
-        </ul>
-        <p><strong>Puntos:</strong></p>
-        <ul>
-          <li>Puntos generados por esta compra: <strong>${totalOrderPoints}</strong></li>
-          ${promoText}
-          <li>Puntos acumulados aproximados luego de este pedido: <strong>${totalAcumulado}</strong></li>
-        </ul>
+      const total = getCartTotal();
+      totalEl.innerHTML = `
+        Total de la compra: <strong>${formatMoneyCRC(total)}</strong>
+        <span class="points-inline" id="cart-points"></span>
       `;
-      resumenFinal.innerHTML = html;
+
+      const basePoints = calculatePointsForAmount(total);
+      const welcomeBonus = state.welcomeBonus || 0;
+      const orderPoints = basePoints + welcomeBonus;
+      state.pointsThisOrder = orderPoints;
+
+      const pointsText = total > 0
+        ? ` · Esta compra genera aprox. ${orderPoints} puntos.`
+        : "";
+      document.getElementById("cart-points").textContent = pointsText;
+
+      updateFinalSummary();
+      updatePointsInfoPanel();
     }
 
     /************************************************************
-     * BACKEND (Apps Script) – FETCH HELPERS
+     * BACKEND HELPERS
      ************************************************************/
     async function fetchCustomerInfo(phone) {
       const payload = {
         action: "getCustomerInfo",
         phone: phone
       };
-
       logEvent("fetch_customer_info", { phone });
 
       try {
@@ -514,8 +583,6 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
-
-        // si Apps Script responde JSON
         const data = await res.json();
         return data;
       } catch (err) {
@@ -529,23 +596,38 @@
       statusEl.textContent = "Enviando pedido...";
       statusEl.classList.remove("error");
 
+      const totalColones = getCartTotal();
+      const basePoints = calculatePointsForAmount(totalColones);
+      const totalPoints = basePoints + (state.welcomeBonus || 0);
+      state.pointsThisOrder = totalPoints;
+
+      const cartLinesText = cart
+        .map(item => `${item.quantity} x ${item.productName} (${item.presentationLabel}) - ${formatMoneyCRC(item.lineTotal)}`)
+        .join("\n");
+
+      const comentariosFinal =
+        (state.comentarios || "") +
+        (cartLinesText
+          ? `\n\nDetalle del carrito:\n${cartLinesText}`
+          : "");
+
       const payload = {
         action: "saveOrder",
         sessionId,
-        productoId: state.productoId,
-        presentacionId: state.presentacionId,
-        gramos: state.gramos,
-        cantidad: state.cantidad,
-        totalColones: state.totalColones,
+        productoId: "MULTIPLE",
+        presentacionId: "",
+        gramos: 0,
+        cantidad: cart.length,
+        totalColones: totalColones,
         nombre: state.nombre,
         telefono: state.telefono,
-        comentarios: state.comentarios,
+        comentarios: comentariosFinal,
         isNewCustomer: state.isNewCustomer,
         promoOptIn: state.promoOptIn,
-        pointsThisOrder: state.totalPointsThisOrder
+        pointsThisOrder: totalPoints
       };
 
-      logEvent("send_order_attempt", payload);
+      logEvent("send_order_attempt", { ...payload, cart });
 
       try {
         const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
@@ -558,7 +640,6 @@
         try {
           data = await res.json();
         } catch (e) {
-          // Si no devuelve JSON igual asumimos éxito si status ok
           data = { success: res.ok };
         }
 
@@ -566,20 +647,18 @@
           throw new Error(data.message || "Error desconocido en el servidor");
         }
 
-        logEvent("send_order_success", { telefono: state.telefono, totalColones: state.totalColones });
+        logEvent("send_order_success", { telefono: state.telefono, totalColones });
 
         statusEl.textContent = "Pedido enviado con éxito. Te contactaremos por WhatsApp para confirmar. 🙌";
 
-        // Aquí también podés generar el link de WhatsApp:
         const mensaje = encodeURIComponent(
           `Hola, soy ${state.nombre} (${state.telefono}). Quiero pedir:\n` +
-          `- ${getSelectedProduct()?.name || ""}\n` +
-          `- ${getSelectedPresentation()?.label || ""}\n` +
-          `- ${state.cantidad} x ${state.gramos} g\n` +
-          `Total estimado: ${formatMoneyCRC(state.totalColones)}\n\n` +
+          (cartLinesText ? cartLinesText + "\n" : "") +
+          `Total estimado: ${formatMoneyCRC(totalColones)}\n\n` +
           `Comentarios: ${state.comentarios || "Ninguno"}`
         );
-        const waUrl = `https://wa.me/50660228322?text=${mensaje}`; // <-- Cambia al número de Monte Alto
+
+        const waUrl = `https://wa.me/50660228322?text=${mensaje}`; // <-- Cambiá al número de Monte Alto
         window.open(waUrl, "_blank");
       } catch (err) {
         console.error(err);
@@ -590,60 +669,158 @@
     }
 
     /************************************************************
+     * PUNTOS + RESÚMENES
+     ************************************************************/
+    function updatePointsInfoPanel() {
+      const panel = document.getElementById("points-info");
+      if (!state.telefono || cart.length === 0) {
+        panel.style.display = "none";
+        return;
+      }
+
+      const totalColones = getCartTotal();
+      const basePoints = calculatePointsForAmount(totalColones);
+      const welcomeBonus = state.welcomeBonus || 0;
+      const orderPoints = basePoints + welcomeBonus;
+      state.pointsThisOrder = orderPoints;
+
+      let msg = "";
+      if ((state.existingPoints || 0) === 0) {
+        msg += "¡Felicidades! Esta compra generará tus primeros puntos acumulables. ";
+      } else {
+        msg += `Actualmente llevás aproximadamente <strong>${state.existingPoints}</strong> puntos acumulados. `;
+      }
+      const totalAcumulado = (state.existingPoints || 0) + orderPoints;
+      msg += `Esta compra agregaría aproximadamente <strong>${orderPoints}</strong> puntos, para un total cercano a <strong>${totalAcumulado}</strong>.`;
+
+      panel.innerHTML = msg;
+      panel.style.display = "block";
+    }
+
+    function updateFinalSummary() {
+      const resumen = document.getElementById("resumen-final");
+      const totalColones = getCartTotal();
+      if (cart.length === 0) {
+        resumen.innerHTML = "<em>Agregá al menos un producto al carrito para ver el resumen de la compra.</em>";
+        return;
+      }
+
+      const basePoints = calculatePointsForAmount(totalColones);
+      const welcomeBonus = state.welcomeBonus || 0;
+      const orderPoints = basePoints + welcomeBonus;
+      const totalAcumulado = (state.existingPoints || 0) + orderPoints;
+
+      const lineas = cart
+        .map(item =>
+          `<li>${item.quantity} x <strong>${item.productName}</strong> (${item.presentationLabel}) – ${formatMoneyCRC(item.lineTotal)}</li>`
+        )
+        .join("");
+
+      const promoText =
+        state.isNewCustomer && state.promoOptIn === "SI"
+          ? `<li>Incluye <strong>10 puntos de bienvenida</strong> por aceptar promociones.</li>`
+          : "";
+
+      resumen.innerHTML = `
+        <p><strong>Resumen de tu compra:</strong></p>
+        <ul>
+          ${lineas}
+        </ul>
+        <p><strong>Total:</strong> ${formatMoneyCRC(totalColones)}</p>
+        <p><strong>Puntos:</strong></p>
+        <ul>
+          <li>Puntos por esta compra: <strong>${orderPoints}</strong></li>
+          ${promoText}
+          <li>Puntos acumulados aproximados después de este pedido: <strong>${totalAcumulado}</strong></li>
+        </ul>
+      `;
+    }
+
+    /************************************************************
      * EVENTOS UI
      ************************************************************/
     function setupEvents() {
       const productoSelect = document.getElementById("producto");
       const presentacionSelect = document.getElementById("presentacion");
-      const gramosInput = document.getElementById("gramos");
       const cantidadInput = document.getElementById("cantidad");
+
       const nombreInput = document.getElementById("nombre");
       const telefonoInput = document.getElementById("telefono");
       const comentariosInput = document.getElementById("comentarios");
-      const btnEnviar = document.getElementById("btn-enviar");
-      const btnAtras = document.getElementById("btn-atras");
+
+      const btnAgregarCarrito = document.getElementById("btn-agregar-carrito");
+      const btnComprarYa = document.getElementById("btn-comprar-ya");
+      const btnVolverProductos = document.getElementById("btn-volver-productos");
+      const btnConfirmar = document.getElementById("btn-confirmar");
+
       const promoWrapper = document.getElementById("promo-optin-wrapper");
-      const pointsInfoEl = document.getElementById("points-info");
 
       productoSelect.addEventListener("change", () => {
-        state.productoId = productoSelect.value || "";
-        logEvent("producto_change", { productoId: state.productoId });
-
-        if (!state.productoId) {
-          updateProductImage();
-          return;
-        }
-
-        updateProductImage();
+        state.currentProductId = productoSelect.value || "";
+        logEvent("producto_change", { productoId: state.currentProductId });
         populatePresentations();
-
-        // Al escoger producto, revelamos el siguiente paso
-        enterStep("detalle");
+        updateProductImage();
+        state.currentPresentationId = "";
+        updateLineSummary();
       });
 
       presentacionSelect.addEventListener("change", () => {
-        state.presentacionId = presentacionSelect.value || "";
-        const presentacion = getSelectedPresentation();
-        logEvent("presentacion_change", { presentacionId: state.presentacionId });
-
-        if (presentacion && (!gramosInput.value || Number(gramosInput.value) === 0)) {
-          gramosInput.value = presentacion.gramsDefault;
-          state.gramos = presentacion.gramsDefault;
-        }
-
-        updatePriceSummary();
-      });
-
-      gramosInput.addEventListener("input", () => {
-        state.gramos = Number(gramosInput.value) || 0;
-        logEvent("gramos_input", { gramos: state.gramos });
-        updatePriceSummary();
+        state.currentPresentationId = presentacionSelect.value || "";
+        logEvent("presentacion_change", { presentacionId: state.currentPresentationId });
+        updateLineSummary();
       });
 
       cantidadInput.addEventListener("input", () => {
-        state.cantidad = Number(cantidadInput.value) || 1;
-        logEvent("cantidad_input", { cantidad: state.cantidad });
-        updatePriceSummary();
+        state.currentQuantity = Number(cantidadInput.value) || 1;
+        logEvent("cantidad_input", { cantidad: state.currentQuantity });
+        updateLineSummary();
+      });
+
+      function addCurrentSelectionToCart() {
+        const product = getSelectedProduct();
+        const presentation = getSelectedPresentation();
+        const qty = Number(state.currentQuantity) || 1;
+
+        if (!product || !presentation || qty <= 0) {
+          alert("Revisá que el producto, la presentación y la cantidad estén completos.");
+          return false;
+        }
+
+        const lineTotal = calculateLineSubtotal();
+        const item = {
+          productId: product.id,
+          productName: product.name,
+          presentationId: presentation.id,
+          presentationLabel: presentation.label,
+          grams: presentation.grams,
+          quantity: qty,
+          lineTotal: lineTotal
+        };
+
+        cart.push(item);
+        logEvent("cart_add_item", item);
+        updateCartUI();
+        return true;
+      }
+
+      btnAgregarCarrito.addEventListener("click", () => {
+        if (addCurrentSelectionToCart()) {
+          // no cambiamos de pantalla, solo agregamos
+        }
+      });
+
+      btnComprarYa.addEventListener("click", () => {
+        if (cart.length === 0) {
+          // si no hay nada en carrito, intentamos agregar la selección actual
+          if (!addCurrentSelectionToCart()) return;
+        }
+        enterStep("cliente");
+        updateFinalSummary();
+        updatePointsInfoPanel();
+      });
+
+      btnVolverProductos.addEventListener("click", () => {
+        enterStep("producto");
       });
 
       nombreInput.addEventListener("input", () => {
@@ -656,47 +833,33 @@
 
         const data = await fetchCustomerInfo(state.telefono);
         if (!data || !data.success) {
-          // No se pudo consultar, asumimos 0 puntos y que es nuevo
           state.isNewCustomer = true;
           state.existingPoints = 0;
+          state.promoOptIn = null;
         } else {
           state.isNewCustomer = !!data.isNewCustomer;
           state.existingPoints = Number(data.points || 0);
+          state.promoOptIn = data.promoOptIn || null;
         }
 
-        // Si no tiene puntos (o es nuevo), mensaje especial
-        let msg = "";
-        if ((state.existingPoints || 0) === 0) {
-          msg += "¡Felicidades! Esta compra generará tus primeros puntos acumulables. ";
-        } else {
-          msg += `Actualmente llevás aproximadamente <strong>${state.existingPoints}</strong> puntos acumulados. `;
-        }
-
-        // Recalcular puntos con posible bonus
-        const basePoints = calculatePointsForAmount(state.totalColones);
-
-        state.welcomeBonus = 0;
-        state.totalPointsThisOrder = basePoints;
-
-        pointsInfoEl.innerHTML = msg;
-        pointsInfoEl.style.display = "block";
-
-        // Si es nuevo cliente, mostrar el opt-in de promos
+        const promoWrapper = document.getElementById("promo-optin-wrapper");
         if (state.isNewCustomer) {
           promoWrapper.style.display = "block";
         } else {
           promoWrapper.style.display = "none";
-          state.promoOptIn = null;
         }
 
-        updatePriceSummary();
+        // reset bonus según estado actual
+        state.welcomeBonus =
+          state.isNewCustomer && state.promoOptIn === "SI" ? 10 : 0;
+
+        updatePointsInfoPanel();
+        updateFinalSummary();
       });
 
-      // Radios de promo opt-in
-      document.querySelectorAll('input[name="promo_optin"]').forEach((radio) => {
+      document.querySelectorAll('input[name="promo_optin"]').forEach(radio => {
         radio.addEventListener("change", () => {
           state.promoOptIn = radio.value;
-          // Si acepta promos y es nuevo cliente -> 10 puntos de bienvenida
           if (state.isNewCustomer && state.promoOptIn === "SI") {
             state.welcomeBonus = 10;
           } else {
@@ -706,7 +869,8 @@
             promoOptIn: state.promoOptIn,
             welcomeBonus: state.welcomeBonus
           });
-          updatePriceSummary();
+          updatePointsInfoPanel();
+          updateFinalSummary();
         });
       });
 
@@ -714,10 +878,9 @@
         state.comentarios = comentariosInput.value.trim();
       });
 
-      btnEnviar.addEventListener("click", async () => {
-        // Validaciones básicas
-        if (!state.productoId || !state.presentacionId || !state.gramos || !state.cantidad) {
-          alert("Revisá que el producto, presentación, gramos y cantidad estén completos.");
+      btnConfirmar.addEventListener("click", async () => {
+        if (cart.length === 0) {
+          alert("Agregá al menos un producto al carrito antes de confirmar.");
           return;
         }
         if (!state.nombre || !state.telefono) {
@@ -729,59 +892,15 @@
           return;
         }
 
-        updateFinalSummary();
         logEvent("send_order_click", {
-          productoId: state.productoId,
-          presentacionId: state.presentacionId,
-          gramos: state.gramos,
-          cantidad: state.cantidad,
-          totalColones: state.totalColones,
           nombre: state.nombre,
           telefono: state.telefono,
+          totalColones: getCartTotal(),
+          cart,
           promoOptIn: state.promoOptIn
         });
 
         await sendOrder();
-      });
-
-      btnAtras.addEventListener("click", () => {
-        // Volver al paso de cliente
-        enterStep("cliente");
-      });
-
-      // Cuando termina de llenar detalle del pedido, pasamos a cliente
-      // Podés decidir exactamente cuándo; aquí lo hacemos si total > 0 y cambia algo
-      ["change", "blur"].forEach((evName) => {
-        gramosInput.addEventListener(evName, () => {
-          if (state.totalColones > 0 && currentStep === "detalle") {
-            enterStep("cliente");
-          }
-        });
-        cantidadInput.addEventListener(evName, () => {
-          if (state.totalColones > 0 && currentStep === "detalle") {
-            enterStep("cliente");
-          }
-        });
-      });
-
-      // Cuando se cambia algo en datos de cliente y ya está listo todo, podemos mostrar confirmación
-      comentariosInput.addEventListener("blur", () => {
-        if (state.nombre && state.telefono && state.totalColones > 0) {
-          updateFinalSummary();
-          enterStep("confirmacion");
-        }
-      });
-      nombreInput.addEventListener("blur", () => {
-        if (state.nombre && state.telefono && state.totalColones > 0) {
-          updateFinalSummary();
-          enterStep("confirmacion");
-        }
-      });
-      telefonoInput.addEventListener("blur", () => {
-        if (state.nombre && state.telefono && state.totalColones > 0) {
-          updateFinalSummary();
-          enterStep("confirmacion");
-        }
       });
     }
 
@@ -793,7 +912,8 @@
       setupEvents();
       logEvent("page_view", { url: location.href });
       enterStep("producto");
-      updatePriceSummary();
+      updateLineSummary();
+      updateCartUI();
     });
   </script>
 </body>
