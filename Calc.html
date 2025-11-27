@@ -170,7 +170,8 @@
       margin-top: 0.5rem;
       font-size: 0.85rem;
       color: #a5b4fc;
-      min-height: 1em;
+      min-height: 1.2em;
+      white-space: pre-line;
     }
 
     .status.error {
@@ -245,9 +246,9 @@
 <body>
   <h1>Monte Alto – Calculadora</h1>
   <div class="card">
-    <!-- STEP 0: Datos del cliente -->
+    <!-- STEP 1: Datos del cliente -->
     <div class="step active" id="step-datos">
-      <div class="step-title">Paso 0 · Tus datos</div>
+      <div class="step-title">Paso 1 · Tus datos</div>
 
       <div class="row">
         <div>
@@ -267,9 +268,9 @@
       </div>
     </div>
 
-    <!-- STEP 1: Producto -->
+    <!-- STEP 2: Producto -->
     <div class="step" id="step-producto">
-      <div class="step-title">Paso 1 · Escogé tu embutido</div>
+      <div class="step-title">Paso 2 · Escogé tu embutido</div>
 
       <label for="producto">Tipo de embutido</label>
       <select id="producto">
@@ -287,3 +288,688 @@
           <label for="cantidad">Número de paquetes</label>
           <input type="number" id="cantidad" min="1" step="1" value="1" />
         </div>
+      </div>
+
+      <div class="summary-box" id="resumen-linea">
+        Subtotal de esta selección: <strong id="subtotal-linea">₡0</strong>
+      </div>
+
+      <div class="actions">
+        <button class="secondary" id="btn-agregar-carrito">Agregar al carrito</button>
+        <button class="primary" id="btn-comprar-ya">Comprar de una vez</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Confirmación -->
+    <div class="step" id="step-cliente">
+      <div class="step-title">Paso 3 · Confirmación y notas</div>
+
+      <div id="points-info" class="summary-box" style="display:none;"></div>
+
+      <div class="promo-optin" id="promo-optin-wrapper" style="display:none;">
+        <div><strong>¿Querés recibir promociones por WhatsApp?</strong></div>
+        <label class="inline">
+          <input type="radio" name="promo_optin" value="SI" /> Sí, acepto (10 puntos de bienvenida)
+        </label>
+        <label class="inline">
+          <input type="radio" name="promo_optin" value="NO" /> No, gracias
+        </label>
+        <div class="small">
+          Usaremos tu número solo para información relacionada con Monte Alto y podés salirte cuando quieras.
+        </div>
+      </div>
+
+      <label for="comentarios">Notas del pedido (opcional)</label>
+      <textarea id="comentarios" rows="2" placeholder="Ej: Entregar en la tarde, poco picante, etc."></textarea>
+
+      <div class="summary-box" id="resumen-final"></div>
+
+      <div class="actions">
+        <button class="secondary" id="btn-volver-productos">Volver a selección de productos</button>
+        <button class="primary" id="btn-confirmar">Confirmar compra y enviar pedido</button>
+      </div>
+
+      <div class="status" id="status"></div>
+    </div>
+
+    <!-- PANEL FIJO: Imagen + Carrito -->
+    <div id="cart-panel">
+      <h2>Carrito actual</h2>
+      <div class="row">
+        <div class="product-image-wrapper" id="product-image-wrapper" style="flex: 1 1 220px; display:none;">
+          <img id="product-image" src="" alt="Producto Monte Alto" />
+          <div class="muted" id="product-image-caption"></div>
+        </div>
+        <div style="flex: 2 1 260px;">
+          <table class="cart-table" id="cart-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Presentación</th>
+                <th>Cant.</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody id="cart-body">
+              <tr><td colspan="4" class="muted">Todavía no hay productos en el carrito.</td></tr>
+            </tbody>
+          </table>
+          <div class="cart-total" id="cart-total">
+            Total de la compra: <strong>₡0</strong>
+            <span class="points-inline" id="cart-points"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /************************************************************
+     * CONFIG
+     ************************************************************/
+    const CONFIG = {
+      SHEETS_ENDPOINT: "https://script.google.com/macros/s/AKfycbzqWLox1-m6wN-Jn_aZ9SCNOpeZfsrv8NNLvX0Inh1vJX6DmpS5XAsH3EeIqwqUrFs2/exec",
+      POINTS_PER_1000: 10,
+      products: [
+        {
+          id: "brat",
+          name: "Chorizo Bratwurst",
+          imageUrl: "Bratwurst.png",
+          presentations: [
+            { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 7800 },
+            { id: "kilo",  label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 7500 }
+          ]
+        },
+        {
+          id: "tex",
+          name: "Chorizo Tex-Mex",
+          imageUrl: "Tex-Mex.png",
+          presentations: [
+            { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 7900 },
+            { id: "kilo",  label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 7600 }
+          ]
+        },
+        {
+          id: "criollo",
+          name: "Criollo argentino",
+          imageUrl: "Argentino.png",
+          presentations: [
+            { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 8000 },
+            { id: "kilo",  label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 7800 }
+          ]
+        },
+        {
+          id: "carib",
+          name: "Chorizo Caribeño",
+          imageUrl: "Caribeño.png",
+          presentations: [
+            { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 7900 },
+            { id: "kilo",  label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 7700 }
+          ]
+        },
+        {
+          id: "tico",
+          name: "Costarricense casero",
+          imageUrl: "Criollo.png",
+          presentations: [
+            { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 7800 },
+            { id: "kilo",  label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 7600 }
+          ]
+        },
+        {
+          id: "bacon",
+          name: "Bacon Ahumado",
+          imageUrl: "Tocineta.png",
+          presentations: [
+            { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 12000 },
+            { id: "kilo",  label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 11500 }
+          ]
+        }
+      ]
+    };
+
+    /************************************************************
+     * ESTADO
+     ************************************************************/
+    let sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    let currentStep = "datos";
+    let stepStartTime = performance.now();
+
+    const state = {
+      currentProductId: "",
+      currentPresentationId: "",
+      currentQuantity: 1,
+      nombre: "",
+      telefono: "",
+      comentarios: "",
+      isNewCustomer: null,
+      existingPoints: 0,
+      promoOptIn: null,
+      welcomeBonus: 0,
+      pointsThisOrder: 0
+    };
+
+    let cart = [];
+
+    /************************************************************
+     * UTILIDADES
+     ************************************************************/
+    function formatMoneyCRC(value) {
+      return "₡" + (value || 0).toLocaleString("es-CR");
+    }
+
+    function logEvent(eventType, data = {}) {
+      const payload = {
+        action: "logEvent",
+        sessionId,
+        eventType,
+        timestamp: new Date().toISOString(),
+        data: JSON.stringify(data || {})
+      };
+
+      fetch(CONFIG.SHEETS_ENDPOINT, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }).catch(() => {});
+    }
+
+    function enterStep(stepName) {
+      const now = performance.now();
+      const duration = now - stepStartTime;
+      if (currentStep) {
+        logEvent("step_duration", {
+          step: currentStep,
+          durationMs: Math.round(duration)
+        });
+      }
+      currentStep = stepName;
+      stepStartTime = now;
+      logEvent("step_enter", { step: stepName });
+
+      ["datos", "producto", "cliente"].forEach(s => {
+        const el = document.getElementById(`step-${s}`);
+        if (el) el.classList.toggle("active", s === stepName);
+      });
+    }
+
+    function getSelectedProduct() {
+      return CONFIG.products.find(p => p.id === state.currentProductId) || null;
+    }
+
+    function getSelectedPresentation() {
+      const p = getSelectedProduct();
+      if (!p) return null;
+      return p.presentations.find(pr => pr.id === state.currentPresentationId) || null;
+    }
+
+    function calculateLineSubtotal() {
+      const presentation = getSelectedPresentation();
+      const qty = Number(state.currentQuantity) || 1;
+      if (!presentation || qty <= 0) return 0;
+      const kg = presentation.grams / 1000;
+      return Math.round(presentation.pricePerKg * kg * qty);
+    }
+
+    function getCartTotal() {
+      return cart.reduce((sum, item) => sum + (item.lineTotal || 0), 0);
+    }
+
+    function calculatePointsForAmount(amountColones) {
+      if (!amountColones || amountColones <= 0) return 0;
+      const blocks = Math.floor(amountColones / 1000);
+      return blocks * CONFIG.POINTS_PER_1000;
+    }
+
+    /************************************************************
+     * UI PRODUCTOS / CARRITO
+     ************************************************************/
+    function populateProducts() {
+      const select = document.getElementById("producto");
+      CONFIG.products.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = p.name;
+        select.appendChild(opt);
+      });
+    }
+
+    function populatePresentations() {
+      const select = document.getElementById("presentacion");
+      select.innerHTML = '<option value="">Selecciona la presentación...</option>';
+      const product = getSelectedProduct();
+      if (!product) return;
+      product.presentations.forEach(pr => {
+        const opt = document.createElement("option");
+        opt.value = pr.id;
+        opt.textContent = pr.label;
+        select.appendChild(opt);
+      });
+    }
+
+    function updateProductImage() {
+      const wrapper = document.getElementById("product-image-wrapper");
+      const img = document.getElementById("product-image");
+      const caption = document.getElementById("product-image-caption");
+      const product = getSelectedProduct();
+      if (!product || !product.imageUrl) {
+        wrapper.style.display = "none";
+        img.src = "";
+        caption.textContent = "";
+        return;
+      }
+      img.src = product.imageUrl;
+      caption.textContent = product.name;
+      wrapper.style.display = "block";
+    }
+
+    function updateLineSummary() {
+      const subtotal = calculateLineSubtotal();
+      document.getElementById("subtotal-linea").textContent = formatMoneyCRC(subtotal);
+    }
+
+    function updateCartUI() {
+      const tbody = document.getElementById("cart-body");
+      const totalEl = document.getElementById("cart-total");
+      tbody.innerHTML = "";
+      if (cart.length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 4;
+        td.className = "muted";
+        td.textContent = "Todavía no hay productos en el carrito.";
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      } else {
+        cart.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${item.productName}</td>
+            <td>${item.presentationLabel}</td>
+            <td>${item.quantity}</td>
+            <td>${formatMoneyCRC(item.lineTotal)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      const total = getCartTotal();
+      totalEl.innerHTML = `
+        Total de la compra: <strong>${formatMoneyCRC(total)}</strong>
+        <span class="points-inline" id="cart-points"></span>
+      `;
+
+      const basePoints = calculatePointsForAmount(total);
+      const welcomeBonus = state.welcomeBonus || 0;
+      const orderPoints = basePoints + welcomeBonus;
+      state.pointsThisOrder = orderPoints;
+
+      const pointsText = total > 0
+        ? ` · Esta compra genera aprox. ${orderPoints} puntos.`
+        : "";
+      document.getElementById("cart-points").textContent = pointsText;
+
+      updateFinalSummary();
+      updatePointsInfoPanel();
+    }
+
+    /************************************************************
+     * BACKEND
+     ************************************************************/
+    async function fetchCustomerInfo(phone) {
+      const payload = { action: "getCustomerInfo", phone };
+      logEvent("fetch_customer_info", { phone });
+
+      try {
+        const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        return data;
+      } catch (err) {
+        console.error("Error consultando info del cliente:", err);
+        return { success: false };
+      }
+    }
+
+    async function sendOrder() {
+      const statusEl = document.getElementById("status");
+      const nombreSeguro = state.nombre || "cliente";
+
+      statusEl.textContent = "Enviando tu pedido, " + nombreSeguro + "...";
+      statusEl.classList.remove("error");
+
+      const totalColones = getCartTotal();
+      const basePoints = calculatePointsForAmount(totalColones);
+      const totalPoints = basePoints + (state.welcomeBonus || 0);
+      state.pointsThisOrder = totalPoints;
+
+      const cartLinesText = cart
+        .map(item => `${item.quantity} x ${item.productName} (${item.presentationLabel}) - ${formatMoneyCRC(item.lineTotal)}`)
+        .join("\n");
+
+      const comentariosFinal =
+        (state.comentarios || "") +
+        (cartLinesText ? `\n\nDetalle del carrito:\n${cartLinesText}` : "");
+
+      const payload = {
+        action: "saveOrder",
+        sessionId,
+        productoId: "MULTIPLE",
+        presentacionId: "",
+        gramos: 0,
+        cantidad: cart.length,
+        totalColones,
+        nombre: state.nombre,
+        telefono: state.telefono,
+        comentarios: comentariosFinal,
+        isNewCustomer: state.isNewCustomer,
+        promoOptIn: state.promoOptIn,
+        pointsThisOrder: totalPoints
+      };
+
+      logEvent("send_order_attempt", { cart, totalColones });
+
+      try {
+        const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const rawText = await res.text();
+        let data;
+        try {
+          data = JSON.parse(rawText);
+        } catch {
+          data = { success: res.ok, message: rawText.slice(0, 200) };
+        }
+
+        if (!data.success) {
+          throw new Error(data.message || "Error desconocido en el servidor");
+        }
+
+        logEvent("send_order_success", { telefono: state.telefono, totalColones });
+
+        // Saludo personalizado
+        statusEl.textContent =
+          `Hola ${nombreSeguro}, tu compra fue registrada correctamente. 🎉\n` +
+          `Te contactaremos por WhatsApp para confirmar los detalles.`;
+
+        const mensaje = encodeURIComponent(
+          `Hola Monte Alto, soy ${state.nombre} (${state.telefono}). Quiero pedir:\n` +
+          (cartLinesText ? cartLinesText + "\n" : "") +
+          `Total estimado: ${formatMoneyCRC(totalColones)}\n\n` +
+          `Comentarios: ${state.comentarios || "Ninguno"}`
+        );
+
+        const waUrl = `https://wa.me/50660228322?text=${mensaje}`;
+        window.open(waUrl, "_blank");
+      } catch (err) {
+        console.error("Error al enviar pedido:", err);
+        statusEl.textContent =
+          "Hubo un problema al enviar el pedido: " +
+          (err && err.message ? err.message : "Error desconocido.");
+        statusEl.classList.add("error");
+        logEvent("send_order_error", { error: String(err) });
+      }
+    }
+
+    /************************************************************
+     * PUNTOS + RESÚMENES
+     ************************************************************/
+    function updatePointsInfoPanel() {
+      const panel = document.getElementById("points-info");
+      if (!state.telefono || cart.length === 0) {
+        panel.style.display = "none";
+        return;
+      }
+
+      const totalColones = getCartTotal();
+      const basePoints = calculatePointsForAmount(totalColones);
+      const welcomeBonus = state.welcomeBonus || 0;
+      const orderPoints = basePoints + welcomeBonus;
+      state.pointsThisOrder = orderPoints;
+
+      let msg = "";
+      if ((state.existingPoints || 0) === 0) {
+        msg += "¡Felicidades! Esta compra generará tus primeros puntos acumulables. ";
+      } else {
+        msg += `Actualmente llevás aproximadamente <strong>${state.existingPoints}</strong> puntos acumulados. `;
+      }
+      const totalAcumulado = (state.existingPoints || 0) + orderPoints;
+      msg += `Esta compra agregaría aproximadamente <strong>${orderPoints}</strong> puntos, para un total cercano a <strong>${totalAcumulado}</strong>.`;
+
+      panel.innerHTML = msg;
+      panel.style.display = "block";
+    }
+
+    function updateFinalSummary() {
+      const resumen = document.getElementById("resumen-final");
+      const totalColones = getCartTotal();
+      if (cart.length === 0) {
+        resumen.innerHTML = "<em>Agregá al menos un producto al carrito para ver el resumen de la compra.</em>";
+        return;
+      }
+
+      const basePoints = calculatePointsForAmount(totalColones);
+      const welcomeBonus = state.welcomeBonus || 0;
+      const orderPoints = basePoints + welcomeBonus;
+      const totalAcumulado = (state.existingPoints || 0) + orderPoints;
+
+      const lineas = cart
+        .map(item =>
+          `<li>${item.quantity} x <strong>${item.productName}</strong> (${item.presentationLabel}) – ${formatMoneyCRC(item.lineTotal)}</li>`
+        )
+        .join("");
+
+      const promoText =
+        state.isNewCustomer && state.promoOptIn === "SI"
+          ? `<li>Incluye <strong>10 puntos de bienvenida</strong> por aceptar promociones.</li>`
+          : "";
+
+      resumen.innerHTML = `
+        <p><strong>Resumen de tu compra:</strong></p>
+        <ul>${lineas}</ul>
+        <p><strong>Total:</strong> ${formatMoneyCRC(totalColones)}</p>
+        <p><strong>Puntos:</strong></p>
+        <ul>
+          <li>Puntos por esta compra: <strong>${orderPoints}</strong></li>
+          ${promoText}
+          <li>Puntos acumulados aproximados después de este pedido: <strong>${totalAcumulado}</strong></li>
+        </ul>
+      `;
+    }
+
+    /************************************************************
+     * EVENTOS UI
+     ************************************************************/
+    function setupEvents() {
+      const productoSelect = document.getElementById("producto");
+      const presentacionSelect = document.getElementById("presentacion");
+      const cantidadInput = document.getElementById("cantidad");
+      const nombreInput = document.getElementById("nombre");
+      const telefonoInput = document.getElementById("telefono");
+      const comentariosInput = document.getElementById("comentarios");
+      const datosError = document.getElementById("datos-error");
+
+      const btnIrProductos = document.getElementById("btn-ir-productos");
+      const btnAgregarCarrito = document.getElementById("btn-agregar-carrito");
+      const btnComprarYa = document.getElementById("btn-comprar-ya");
+      const btnVolverProductos = document.getElementById("btn-volver-productos");
+      const btnConfirmar = document.getElementById("btn-confirmar");
+      const promoWrapper = document.getElementById("promo-optin-wrapper");
+
+      btnIrProductos.addEventListener("click", () => {
+        datosError.textContent = "";
+        const nombre = nombreInput.value.trim();
+        const telefono = telefonoInput.value.trim();
+
+        if (!nombre) {
+          datosError.textContent = "Por favor ingresá tu nombre.";
+          return;
+        }
+        if (!telefono || telefono.length < 8) {
+          datosError.textContent = "Ingresá un teléfono válido (ej: 12345678).";
+          return;
+        }
+
+        state.nombre = nombre;
+        state.telefono = telefono;
+
+        // Cargar info del cliente y luego pasar a productos
+        fetchCustomerInfo(telefono).then(data => {
+          if (!data || !data.success) {
+            state.isNewCustomer = true;
+            state.existingPoints = 0;
+            state.promoOptIn = null;
+          } else {
+            state.isNewCustomer = !!data.isNewCustomer;
+            state.existingPoints = Number(data.points || 0);
+            state.promoOptIn = data.promoOptIn || null;
+          }
+
+          if (state.isNewCustomer) {
+            promoWrapper.style.display = "block";
+          } else {
+            promoWrapper.style.display = "none";
+          }
+
+          state.welcomeBonus =
+            state.isNewCustomer && state.promoOptIn === "SI" ? 10 : 0;
+
+          updatePointsInfoPanel();
+          enterStep("producto");
+        });
+      });
+
+      productoSelect.addEventListener("change", () => {
+        state.currentProductId = productoSelect.value || "";
+        logEvent("producto_change", { productoId: state.currentProductId });
+        populatePresentations();
+        updateProductImage();
+        state.currentPresentationId = "";
+        updateLineSummary();
+      });
+
+      presentacionSelect.addEventListener("change", () => {
+        state.currentPresentationId = presentacionSelect.value || "";
+        logEvent("presentacion_change", { presentacionId: state.currentPresentationId });
+        updateLineSummary();
+      });
+
+      cantidadInput.addEventListener("input", () => {
+        state.currentQuantity = Number(cantidadInput.value) || 1;
+        logEvent("cantidad_input", { cantidad: state.currentQuantity });
+        updateLineSummary();
+      });
+
+      function addCurrentSelectionToCart() {
+        const product = getSelectedProduct();
+        const presentation = getSelectedPresentation();
+        const qty = Number(state.currentQuantity) || 1;
+
+        if (!product || !presentation || qty <= 0) {
+          alert("Revisá que el producto, la presentación y la cantidad estén completos.");
+          return false;
+        }
+
+        const lineTotal = calculateLineSubtotal();
+        const item = {
+          productId: product.id,
+          productName: product.name,
+          presentationId: presentation.id,
+          presentationLabel: presentation.label,
+          grams: presentation.grams,
+          quantity: qty,
+          lineTotal
+        };
+
+        cart.push(item);
+        logEvent("cart_add_item", item);
+        updateCartUI();
+        return true;
+      }
+
+      btnAgregarCarrito.addEventListener("click", () => {
+        addCurrentSelectionToCart();
+      });
+
+      btnComprarYa.addEventListener("click", () => {
+        if (cart.length === 0) {
+          if (!addCurrentSelectionToCart()) return;
+        }
+        enterStep("cliente");
+        updateFinalSummary();
+        updatePointsInfoPanel();
+      });
+
+      btnVolverProductos.addEventListener("click", () => {
+        enterStep("producto");
+      });
+
+      document.querySelectorAll('input[name="promo_optin"]').forEach(radio => {
+        radio.addEventListener("change", () => {
+          state.promoOptIn = radio.value;
+          if (state.isNewCustomer && state.promoOptIn === "SI") {
+            state.welcomeBonus = 10;
+          } else {
+            state.welcomeBonus = 0;
+          }
+          logEvent("promo_optin_change", {
+            promoOptIn: state.promoOptIn,
+            welcomeBonus: state.welcomeBonus
+          });
+          updatePointsInfoPanel();
+          updateFinalSummary();
+        });
+      });
+
+      comentariosInput.addEventListener("input", () => {
+        state.comentarios = comentariosInput.value.trim();
+      });
+
+      btnConfirmar.addEventListener("click", async () => {
+        if (cart.length === 0) {
+          alert("Agregá al menos un producto al carrito antes de confirmar.");
+          return;
+        }
+        if (!state.nombre || !state.telefono) {
+          alert("Revisá que tus datos estén completos.");
+          enterStep("datos");
+          return;
+        }
+        if (state.isNewCustomer && state.promoOptIn === null) {
+          alert("Confirmá si querés o no recibir promociones por WhatsApp.");
+          return;
+        }
+
+        logEvent("send_order_click", {
+          nombre: state.nombre,
+          telefono: state.telefono,
+          totalColones: getCartTotal(),
+          cart,
+          promoOptIn: state.promoOptIn
+        });
+
+        await sendOrder();
+      });
+    }
+
+    /************************************************************
+     * START
+     ************************************************************/
+    window.addEventListener("load", () => {
+      populateProducts();
+      setupEvents();
+      logEvent("page_view", { url: location.href });
+      enterStep("datos");
+      updateLineSummary();
+      updateCartUI();
+    });
+  </script>
+</body>
+</html>
