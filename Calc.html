@@ -491,11 +491,12 @@ function setup(){
     const lineTotal = calculateSubtotal();
 
     cart.push({
-      productId:p.id,
-      productName:p.name,
-      presentationId:pr.id,
-      presentationLabel:pr.label,
-      quantity:qty,
+      productId: p.id,
+      productName: p.name,
+      presentationId: pr.id,
+      presentationLabel: pr.label,
+      grams: pr.grams,
+      quantity: qty,
       lineTotal
     });
 
@@ -592,6 +593,7 @@ window.onload = ()=> setup();
 
 </body>
 </html>
+
 
 
 
