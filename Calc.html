@@ -233,7 +233,7 @@
 --------------------------------------------------------- */
 const CONFIG = {
   SHEETS_ENDPOINT:
-    "https://script.google.com/macros/s/AKfycbygAD9TUceanVW-QDeV_2m_fA2I-m1Ctl7ZqyQE2be_ySVDHyhQDMDSP6InVHJ0G3fw/exec",
+    "https://script.google.com/macros/s/AKfycby9Y5YlZPbttjxy85uL1zguMmd4G3sOEIlirbTozvGcYLl837cfgZKhZ1u4MQeSEja4/exec",
 
   POINTS_PER_1000: 10,
 
@@ -382,7 +382,7 @@ async function sendOrder(){
 const payload = {
   action: "saveOrder",
   sessionId,
-  productoId: "Bombo", // o MULTIPLE, como quieras
+  productoId: i.productName, // o MULTIPLE, como quieras
   nombre: state.nombre,
   telefono: state.telefono,
   comentarios: state.comentarios + "\n" + cartLines,
@@ -607,6 +607,7 @@ window.onload = ()=> setup();
 
 </body>
 </html>
+
 
 
 
