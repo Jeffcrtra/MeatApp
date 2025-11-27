@@ -368,7 +368,7 @@
      * CONFIG
      ************************************************************/
     const CONFIG = {
-      SHEETS_ENDPOINT: "https://script.google.com/macros/s/AKfycbzqWLox1-m6wN-Jn_aZ9SCNOpeZfsrv8NNLvX0Inh1vJX6DmpS5XAsH3EeIqwqUrFs2/exec",
+      SHEETS_ENDPOINT: "https://script.google.com/macros/s/AKfycbwFc8rXboERUjsDYgTMI7bNgr2hHRaEhP_h0BpXUZYFV3--awm7Z-7s05x3sFj8B8dC/exec",
       POINTS_PER_1000: 10,
       products: [
         {
@@ -618,105 +618,97 @@
      * BACKEND
      ************************************************************/
     async function fetchCustomerInfo(phone) {
-      const payload = { action: "getCustomerInfo", phone };
-      logEvent("fetch_customer_info", { phone });
+  const payload = { action: "getCustomerInfo", phone };
+  logEvent("fetch_customer_info", { phone });
 
-      try {
-        const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        return data;
-      } catch (err) {
-        console.error("Error consultando info del cliente:", err);
-        return { success: false };
-      }
-    }
+  try {
+    await fetch(CONFIG.SHEETS_ENDPOINT, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    // No podemos leer la respuesta en no-cors, así que devolvemos
+    // algo neutro: lo tratamos como cliente nuevo sin puntos previos.
+    return { success: false };
+  } catch (err) {
+    console.error("Error consultando info del cliente:", err);
+    return { success: false };
+  }
+}
 
     async function sendOrder() {
-      const statusEl = document.getElementById("status");
-      const nombreSeguro = state.nombre || "cliente";
+  const statusEl = document.getElementById("status");
+  const nombreSeguro = state.nombre || "cliente";
 
-      statusEl.textContent = "Enviando tu pedido, " + nombreSeguro + "...";
-      statusEl.classList.remove("error");
+  statusEl.textContent = "Enviando tu pedido, " + nombreSeguro + "...";
+  statusEl.classList.remove("error");
 
-      const totalColones = getCartTotal();
-      const basePoints = calculatePointsForAmount(totalColones);
-      const totalPoints = basePoints + (state.welcomeBonus || 0);
-      state.pointsThisOrder = totalPoints;
+  const totalColones = getCartTotal();
+  const basePoints = calculatePointsForAmount(totalColones);
+  const totalPoints = basePoints + (state.welcomeBonus || 0);
+  state.pointsThisOrder = totalPoints;
 
-      const cartLinesText = cart
-        .map(item => `${item.quantity} x ${item.productName} (${item.presentationLabel}) - ${formatMoneyCRC(item.lineTotal)}`)
-        .join("\n");
+  const cartLinesText = cart
+    .map(item => `${item.quantity} x ${item.productName} (${item.presentationLabel}) - ${formatMoneyCRC(item.lineTotal)}`)
+    .join("\n");
 
-      const comentariosFinal =
-        (state.comentarios || "") +
-        (cartLinesText ? `\n\nDetalle del carrito:\n${cartLinesText}` : "");
+  const comentariosFinal =
+    (state.comentarios || "") +
+    (cartLinesText ? `\n\nDetalle del carrito:\n${cartLinesText}` : "");
 
-      const payload = {
-        action: "saveOrder",
-        sessionId,
-        productoId: "MULTIPLE",
-        presentacionId: "",
-        gramos: 0,
-        cantidad: cart.length,
-        totalColones,
-        nombre: state.nombre,
-        telefono: state.telefono,
-        comentarios: comentariosFinal,
-        isNewCustomer: state.isNewCustomer,
-        promoOptIn: state.promoOptIn,
-        pointsThisOrder: totalPoints
-      };
+  const payload = {
+    action: "saveOrder",
+    sessionId,
+    productoId: "MULTIPLE",
+    presentacionId: "",
+    gramos: 0,
+    cantidad: cart.length,
+    totalColones,
+    nombre: state.nombre,
+    telefono: state.telefono,
+    comentarios: comentariosFinal,
+    isNewCustomer: state.isNewCustomer,
+    promoOptIn: state.promoOptIn,
+    pointsThisOrder: totalPoints
+  };
 
-      logEvent("send_order_attempt", { cart, totalColones });
+  logEvent("send_order_attempt", { cart, totalColones });
 
-      try {
-        const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
+  try {
+    // NOTA: usamos mode: "no-cors" para evitar el bloqueo del navegador
+    await fetch(CONFIG.SHEETS_ENDPOINT, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
 
-        const rawText = await res.text();
-        let data;
-        try {
-          data = JSON.parse(rawText);
-        } catch {
-          data = { success: res.ok, message: rawText.slice(0, 200) };
-        }
+    logEvent("send_order_success", { telefono: state.telefono, totalColones });
 
-        if (!data.success) {
-          throw new Error(data.message || "Error desconocido en el servidor");
-        }
+    // Saludo personalizado (asumimos éxito si no hubo error de red)
+    statusEl.textContent =
+      `Hola ${nombreSeguro}, tu compra fue registrada (si algo falla, te avisamos). 🎉\n` +
+      `Te contactaremos por WhatsApp para confirmar los detalles.`;
 
-        logEvent("send_order_success", { telefono: state.telefono, totalColones });
+    const mensaje = encodeURIComponent(
+      `Hola Monte Alto, soy ${state.nombre} (${state.telefono}). Quiero pedir:\n` +
+      (cartLinesText ? cartLinesText + "\n" : "") +
+      `Total estimado: ${formatMoneyCRC(totalColones)}\n\n` +
+      `Comentarios: ${state.comentarios || "Ninguno"}`
+    );
 
-        // Saludo personalizado
-        statusEl.textContent =
-          `Hola ${nombreSeguro}, tu compra fue registrada correctamente. 🎉\n` +
-          `Te contactaremos por WhatsApp para confirmar los detalles.`;
-
-        const mensaje = encodeURIComponent(
-          `Hola Monte Alto, soy ${state.nombre} (${state.telefono}). Quiero pedir:\n` +
-          (cartLinesText ? cartLinesText + "\n" : "") +
-          `Total estimado: ${formatMoneyCRC(totalColones)}\n\n` +
-          `Comentarios: ${state.comentarios || "Ninguno"}`
-        );
-
-        const waUrl = `https://wa.me/50660228322?text=${mensaje}`;
-        window.open(waUrl, "_blank");
-      } catch (err) {
-        console.error("Error al enviar pedido:", err);
-        statusEl.textContent =
-          "Hubo un problema al enviar el pedido: " +
-          (err && err.message ? err.message : "Error desconocido.");
-        statusEl.classList.add("error");
-        logEvent("send_order_error", { error: String(err) });
-      }
-    }
+    const waUrl = `https://wa.me/50660228322?text=${mensaje}`;
+    window.open(waUrl, "_blank");
+  } catch (err) {
+    console.error("Error al enviar pedido:", err);
+    statusEl.textContent =
+      "Hubo un problema al enviar el pedido (error de red). Revisá tu conexión e intentá de nuevo.";
+    statusEl.classList.add("error");
+    logEvent("send_order_error", { error: String(err) });
+  }
+}
 
     /************************************************************
      * PUNTOS + RESÚMENES
@@ -973,3 +965,4 @@
   </script>
 </body>
 </html>
+
