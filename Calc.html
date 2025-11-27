@@ -388,7 +388,7 @@ const payload = {
   comentarios: state.comentarios + "\n" + cartLines,
   cantidad: cart.length,
   totalColones: total,
-  puntos: 0,
+  puntos: total/100,
   presentacionResumen,   // 🔹 NUEVO
   pesoTotalGramos        // 🔹 NUEVO
 };
@@ -607,6 +607,7 @@ window.onload = ()=> setup();
 
 </body>
 </html>
+
 
 
 
