@@ -244,7 +244,7 @@
 
       <label for="producto">Tipo de embutido</label>
       <select id="producto">
-        <option value="">Selecciona un producto...</option>
+        <option value="">— Selecciona un producto —</option>
       </select>
 
       <div class="row">
@@ -351,29 +351,65 @@
      * CONFIG BÁSICO
      ************************************************************/
     const CONFIG = {
-      SHEETS_ENDPOINT: "https://script.google.com/macros/s/AKfycbzqWLox1-m6wN-Jn_aZ9SCNOpeZfsrv8NNLvX0Inh1vJX6DmpS5XAsH3EeIqwqUrFs2/exec", // <-- Reemplazar por tu Web App URL
+      SHEETS_ENDPOINT: "https://script.google.com/macros/s/AKfycbzqWLox1-m6wN-Jn_aZ9SCNOpeZfsrv8NNLvX0Inh1vJX6DmpS5XAsH3EeIqwqUrFs2/exec",
       POINTS_PER_1000: 10,
-      // Ajustá estos productos a tu catálogo real
+
+      // Catálogo Monte Alto (imágenes en la misma carpeta que index.html)
       products: [
         {
-          id: "chorizo_caribeno",
-          name: "Chorizo Caribeño",
-          imageUrl: "https://via.placeholder.com/400x250?text=Chorizo+Caribeno",
+          id: "brat",
+          name: "Chorizo Bratwurst",
+          imageUrl: "Bratwurst.png",
           presentations: [
             { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 7800 },
-            { id: "kilo", label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 7500 }
+            { id: "kilo",  label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 7500 }
           ]
         },
         {
-          id: "chorizo_criollo",
-          name: "Chorizo Criollo",
-          imageUrl: "https://via.placeholder.com/400x250?text=Chorizo+Criollo",
+          id: "tex",
+          name: "Chorizo Tex-Mex",
+          imageUrl: "Tex-Mex.png",
+          presentations: [
+            { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 7900 },
+            { id: "kilo",  label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 7600 }
+          ]
+        },
+        {
+          id: "criollo",
+          name: "Criollo argentino",
+          imageUrl: "Argentino.png",
           presentations: [
             { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 8000 },
-            { id: "kilo", label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 7800 }
+            { id: "kilo",  label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 7800 }
+          ]
+        },
+        {
+          id: "carib",
+          name: "Chorizo Caribeño",
+          imageUrl: "Caribeño.png",
+          presentations: [
+            { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 7900 },
+            { id: "kilo",  label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 7700 }
+          ]
+        },
+        {
+          id: "tico",
+          name: "Costarricense casero",
+          imageUrl: "Criollo.png",
+          presentations: [
+            { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 7800 },
+            { id: "kilo",  label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 7600 }
+          ]
+        },
+        {
+          id: "bacon",
+          name: "Bacon Ahumado",
+          imageUrl: "Tocineta.png",
+          presentations: [
+            { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 12000 },
+            { id: "kilo",  label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 11500 }
           ]
         }
-        // Aquí podés agregar más embutidos
       ]
     };
 
@@ -523,7 +559,6 @@
     function updateCartUI() {
       const tbody = document.getElementById("cart-body");
       const totalEl = document.getElementById("cart-total");
-      const pointsInline = document.getElementById("cart-points");
 
       tbody.innerHTML = "";
       if (cart.length === 0) {
@@ -627,7 +662,7 @@
         pointsThisOrder: totalPoints
       };
 
-      logEvent("send_order_attempt", { ...payload, cart });
+      logEvent("send_order_attempt", { cart, totalColones });
 
       try {
         const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
@@ -658,7 +693,7 @@
           `Comentarios: ${state.comentarios || "Ninguno"}`
         );
 
-        const waUrl = `https://wa.me/50660228322?text=${mensaje}`; // <-- Cambiá al número de Monte Alto
+        const waUrl = `https://wa.me/50660228322?text=${mensaje}`; // <-- Cambiá al número de Monte Alto si varía
         window.open(waUrl, "_blank");
       } catch (err) {
         console.error(err);
@@ -804,14 +839,11 @@
       }
 
       btnAgregarCarrito.addEventListener("click", () => {
-        if (addCurrentSelectionToCart()) {
-          // no cambiamos de pantalla, solo agregamos
-        }
+        addCurrentSelectionToCart();
       });
 
       btnComprarYa.addEventListener("click", () => {
         if (cart.length === 0) {
-          // si no hay nada en carrito, intentamos agregar la selección actual
           if (!addCurrentSelectionToCart()) return;
         }
         enterStep("cliente");
@@ -842,14 +874,12 @@
           state.promoOptIn = data.promoOptIn || null;
         }
 
-        const promoWrapper = document.getElementById("promo-optin-wrapper");
         if (state.isNewCustomer) {
           promoWrapper.style.display = "block";
         } else {
           promoWrapper.style.display = "none";
         }
 
-        // reset bonus según estado actual
         state.welcomeBonus =
           state.isNewCustomer && state.promoOptIn === "SI" ? 10 : 0;
 
