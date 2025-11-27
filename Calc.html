@@ -640,10 +640,11 @@
 
     async function sendOrder() {
   const statusEl = document.getElementById("status");
-  const nombreSeguro = state.nombre || "cliente";
-
-  statusEl.textContent = "Enviando tu pedido, " + nombreSeguro + "...";
-  statusEl.classList.remove("error");
+  const nombreSeguro = (state.nombre || "").trim();
+  
+  statusEl.textContent =
+    `Hola ${nombreSeguro}, tu compra fue registrada correctamente. 🎉\n` +
+    `En breve te contactaremos por WhatsApp para confirmar los detalles.`;
 
   const totalColones = getCartTotal();
   const basePoints = calculatePointsForAmount(totalColones);
@@ -699,8 +700,21 @@
       `Comentarios: ${state.comentarios || "Ninguno"}`
     );
 
-    const waUrl = `https://wa.me/50660228322?text=${mensaje}`;
+  const isMobile =
+    /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent);
+  
+  const waUrl = `https://wa.me/50660228322?text=${mensaje}`;
+  
+  if (isMobile) {
+    // Solo abre WhatsApp si es teléfono
     window.open(waUrl, "_blank");
+  } else {
+    // Si es computadora, no abrimos WhatsApp automáticamente
+    statusEl.textContent +=
+      `\n\nComo estás usando una computadora, no se abrirá WhatsApp automáticamente. ` +
+      `Podés enviar el pedido desde tu teléfono cuando quieras.`;
+  }
+    
   } catch (err) {
     console.error("Error al enviar pedido:", err);
     statusEl.textContent =
@@ -965,4 +979,5 @@
   </script>
 </body>
 </html>
+
 
