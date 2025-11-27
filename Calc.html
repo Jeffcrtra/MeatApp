@@ -367,17 +367,31 @@ async function sendOrder(){
     .map(i=>`${i.quantity} x ${i.productName} (${i.presentationLabel}) – ${formatCRC(i.lineTotal)}`)
     .join("\n");
 
-  const payload = {
-    action:"saveOrder",
-    sessionId,
-    productoId:"BOmbo",
-    nombre:state.nombre,
-    telefono:state.telefono,
-    comentarios: state.comentarios + "\n" + cartLines,
-    cantidad: cart.length,
-    totalColones: total,
-    puntos: 0
-  };
+  // 🔹 Resumen de presentaciones (para la columna "Presentacion")
+  const presentacionResumen = cart
+    .map(i => `${i.quantity} x ${i.presentationLabel}`)
+    .join(", ");
+  
+  // 🔹 Peso total en gramos (para la columna "Weight")
+  const pesoTotalGramos = cart.reduce((s, i) => {
+    const g = Number(i.grams || 0);
+    const q = Number(i.quantity || 0);
+    return s + g * q;
+  }, 0);
+  
+const payload = {
+  action: "saveOrder",
+  sessionId,
+  productoId: "Bombo", // o MULTIPLE, como quieras
+  nombre: state.nombre,
+  telefono: state.telefono,
+  comentarios: state.comentarios + "\n" + cartLines,
+  cantidad: cart.length,
+  totalColones: total,
+  puntos: 0,
+  presentacionResumen,   // 🔹 NUEVO
+  pesoTotalGramos        // 🔹 NUEVO
+};
 
   try{
     await fetch(CONFIG.SHEETS_ENDPOINT,{
@@ -593,6 +607,7 @@ window.onload = ()=> setup();
 
 </body>
 </html>
+
 
 
 
