@@ -2,17 +2,16 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Monte Alto – Calculadora</title>
+  <title>Monte Alto – Calculadora de Embutidos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <meta name="theme-color" content="#003366" />
+
   <style>
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      margin: 0;
-      padding: 1rem;
+      font-family: system-ui, sans-serif;
       background: #111827;
       color: #f9fafb;
+      margin: 0;
+      padding: 1rem;
     }
 
     h1 {
@@ -21,41 +20,31 @@
     }
 
     .card {
-      max-width: 640px;
+      max-width: 680px;
       margin: 0 auto;
       background: #1f2937;
       border-radius: 0.75rem;
       padding: 1rem 1.25rem 1.5rem;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
     }
 
     label {
       display: block;
       margin-bottom: 0.25rem;
-      font-size: 0.9rem;
       color: #d1d5db;
+      font-size: 0.9rem;
     }
 
-    select,
-    input,
-    button,
-    textarea {
+    select, input, button, textarea {
       width: 100%;
       box-sizing: border-box;
-      padding: 0.5rem 0.75rem;
+      padding: 0.55rem 0.8rem;
       border-radius: 0.5rem;
       border: 1px solid #374151;
-      background: #111827;
+      background: #0f172a;
       color: #f9fafb;
-      font-size: 0.95rem;
       margin-bottom: 0.75rem;
-    }
-
-    select:focus,
-    input:focus,
-    textarea:focus {
-      outline: 2px solid #2563eb;
-      border-color: transparent;
+      font-size: 0.95rem;
     }
 
     button {
@@ -66,23 +55,22 @@
 
     button.primary {
       background: #2563eb;
+      color: white;
     }
 
     button.secondary {
       background: #374151;
+      color: white;
     }
 
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+    /* BOTÓN AMARILLO */
+    #btn-agregar-carrito {
+      background: #fbbf24;
+      color: #111827;
+      font-weight: 700;
     }
 
     .step {
-      margin-bottom: 1rem;
-      padding: 0.75rem;
-      border-radius: 0.5rem;
-      background: #111827;
-      border: 1px solid #374151;
       display: none;
     }
 
@@ -90,27 +78,28 @@
       display: block;
     }
 
-    .step-title {
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: #9ca3af;
-      margin-bottom: 0.5rem;
+    .summary-box {
+      background: #030712;
+      border: 1px dashed #4b5563;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      margin-top: 0.75rem;
+      font-size: 0.9rem;
     }
 
     .row {
       display: flex;
       gap: 0.75rem;
-      flex-wrap: wrap;
     }
 
     .row > div {
-      flex: 1 1 160px;
+      flex: 1;
     }
 
     .product-image-wrapper {
       text-align: center;
-      margin: 0.5rem 0 0.75rem;
+      margin-top: 0.5rem;
+      display: none;
     }
 
     .product-image-wrapper img {
@@ -119,865 +108,487 @@
       border: 1px solid #374151;
     }
 
-    .summary-box {
-      margin-top: 0.75rem;
-      padding: 0.75rem;
-      border-radius: 0.5rem;
-      background: #030712;
-      border: 1px dashed #4b5563;
-      font-size: 0.9rem;
-    }
-
-    .promo-optin {
-      margin-top: 0.5rem;
-      padding: 0.5rem;
-      border-radius: 0.5rem;
-      background: #020617;
-      border: 1px solid #4b5563;
-      font-size: 0.85rem;
-    }
-
-    .promo-optin label.inline {
-      display: inline-flex;
-      align-items: center;
-      margin-right: 1rem;
-      font-size: 0.85rem;
-    }
-
-    .promo-optin input[type="radio"] {
-      width: auto;
-      margin-right: 0.25rem;
-      margin-bottom: 0;
-    }
-
-    .small {
-      font-size: 0.8rem;
-      color: #9ca3af;
-    }
-
-    .actions {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 0.75rem;
-      flex-wrap: wrap;
-    }
-
-    .actions button {
-      flex: 1 1 160px;
-    }
-
-    .status {
-      margin-top: 0.5rem;
-      font-size: 0.85rem;
-      color: #a5b4fc;
-      min-height: 1.2em;
-      white-space: pre-line;
-    }
-
-    .status.error {
-      color: #fecaca;
-    }
-
-    #cart-panel {
-      margin-top: 1rem;
-      padding: 0.75rem;
-      border-radius: 0.5rem;
-      background: #030712;
-      border: 1px solid #374151;
-    }
-
-    #cart-panel h2 {
-      font-size: 0.95rem;
-      margin-top: 0;
-      margin-bottom: 0.5rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: #9ca3af;
-    }
-
-    table.cart-table {
+    .cart-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.85rem;
-      margin-top: 0.25rem;
-    }
-
-    table.cart-table th,
-    table.cart-table td {
-      padding: 0.25rem 0.35rem;
-      text-align: left;
-    }
-
-    table.cart-table th {
-      border-bottom: 1px solid #4b5563;
-      font-weight: 600;
-      color: #d1d5db;
-    }
-
-    table.cart-table td {
-      border-bottom: 1px solid #111827;
-      color: #e5e7eb;
-    }
-
-    .cart-total {
       margin-top: 0.5rem;
-      font-size: 0.9rem;
-    }
-
-    .points-inline {
-      font-size: 0.85rem;
-      color: #fbbf24;
-    }
-
-    .muted {
-      color: #6b7280;
       font-size: 0.85rem;
     }
 
-    .error-text {
-      color: #fecaca;
-      font-size: 0.85rem;
-      min-height: 1em;
-      margin-top: -0.25rem;
-      margin-bottom: 0.25rem;
+    .cart-table th {
+      border-bottom: 1px solid #4b5563;
+      color: #d1d5db;
+      text-align: left;
+      padding-bottom: 0.25rem;
     }
+
+    .cart-table td {
+      padding: 0.25rem 0;
+      border-bottom: 1px solid #111827;
+    }
+
+    .muted { color:#6b7280; font-size:0.85rem; }
+
+    .error-text { color:#fecaca; font-size:0.9rem; min-height:1em; }
+
+    #status { white-space:pre-line; margin-top:0.75rem; }
+
   </style>
 </head>
+
 <body>
   <h1>Monte Alto – Calculadora</h1>
+
   <div class="card">
-    <!-- STEP 1: Datos del cliente -->
-    <div class="step active" id="step-datos">
-      <div class="step-title">Paso 1 · Tus datos</div>
+
+    <!-- PASO 1: DATOS -->
+    <div id="step-datos" class="step active">
+      <h3>Paso 1 · Tus datos</h3>
 
       <div class="row">
         <div>
-          <label for="nombre">Nombre</label>
-          <input type="text" id="nombre" placeholder="Tu nombre completo" autocomplete="name" />
+          <label>Nombre</label>
+          <input id="nombre" type="text" placeholder="Tu nombre" />
         </div>
+
         <div>
-          <label for="telefono">Número de teléfono</label>
-          <input type="tel" id="telefono" placeholder="Ej: 12345678" autocomplete="tel" />
+          <label>Teléfono</label>
+          <input id="telefono" type="tel" placeholder="Ej: 12345678" />
         </div>
       </div>
 
-      <div class="error-text" id="datos-error"></div>
+      <div id="datos-error" class="error-text"></div>
 
-      <div class="actions">
-        <button class="primary" id="btn-ir-productos">Continuar</button>
-      </div>
+      <button id="btn-ir-productos" class="primary">Continuar</button>
     </div>
 
-    <!-- STEP 2: Producto -->
-    <div class="step" id="step-producto">
-      <div class="step-title">Paso 2 · Escogé tu embutido</div>
+    <!-- PASO 2: PRODUCTOS -->
+    <div id="step-producto" class="step">
+      <h3>Paso 2 · Escogé tu embutido</h3>
 
-      <label for="producto">Tipo de embutido</label>
+      <label>Tipo de embutido</label>
       <select id="producto">
         <option value="">— Selecciona un producto —</option>
       </select>
 
-      <div class="row">
-        <div>
-          <label for="presentacion">Presentación</label>
-          <select id="presentacion">
-            <option value="">Selecciona la presentación...</option>
-          </select>
-        </div>
-        <div>
-          <label for="cantidad">Número de paquetes</label>
-          <input type="number" id="cantidad" min="1" step="1" value="1" />
-        </div>
+      <div class="product-image-wrapper" id="product-image-wrapper">
+        <img id="product-image" src="" />
+        <div class="muted" id="product-image-caption"></div>
       </div>
 
-      <div class="summary-box" id="resumen-linea">
-        Subtotal de esta selección: <strong id="subtotal-linea">₡0</strong>
+      <label>Presentación</label>
+      <select id="presentacion">
+        <option value="">Selecciona la presentación...</option>
+      </select>
+
+      <label>Número de paquetes</label>
+      <input id="cantidad" type="number" min="1" value="1"/>
+
+      <div class="summary-box">
+        Subtotal: <strong id="subtotal-linea">₡0</strong>
       </div>
 
-      <div class="actions">
-        <button class="secondary" id="btn-agregar-carrito">Agregar al carrito</button>
-        <button class="primary" id="btn-comprar-ya">Comprar de una vez</button>
+      <button id="btn-agregar-carrito">Agregar al carrito</button>
+      <button id="btn-comprar-ya" class="primary">Comprar de una vez</button>
+    </div>
+
+    <!-- PASO 3: CONFIRMAR -->
+    <div id="step-cliente" class="step">
+      <h3>Paso 3 · Confirmación del pedido</h3>
+
+      <label>Notas (opcional)</label>
+      <textarea id="comentarios" rows="3" placeholder="Ej: Entregar en la tarde"></textarea>
+
+      <div id="resumen-final" class="summary-box"></div>
+
+      <button id="btn-volver-productos" class="secondary">Volver</button>
+      <button id="btn-confirmar" class="primary">Confirmar pedido</button>
+
+      <div id="status" class="muted"></div>
+    </div>
+
+    <!-- CARRITO -->
+    <div id="cart-panel" class="summary-box">
+      <h3>Carrito</h3>
+      <table class="cart-table">
+        <thead>
+          <tr><th>Producto</th><th>Presentación</th><th>Cant</th><th>Subtotal</th></tr>
+        </thead>
+        <tbody id="cart-body">
+          <tr><td colspan="4" class="muted">Sin productos todavía.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="cart-total">
+        Total: <strong id="cart-total">₡0</strong>
       </div>
     </div>
 
-    <!-- STEP 3: Confirmación -->
-    <div class="step" id="step-cliente">
-      <div class="step-title">Paso 3 · Confirmación y notas</div>
-
-      <div id="points-info" class="summary-box" style="display:none;"></div>
-
-      <div class="promo-optin" id="promo-optin-wrapper" style="display:none;">
-        <div><strong>¿Querés recibir promociones por WhatsApp?</strong></div>
-        <label class="inline">
-          <input type="radio" name="promo_optin" value="SI" /> Sí, acepto (10 puntos de bienvenida)
-        </label>
-        <label class="inline">
-          <input type="radio" name="promo_optin" value="NO" /> No, gracias
-        </label>
-        <div class="small">
-          Usaremos tu número solo para información relacionada con Monte Alto y podés salirte cuando quieras.
-        </div>
-      </div>
-
-      <label for="comentarios">Notas del pedido (opcional)</label>
-      <textarea id="comentarios" rows="2" placeholder="Ej: Entregar en la tarde, poco picante, etc."></textarea>
-
-      <div class="summary-box" id="resumen-final"></div>
-
-      <div class="actions">
-        <button class="secondary" id="btn-volver-productos">Volver a selección de productos</button>
-        <button class="primary" id="btn-confirmar">Confirmar compra y enviar pedido</button>
-      </div>
-
-      <div class="status" id="status"></div>
-    </div>
-
-    <!-- PANEL FIJO: Imagen + Carrito -->
-    <div id="cart-panel">
-      <h2>Carrito actual</h2>
-      <div class="row">
-        <div class="product-image-wrapper" id="product-image-wrapper" style="flex: 1 1 220px; display:none;">
-          <img id="product-image" src="" alt="Producto Monte Alto" />
-          <div class="muted" id="product-image-caption"></div>
-        </div>
-        <div style="flex: 2 1 260px;">
-          <table class="cart-table" id="cart-table">
-            <thead>
-              <tr>
-                <th>Producto</th>
-                <th>Presentación</th>
-                <th>Cant.</th>
-                <th>Subtotal</th>
-              </tr>
-            </thead>
-            <tbody id="cart-body">
-              <tr><td colspan="4" class="muted">Todavía no hay productos en el carrito.</td></tr>
-            </tbody>
-          </table>
-          <div class="cart-total" id="cart-total">
-            Total de la compra: <strong>₡0</strong>
-            <span class="points-inline" id="cart-points"></span>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
-  <script>
-    /************************************************************
-     * CONFIG
-     ************************************************************/
-    const CONFIG = {
-      SHEETS_ENDPOINT: "https://script.google.com/macros/s/AKfycbwFc8rXboERUjsDYgTMI7bNgr2hHRaEhP_h0BpXUZYFV3--awm7Z-7s05x3sFj8B8dC/exec",
-      POINTS_PER_1000: 10,
-      products: [
-        {
-          id: "brat",
-          name: "Chorizo Bratwurst",
-          imageUrl: "Bratwurst.png",
-          presentations: [
-            { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 7800 },
-            { id: "kilo",  label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 7500 }
-          ]
-        },
-        {
-          id: "tex",
-          name: "Chorizo Tex-Mex",
-          imageUrl: "Tex-Mex.png",
-          presentations: [
-            { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 7900 },
-            { id: "kilo",  label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 7600 }
-          ]
-        },
-        {
-          id: "criollo",
-          name: "Criollo argentino",
-          imageUrl: "Argentino.png",
-          presentations: [
-            { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 8000 },
-            { id: "kilo",  label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 7800 }
-          ]
-        },
-        {
-          id: "carib",
-          name: "Chorizo Caribeño",
-          imageUrl: "Caribeño.png",
-          presentations: [
-            { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 7900 },
-            { id: "kilo",  label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 7700 }
-          ]
-        },
-        {
-          id: "tico",
-          name: "Costarricense casero",
-          imageUrl: "Criollo.png",
-          presentations: [
-            { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 7800 },
-            { id: "kilo",  label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 7600 }
-          ]
-        },
-        {
-          id: "bacon",
-          name: "Bacon Ahumado",
-          imageUrl: "Tocineta.png",
-          presentations: [
-            { id: "medio", label: "½ kilo (500 g)", grams: 500, pricePerKg: 12000 },
-            { id: "kilo",  label: "1 kilo (1000 g)", grams: 1000, pricePerKg: 11500 }
-          ]
-        }
+
+<script>
+/* ---------------------------------------------------------
+   CONFIG
+--------------------------------------------------------- */
+const CONFIG = {
+  SHEETS_ENDPOINT:
+    "https://script.google.com/macros/s/AKfycbzqWLox1-m6wN-Jn_aZ9SCNOpeZfsrv8NNLvX0Inh1vJX6DmpS5XAsH3EeIqwqUrFs2/exec",
+
+  POINTS_PER_1000: 10,
+
+  products: [
+    {
+      id: "brat",
+      name: "Chorizo Bratwurst",
+      imageUrl: "Bratwurst.png",
+      presentations: [
+        { id: "medio", label: "½ kilo (500g)", grams: 500, pricePerKg: 7800 },
+        { id: "kilo",  label: "1 kilo (1000g)", grams:1000, pricePerKg: 7500 }
       ]
-    };
-
-    /************************************************************
-     * ESTADO
-     ************************************************************/
-    let sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    let currentStep = "datos";
-    let stepStartTime = performance.now();
-
-    const state = {
-      currentProductId: "",
-      currentPresentationId: "",
-      currentQuantity: 1,
-      nombre: "",
-      telefono: "",
-      comentarios: "",
-      isNewCustomer: null,
-      existingPoints: 0,
-      promoOptIn: null,
-      welcomeBonus: 0,
-      pointsThisOrder: 0
-    };
-
-    let cart = [];
-
-    /************************************************************
-     * UTILIDADES
-     ************************************************************/
-    function formatMoneyCRC(value) {
-      return "₡" + (value || 0).toLocaleString("es-CR");
+    },
+    {
+      id: "tex",
+      name: "Chorizo Tex-Mex",
+      imageUrl: "Tex-Mex.png",
+      presentations: [
+        { id: "medio", label: "½ kilo (500g)", grams:500, pricePerKg: 7900 },
+        { id: "kilo",  label: "1 kilo (1000g)", grams:1000, pricePerKg: 7600 }
+      ]
+    },
+    {
+      id: "criollo",
+      name: "Criollo argentino",
+      imageUrl: "Argentino.png",
+      presentations: [
+        { id: "medio", label: "½ kilo (500g)", grams:500, pricePerKg: 8000 },
+        { id: "kilo",  label: "1 kilo (1000g)", grams:1000, pricePerKg: 7800 }
+      ]
+    },
+    {
+      id: "carib",
+      name: "Chorizo Caribeño",
+      imageUrl: "Caribeño.png",
+      presentations: [
+        { id: "medio", label: "½ kilo (500g)", grams:500, pricePerKg: 7900 },
+        { id: "kilo",  label: "1 kilo (1000g)", grams:1000, pricePerKg: 7700 }
+      ]
+    },
+    {
+      id: "tico",
+      name: "Costarricense casero",
+      imageUrl: "Criollo.png",
+      presentations: [
+        { id: "medio", label:"½ kilo (500g)", grams:500, pricePerKg: 7800 },
+        { id: "kilo",  label:"1 kilo (1000g)", grams:1000, pricePerKg:7600 }
+      ]
+    },
+    {
+      id:"bacon",
+      name:"Bacon Ahumado",
+      imageUrl:"Tocineta.png",
+      presentations:[
+        { id:"medio", label:"½ kilo (500g)", grams:500, pricePerKg:12000 },
+        { id:"kilo",  label:"1 kilo (1000g)", grams:1000, pricePerKg:11500 }
+      ]
     }
+  ]
+};
 
-    function logEvent(eventType, data = {}) {
-      const payload = {
-        action: "logEvent",
-        sessionId,
-        eventType,
-        timestamp: new Date().toISOString(),
-        data: JSON.stringify(data || {})
-      };
 
-      fetch(CONFIG.SHEETS_ENDPOINT, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      }).catch(() => {});
-    }
+/* ---------------------------------------------------------
+   ESTADO
+--------------------------------------------------------- */
+let sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+let cart = [];
 
-    function enterStep(stepName) {
-      const now = performance.now();
-      const duration = now - stepStartTime;
-      if (currentStep) {
-        logEvent("step_duration", {
-          step: currentStep,
-          durationMs: Math.round(duration)
-        });
-      }
-      currentStep = stepName;
-      stepStartTime = now;
-      logEvent("step_enter", { step: stepName });
+const state = {
+  nombre:"",
+  telefono:"",
+  comentarios:"",
+  currentProductId:"",
+  currentPresentationId:"",
+  currentQuantity:1,
+};
 
-      ["datos", "producto", "cliente"].forEach(s => {
-        const el = document.getElementById(`step-${s}`);
-        if (el) el.classList.toggle("active", s === stepName);
-      });
-    }
 
-    function getSelectedProduct() {
-      return CONFIG.products.find(p => p.id === state.currentProductId) || null;
-    }
-
-    function getSelectedPresentation() {
-      const p = getSelectedProduct();
-      if (!p) return null;
-      return p.presentations.find(pr => pr.id === state.currentPresentationId) || null;
-    }
-
-    function calculateLineSubtotal() {
-      const presentation = getSelectedPresentation();
-      const qty = Number(state.currentQuantity) || 1;
-      if (!presentation || qty <= 0) return 0;
-      const kg = presentation.grams / 1000;
-      return Math.round(presentation.pricePerKg * kg * qty);
-    }
-
-    function getCartTotal() {
-      return cart.reduce((sum, item) => sum + (item.lineTotal || 0), 0);
-    }
-
-    function calculatePointsForAmount(amountColones) {
-      if (!amountColones || amountColones <= 0) return 0;
-      const blocks = Math.floor(amountColones / 1000);
-      return blocks * CONFIG.POINTS_PER_1000;
-    }
-
-    /************************************************************
-     * UI PRODUCTOS / CARRITO
-     ************************************************************/
-    function populateProducts() {
-      const select = document.getElementById("producto");
-      CONFIG.products.forEach(p => {
-        const opt = document.createElement("option");
-        opt.value = p.id;
-        opt.textContent = p.name;
-        select.appendChild(opt);
-      });
-    }
-
-    function populatePresentations() {
-      const select = document.getElementById("presentacion");
-      select.innerHTML = '<option value="">Selecciona la presentación...</option>';
-      const product = getSelectedProduct();
-      if (!product) return;
-      product.presentations.forEach(pr => {
-        const opt = document.createElement("option");
-        opt.value = pr.id;
-        opt.textContent = pr.label;
-        select.appendChild(opt);
-      });
-    }
-
-    function updateProductImage() {
-      const wrapper = document.getElementById("product-image-wrapper");
-      const img = document.getElementById("product-image");
-      const caption = document.getElementById("product-image-caption");
-      const product = getSelectedProduct();
-      if (!product || !product.imageUrl) {
-        wrapper.style.display = "none";
-        img.src = "";
-        caption.textContent = "";
-        return;
-      }
-      img.src = product.imageUrl;
-      caption.textContent = product.name;
-      wrapper.style.display = "block";
-    }
-
-    function updateLineSummary() {
-      const subtotal = calculateLineSubtotal();
-      document.getElementById("subtotal-linea").textContent = formatMoneyCRC(subtotal);
-    }
-
-    function updateCartUI() {
-      const tbody = document.getElementById("cart-body");
-      const totalEl = document.getElementById("cart-total");
-      tbody.innerHTML = "";
-      if (cart.length === 0) {
-        const tr = document.createElement("tr");
-        const td = document.createElement("td");
-        td.colSpan = 4;
-        td.className = "muted";
-        td.textContent = "Todavía no hay productos en el carrito.";
-        tr.appendChild(td);
-        tbody.appendChild(tr);
-      } else {
-        cart.forEach(item => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${item.productName}</td>
-            <td>${item.presentationLabel}</td>
-            <td>${item.quantity}</td>
-            <td>${formatMoneyCRC(item.lineTotal)}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      }
-
-      const total = getCartTotal();
-      totalEl.innerHTML = `
-        Total de la compra: <strong>${formatMoneyCRC(total)}</strong>
-        <span class="points-inline" id="cart-points"></span>
-      `;
-
-      const basePoints = calculatePointsForAmount(total);
-      const welcomeBonus = state.welcomeBonus || 0;
-      const orderPoints = basePoints + welcomeBonus;
-      state.pointsThisOrder = orderPoints;
-
-      const pointsText = total > 0
-        ? ` · Esta compra genera aprox. ${orderPoints} puntos.`
-        : "";
-      document.getElementById("cart-points").textContent = pointsText;
-
-      updateFinalSummary();
-      updatePointsInfoPanel();
-    }
-
-    /************************************************************
-     * BACKEND
-     ************************************************************/
-    async function fetchCustomerInfo(phone) {
-  const payload = { action: "getCustomerInfo", phone };
-  logEvent("fetch_customer_info", { phone });
-
-  try {
-    await fetch(CONFIG.SHEETS_ENDPOINT, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    // No podemos leer la respuesta en no-cors, así que devolvemos
-    // algo neutro: lo tratamos como cliente nuevo sin puntos previos.
-    return { success: false };
-  } catch (err) {
-    console.error("Error consultando info del cliente:", err);
-    return { success: false };
-  }
+/* ---------------------------------------------------------
+   UTILIDADES
+--------------------------------------------------------- */
+function formatCRC(v){ return "₡"+(v||0).toLocaleString("es-CR"); }
+function getSelectedProduct(){
+  return CONFIG.products.find(p=>p.id===state.currentProductId) || null;
+}
+function getSelectedPresentation(){
+  const p=getSelectedProduct();
+  return p ? p.presentations.find(x=>x.id===state.currentPresentationId) : null;
+}
+function calculateSubtotal(){
+  const pr=getSelectedPresentation();
+  if(!pr) return 0;
+  const kg = pr.grams /1000;
+  return Math.round(pr.pricePerKg * kg * state.currentQuantity);
 }
 
-    async function sendOrder() {
-  const statusEl = document.getElementById("status");
-  const nombreSeguro = (state.nombre || "").trim();
-  
-  statusEl.textContent =
-    `Hola ${nombreSeguro}, tu compra fue registrada correctamente. 🎉\n` +
-    `En breve te contactaremos por WhatsApp para confirmar los detalles.`;
 
-  const totalColones = getCartTotal();
-  const basePoints = calculatePointsForAmount(totalColones);
-  const totalPoints = basePoints + (state.welcomeBonus || 0);
-  state.pointsThisOrder = totalPoints;
+/* ---------------------------------------------------------
+   LOG (DESACTIVADO)
+--------------------------------------------------------- */
+const ENABLE_LOGS = false;
+function logEvent(event, data){
+  if(!ENABLE_LOGS) return;
+  fetch(CONFIG.SHEETS_ENDPOINT, {
+    method:"POST",
+    mode:"no-cors",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      action:"logEvent",
+      sessionId,
+      event,
+      timestamp:new Date(),
+      data:JSON.stringify(data||{})
+    })
+  });
+}
 
-  const cartLinesText = cart
-    .map(item => `${item.quantity} x ${item.productName} (${item.presentationLabel}) - ${formatMoneyCRC(item.lineTotal)}`)
+
+/* ---------------------------------------------------------
+   UI ENVÍO
+--------------------------------------------------------- */
+async function sendOrder(){
+  const statusEl=document.getElementById("status");
+  const nombreSeguro=(state.nombre||"").trim();
+
+  statusEl.textContent = `Enviando tu pedido, ${nombreSeguro}...`;
+
+  const total = cart.reduce((s,c)=>s+c.lineTotal,0);
+
+  const cartLines = cart
+    .map(i=>`${i.quantity} x ${i.productName} (${i.presentationLabel}) – ${formatCRC(i.lineTotal)}`)
     .join("\n");
 
-  const comentariosFinal =
-    (state.comentarios || "") +
-    (cartLinesText ? `\n\nDetalle del carrito:\n${cartLinesText}` : "");
-
   const payload = {
-    action: "saveOrder",
+    action:"saveOrder",
     sessionId,
-    productoId: "MULTIPLE",
-    presentacionId: "",
-    gramos: 0,
+    productoId:"MULTIPLE",
+    nombre:state.nombre,
+    telefono:state.telefono,
+    comentarios: state.comentarios + "\n" + cartLines,
     cantidad: cart.length,
-    totalColones,
-    nombre: state.nombre,
-    telefono: state.telefono,
-    comentarios: comentariosFinal,
-    isNewCustomer: state.isNewCustomer,
-    promoOptIn: state.promoOptIn,
-    pointsThisOrder: totalPoints
+    totalColones: total,
+    puntos: 0
   };
 
-  logEvent("send_order_attempt", { cart, totalColones });
-
-  try {
-    // NOTA: usamos mode: "no-cors" para evitar el bloqueo del navegador
-    await fetch(CONFIG.SHEETS_ENDPOINT, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+  try{
+    await fetch(CONFIG.SHEETS_ENDPOINT,{
+      method:"POST",
+      mode:"no-cors",
+      headers:{ "Content-Type":"application/json"},
+      body:JSON.stringify(payload)
     });
 
-    logEvent("send_order_success", { telefono: state.telefono, totalColones });
-
-    // Saludo personalizado (asumimos éxito si no hubo error de red)
     statusEl.textContent =
-      `Hola ${nombreSeguro}, tu compra fue registrada (si algo falla, te avisamos). 🎉\n` +
-      `Te contactaremos por WhatsApp para confirmar los detalles.`;
+      `Hola ${nombreSeguro}, tu compra fue registrada correctamente. 🎉\n`+
+      `Te contactaremos por WhatsApp para confirmar.`;
 
     const mensaje = encodeURIComponent(
-      `Hola Monte Alto, soy ${state.nombre} (${state.telefono}). Quiero pedir:\n` +
-      (cartLinesText ? cartLinesText + "\n" : "") +
-      `Total estimado: ${formatMoneyCRC(totalColones)}\n\n` +
-      `Comentarios: ${state.comentarios || "Ninguno"}`
+      `Hola Monte Alto, soy ${state.nombre} (${state.telefono}).\n`+
+      `Pedido:\n${cartLines}\n\nTotal estimado: ${formatCRC(total)}`
     );
 
-  const isMobile =
-    /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent);
-  
-  const waUrl = `https://wa.me/50660228322?text=${mensaje}`;
-  
-  if (isMobile) {
-    // Solo abre WhatsApp si es teléfono
-    window.open(waUrl, "_blank");
-  } else {
-    // Si es computadora, no abrimos WhatsApp automáticamente
-    statusEl.textContent +=
-      `\n\nComo estás usando una computadora, no se abrirá WhatsApp automáticamente. ` +
-      `Podés enviar el pedido desde tu teléfono cuando quieras.`;
-  }
-    
-  } catch (err) {
-    console.error("Error al enviar pedido:", err);
-    statusEl.textContent =
-      "Hubo un problema al enviar el pedido (error de red). Revisá tu conexión e intentá de nuevo.";
-    statusEl.classList.add("error");
-    logEvent("send_order_error", { error: String(err) });
+    const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent);
+    if(isMobile){
+      window.open(`https://wa.me/50660228322?text=${mensaje}`,"_blank");
+    } else {
+      statusEl.textContent +=
+        `\n\nNota: Estás en computadora, por eso no se abrió WhatsApp automáticamente.`;
+    }
+
+  }catch(e){
+    statusEl.textContent="Error al enviar el pedido.";
   }
 }
 
-    /************************************************************
-     * PUNTOS + RESÚMENES
-     ************************************************************/
-    function updatePointsInfoPanel() {
-      const panel = document.getElementById("points-info");
-      if (!state.telefono || cart.length === 0) {
-        panel.style.display = "none";
-        return;
-      }
 
-      const totalColones = getCartTotal();
-      const basePoints = calculatePointsForAmount(totalColones);
-      const welcomeBonus = state.welcomeBonus || 0;
-      const orderPoints = basePoints + welcomeBonus;
-      state.pointsThisOrder = orderPoints;
+/* ---------------------------------------------------------
+   SETUP
+--------------------------------------------------------- */
+function setup(){
+  const productoSelect = document.getElementById("producto");
+  CONFIG.products.forEach(p=>{
+    const o=document.createElement("option");
+    o.value=p.id;
+    o.textContent=p.name;
+    productoSelect.appendChild(o);
+  });
 
-      let msg = "";
-      if ((state.existingPoints || 0) === 0) {
-        msg += "¡Felicidades! Esta compra generará tus primeros puntos acumulables. ";
-      } else {
-        msg += `Actualmente llevás aproximadamente <strong>${state.existingPoints}</strong> puntos acumulados. `;
-      }
-      const totalAcumulado = (state.existingPoints || 0) + orderPoints;
-      msg += `Esta compra agregaría aproximadamente <strong>${orderPoints}</strong> puntos, para un total cercano a <strong>${totalAcumulado}</strong>.`;
+  document.getElementById("btn-ir-productos").onclick = ()=>{
+    const n=document.getElementById("nombre").value.trim();
+    const t=document.getElementById("telefono").value.trim();
+    const err=document.getElementById("datos-error");
 
-      panel.innerHTML = msg;
-      panel.style.display = "block";
+    if(!n){ err.textContent="Ingresá tu nombre."; return; }
+    if(!t || t.length<8){ err.textContent="Teléfono inválido."; return; }
+
+    state.nombre=n;
+    state.telefono=t;
+
+    document.getElementById("step-datos").classList.remove("active");
+    document.getElementById("step-producto").classList.add("active");
+  };
+
+  productoSelect.onchange = ()=>{
+    state.currentProductId = productoSelect.value;
+    const p = getSelectedProduct();
+
+    const imgWrap=document.getElementById("product-image-wrapper");
+    const img=document.getElementById("product-image");
+    const caption=document.getElementById("product-image-caption");
+
+    if(p){
+      img.src=p.imageUrl;
+      caption.textContent=p.name;
+      imgWrap.style.display="block";
+    } else {
+      imgWrap.style.display="none";
+      img.src="";
     }
 
-    function updateFinalSummary() {
-      const resumen = document.getElementById("resumen-final");
-      const totalColones = getCartTotal();
-      if (cart.length === 0) {
-        resumen.innerHTML = "<em>Agregá al menos un producto al carrito para ver el resumen de la compra.</em>";
-        return;
-      }
-
-      const basePoints = calculatePointsForAmount(totalColones);
-      const welcomeBonus = state.welcomeBonus || 0;
-      const orderPoints = basePoints + welcomeBonus;
-      const totalAcumulado = (state.existingPoints || 0) + orderPoints;
-
-      const lineas = cart
-        .map(item =>
-          `<li>${item.quantity} x <strong>${item.productName}</strong> (${item.presentationLabel}) – ${formatMoneyCRC(item.lineTotal)}</li>`
-        )
-        .join("");
-
-      const promoText =
-        state.isNewCustomer && state.promoOptIn === "SI"
-          ? `<li>Incluye <strong>10 puntos de bienvenida</strong> por aceptar promociones.</li>`
-          : "";
-
-      resumen.innerHTML = `
-        <p><strong>Resumen de tu compra:</strong></p>
-        <ul>${lineas}</ul>
-        <p><strong>Total:</strong> ${formatMoneyCRC(totalColones)}</p>
-        <p><strong>Puntos:</strong></p>
-        <ul>
-          <li>Puntos por esta compra: <strong>${orderPoints}</strong></li>
-          ${promoText}
-          <li>Puntos acumulados aproximados después de este pedido: <strong>${totalAcumulado}</strong></li>
-        </ul>
-      `;
-    }
-
-    /************************************************************
-     * EVENTOS UI
-     ************************************************************/
-    function setupEvents() {
-      const productoSelect = document.getElementById("producto");
-      const presentacionSelect = document.getElementById("presentacion");
-      const cantidadInput = document.getElementById("cantidad");
-      const nombreInput = document.getElementById("nombre");
-      const telefonoInput = document.getElementById("telefono");
-      const comentariosInput = document.getElementById("comentarios");
-      const datosError = document.getElementById("datos-error");
-
-      const btnIrProductos = document.getElementById("btn-ir-productos");
-      const btnAgregarCarrito = document.getElementById("btn-agregar-carrito");
-      const btnComprarYa = document.getElementById("btn-comprar-ya");
-      const btnVolverProductos = document.getElementById("btn-volver-productos");
-      const btnConfirmar = document.getElementById("btn-confirmar");
-      const promoWrapper = document.getElementById("promo-optin-wrapper");
-
-      btnIrProductos.addEventListener("click", () => {
-        datosError.textContent = "";
-        const nombre = nombreInput.value.trim();
-        const telefono = telefonoInput.value.trim();
-
-        if (!nombre) {
-          datosError.textContent = "Por favor ingresá tu nombre.";
-          return;
-        }
-        if (!telefono || telefono.length < 8) {
-          datosError.textContent = "Ingresá un teléfono válido (ej: 12345678).";
-          return;
-        }
-
-        state.nombre = nombre;
-        state.telefono = telefono;
-
-        // Cargar info del cliente y luego pasar a productos
-        fetchCustomerInfo(telefono).then(data => {
-          if (!data || !data.success) {
-            state.isNewCustomer = true;
-            state.existingPoints = 0;
-            state.promoOptIn = null;
-          } else {
-            state.isNewCustomer = !!data.isNewCustomer;
-            state.existingPoints = Number(data.points || 0);
-            state.promoOptIn = data.promoOptIn || null;
-          }
-
-          if (state.isNewCustomer) {
-            promoWrapper.style.display = "block";
-          } else {
-            promoWrapper.style.display = "none";
-          }
-
-          state.welcomeBonus =
-            state.isNewCustomer && state.promoOptIn === "SI" ? 10 : 0;
-
-          updatePointsInfoPanel();
-          enterStep("producto");
-        });
-      });
-
-      productoSelect.addEventListener("change", () => {
-        state.currentProductId = productoSelect.value || "";
-        logEvent("producto_change", { productoId: state.currentProductId });
-        populatePresentations();
-        updateProductImage();
-        state.currentPresentationId = "";
-        updateLineSummary();
-      });
-
-      presentacionSelect.addEventListener("change", () => {
-        state.currentPresentationId = presentacionSelect.value || "";
-        logEvent("presentacion_change", { presentacionId: state.currentPresentationId });
-        updateLineSummary();
-      });
-
-      cantidadInput.addEventListener("input", () => {
-        state.currentQuantity = Number(cantidadInput.value) || 1;
-        logEvent("cantidad_input", { cantidad: state.currentQuantity });
-        updateLineSummary();
-      });
-
-      function addCurrentSelectionToCart() {
-        const product = getSelectedProduct();
-        const presentation = getSelectedPresentation();
-        const qty = Number(state.currentQuantity) || 1;
-
-        if (!product || !presentation || qty <= 0) {
-          alert("Revisá que el producto, la presentación y la cantidad estén completos.");
-          return false;
-        }
-
-        const lineTotal = calculateLineSubtotal();
-        const item = {
-          productId: product.id,
-          productName: product.name,
-          presentationId: presentation.id,
-          presentationLabel: presentation.label,
-          grams: presentation.grams,
-          quantity: qty,
-          lineTotal
-        };
-
-        cart.push(item);
-        logEvent("cart_add_item", item);
-        updateCartUI();
-        return true;
-      }
-
-      btnAgregarCarrito.addEventListener("click", () => {
-        addCurrentSelectionToCart();
-      });
-
-      btnComprarYa.addEventListener("click", () => {
-        if (cart.length === 0) {
-          if (!addCurrentSelectionToCart()) return;
-        }
-        enterStep("cliente");
-        updateFinalSummary();
-        updatePointsInfoPanel();
-      });
-
-      btnVolverProductos.addEventListener("click", () => {
-        enterStep("producto");
-      });
-
-      document.querySelectorAll('input[name="promo_optin"]').forEach(radio => {
-        radio.addEventListener("change", () => {
-          state.promoOptIn = radio.value;
-          if (state.isNewCustomer && state.promoOptIn === "SI") {
-            state.welcomeBonus = 10;
-          } else {
-            state.welcomeBonus = 0;
-          }
-          logEvent("promo_optin_change", {
-            promoOptIn: state.promoOptIn,
-            welcomeBonus: state.welcomeBonus
-          });
-          updatePointsInfoPanel();
-          updateFinalSummary();
-        });
-      });
-
-      comentariosInput.addEventListener("input", () => {
-        state.comentarios = comentariosInput.value.trim();
-      });
-
-      btnConfirmar.addEventListener("click", async () => {
-        if (cart.length === 0) {
-          alert("Agregá al menos un producto al carrito antes de confirmar.");
-          return;
-        }
-        if (!state.nombre || !state.telefono) {
-          alert("Revisá que tus datos estén completos.");
-          enterStep("datos");
-          return;
-        }
-        if (state.isNewCustomer && state.promoOptIn === null) {
-          alert("Confirmá si querés o no recibir promociones por WhatsApp.");
-          return;
-        }
-
-        logEvent("send_order_click", {
-          nombre: state.nombre,
-          telefono: state.telefono,
-          totalColones: getCartTotal(),
-          cart,
-          promoOptIn: state.promoOptIn
-        });
-
-        await sendOrder();
+    const sel=document.getElementById("presentacion");
+    sel.innerHTML='<option value="">Selecciona la presentación...</option>';
+    if(p){
+      p.presentations.forEach(pr=>{
+        const o=document.createElement("option");
+        o.value=pr.id;
+        o.textContent=pr.label;
+        sel.appendChild(o);
       });
     }
+  };
 
-    /************************************************************
-     * START
-     ************************************************************/
-    window.addEventListener("load", () => {
-      populateProducts();
-      setupEvents();
-      logEvent("page_view", { url: location.href });
-      enterStep("datos");
-      updateLineSummary();
-      updateCartUI();
+  document.getElementById("presentacion").onchange = ()=>{
+    state.currentPresentationId = document.getElementById("presentacion").value;
+    document.getElementById("subtotal-linea").textContent =
+      formatCRC(calculateSubtotal());
+  };
+
+  document.getElementById("cantidad").oninput = ()=>{
+    state.currentQuantity = Number(document.getElementById("cantidad").value)||1;
+    document.getElementById("subtotal-linea").textContent =
+      formatCRC(calculateSubtotal());
+  };
+
+
+  /* ----- AGREGAR AL CARRITO ----- */
+  document.getElementById("btn-agregar-carrito").onclick = ()=>{
+    const p=getSelectedProduct();
+    const pr=getSelectedPresentation();
+    if(!p || !pr){
+      alert("Revisá producto y presentación.");
+      return;
+    }
+    const qty = state.currentQuantity;
+    const lineTotal = calculateSubtotal();
+
+    cart.push({
+      productId:p.id,
+      productName:p.name,
+      presentationId:pr.id,
+      presentationLabel:pr.label,
+      quantity:qty,
+      lineTotal
     });
-  </script>
+
+    updateCartTable();
+
+    // limpiar selecciones
+    state.currentProductId="";
+    state.currentPresentationId="";
+    state.currentQuantity=1;
+
+    document.getElementById("producto").value="";
+    document.getElementById("presentacion").innerHTML =
+      '<option value="">Selecciona la presentación...</option>';
+    document.getElementById("cantidad").value=1;
+    document.getElementById("product-image-wrapper").style.display="none";
+    document.getElementById("subtotal-linea").textContent="₡0";
+  };
+
+
+  /* ----- COMPRAR YA ----- */
+  document.getElementById("btn-comprar-ya").onclick = ()=>{
+    if(cart.length===0){
+      alert("Agregá algo al carrito.");
+      return;
+    }
+
+    document.getElementById("step-producto").classList.remove("active");
+    document.getElementById("step-cliente").classList.add("active");
+    updateResumenFinal();
+  };
+
+
+  /* ----- VOLVER ----- */
+  document.getElementById("btn-volver-productos").onclick = ()=>{
+    document.getElementById("step-cliente").classList.remove("active");
+    document.getElementById("step-producto").classList.add("active");
+  };
+
+
+  /* ----- CONFIRMAR ----- */
+  document.getElementById("btn-confirmar").onclick = ()=>{
+    state.comentarios=document.getElementById("comentarios").value.trim();
+    sendOrder();
+  };
+}
+
+
+/* ---------------------------------------------------------
+   ACTUALIZADORES DE UI
+--------------------------------------------------------- */
+function updateCartTable(){
+  const body=document.getElementById("cart-body");
+  body.innerHTML="";
+
+  if(cart.length===0){
+    body.innerHTML='<tr><td colspan="4" class="muted">Sin productos todavía.</td></tr>';
+    document.getElementById("cart-total").textContent="₡0";
+    return;
+  }
+
+  cart.forEach(i=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML =
+      `<td>${i.productName}</td>
+       <td>${i.presentationLabel}</td>
+       <td>${i.quantity}</td>
+       <td>${formatCRC(i.lineTotal)}</td>`;
+    body.appendChild(tr);
+  });
+
+  const total = cart.reduce((s,c)=>s+c.lineTotal,0);
+  document.getElementById("cart-total").textContent = formatCRC(total);
+}
+
+
+function updateResumenFinal(){
+  const total = cart.reduce((s,c)=>s+c.lineTotal,0);
+  const list = cart.map(i =>
+    `${i.quantity} x ${i.productName} (${i.presentationLabel}) – ${formatCRC(i.lineTotal)}`
+  ).join("<br>");
+
+  document.getElementById("resumen-final").innerHTML =
+    `<strong>Resumen de tu compra:</strong><br>${list}<br><br>
+     <strong>Total:</strong> ${formatCRC(total)}`;
+}
+
+
+/* ---------------------------------------------------------
+   INICIAR
+--------------------------------------------------------- */
+window.onload = ()=> setup();
+
+</script>
+
 </body>
 </html>
-
-
