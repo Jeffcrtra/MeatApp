@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Monte Alto – Calculadora de Embutidos 12:50</title>
+  <title>Monte Alto – Calculadora de Embutidos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
@@ -224,7 +224,7 @@
 </head>
 
 <body>
-  <h1>Monte Alto – Calculadora 12:50</h1>
+  <h1>Monte Alto – Calculadora 1:38</h1>
 
   <div class="card">
 
@@ -586,7 +586,7 @@ async function sendOrder() {
       comentarios: comentariosFinal,
       cantidad: cart.length,
       totalColones: totalColones,
-      puntos: 0, // más adelante puedes sumar puntos
+      puntos: 0,
       productoId: primerProducto,
       presentacionResumen: presentacionResumen,
       pesoTotalGramos: pesoTotalGramos,
@@ -606,7 +606,8 @@ async function sendOrder() {
     console.log("Respuesta HTTP de Apps Script:", res.status, res.statusText);
 
     if (!res.ok) {
-      statusEl.textContent = `Error enviando el pedido (HTTP ${res.status}). Revisá la URL del Apps Script.`;
+      statusEl.textContent =
+        `Error enviando el pedido (HTTP ${res.status}: ${res.statusText}). Verificá la URL del Apps Script.`;
       return;
     }
 
@@ -622,7 +623,8 @@ async function sendOrder() {
 
   } catch (err) {
     console.error("Error en sendOrder():", err);
-    statusEl.textContent = "Hubo un problema enviando tu pedido. Revisá tu conexión e intentá de nuevo.";
+    statusEl.textContent =
+      "Hubo un problema enviando tu pedido.\nDetalle técnico: " + (err && err.message ? err.message : String(err));
   }
 }
 
@@ -640,7 +642,7 @@ function setup(){
   CONFIG.products.forEach(p=>{
     const o=document.createElement("option");
     o.value=p.id;
-    o.textContent=p.name;  // sin peso
+    o.textContent=p.name;
     productoSelect.appendChild(o);
   });
 
@@ -657,7 +659,7 @@ function setup(){
     fetchPointsForPhone(telInput.value);
   });
 
-  // Código de descuento siempre en mayúsculas (valor también)
+  // Código de descuento siempre en mayúsculas
   discountInput.addEventListener("input", ()=>{
     discountInput.value = discountInput.value.toUpperCase();
   });
@@ -818,4 +820,3 @@ window.onload = ()=> setup();
 
 </body>
 </html>
-
