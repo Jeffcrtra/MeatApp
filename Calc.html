@@ -224,7 +224,7 @@
 </head>
 
 <body>
-  <h1>Monte Alto – Calculadora 1:49</h1>
+  <h1>Monte Alto – Calculadora</h1>
 
   <div class="card">
 
@@ -411,6 +411,15 @@ function calculateSubtotal(){
   return Math.round(p.pricePerKg * kg * state.currentQuantity);
 }
 
+/** Próximo sábado (incluye hoy si hoy es sábado) */
+function getNextSaturday(fromDate = new Date()){
+  const d = new Date(fromDate);
+  const day = d.getDay(); // 0=dom, 6=sáb
+  const diff = (6 - day + 7) % 7;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
 
 /* ---------------------------------------------------------
    LOG (DESACTIVADO)
@@ -420,7 +429,6 @@ function logEvent(event, data){
   if(!ENABLE_LOGS) return;
   fetch(CONFIG.SHEETS_ENDPOINT, {
     method:"POST",
-    mode:"no-cors",
     headers:{ "Content-Type":"text/plain;charset=utf-8" },
     body:JSON.stringify({
       action:"logEvent",
@@ -445,6 +453,8 @@ async function fetchPointsForPhone(phone){
     return;
   }
 
+  console.log("Buscando puntos para teléfono:", clean);
+
   try {
     const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
       method:"POST",
@@ -462,6 +472,8 @@ async function fetchPointsForPhone(phone){
     }
 
     const data = await res.json();
+    console.log("Respuesta getPoints:", data);
+
     if (data.success) {
       const pts = Number(data.points || 0);
       if (pts > 0) {
@@ -611,6 +623,7 @@ async function sendOrder() {
       return;
     }
 
+    // Leer respuesta por si queremos debug
     let textoRespuesta;
     try {
       textoRespuesta = await res.text();
@@ -619,7 +632,31 @@ async function sendOrder() {
       console.warn("No se pudo leer el cuerpo de la respuesta:", e);
     }
 
-    statusEl.textContent = `¡Pedido enviado con éxito! Gracias, ${nombreSeguro}.`;
+    // ---- MENSAJE AMIGABLE CON RESUMEN Y FECHA DE ENTREGA ----
+    const resumenHtml = cart
+      .map(item =>
+        `${item.quantity} x ${item.productName} (${item.packLabel}) – ${formatCRC(item.lineTotal)}`
+      )
+      .join("<br>");
+
+    const entregaDate = getNextSaturday(new Date());
+    const entregaStr = entregaDate.toLocaleDateString("es-CR", {
+      weekday: "long",
+      day: "numeric",
+      month: "long"
+    });
+
+    statusEl.innerHTML =
+      `¡Gracias por tu compra, ${nombreSeguro}! 🧡<br><br>` +
+      `<strong>Resumen de tu pedido:</strong><br>` +
+      `${resumenHtml}<br><br>` +
+      `<strong>Total:</strong> ${formatCRC(totalColones)}<br>` +
+      `<strong>Fecha estimada de entrega:</strong> ${entregaStr}`;
+
+    // Limpiar carrito y UI
+    cart = [];
+    updateCartUI();
+    document.getElementById("resumen-final").innerHTML = "";
 
   } catch (err) {
     console.error("Error en sendOrder():", err);
