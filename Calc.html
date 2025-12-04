@@ -52,6 +52,17 @@
       cursor: pointer;
       border: none;
       font-weight: 600;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+      transition:
+        transform 0.08s ease-out,
+        box-shadow 0.08s ease-out,
+        background-color 0.15s ease-out;
+    }
+
+    /* push-down animation */
+    button:active {
+      transform: scale(0.97) translateY(1px);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
     }
 
     button.primary {
@@ -64,6 +75,7 @@
       color: white;
     }
 
+    /* BOTÓN AMARILLO */
     #btn-agregar-carrito {
       background: #fbbf24;
       color: #111827;
@@ -114,8 +126,22 @@
 
     .error-text { color:#fecaca; font-size:0.9rem; min-height:1em; }
 
-    #status { white-space:pre-line; margin-top:0.75rem; }
+    #status {
+      white-space:pre-line;
+      margin-top:0.75rem;
+      font-size:0.9rem;
+    }
 
+    /* cajita especial para mensaje de éxito */
+    #status.status-box-success {
+      background:#022c22;
+      border:1px solid #10b981;
+      padding:0.75rem;
+      border-radius:0.5rem;
+      color:#d1fae5;
+    }
+
+    /* ICONO CARRITO */
     #cart-icon {
       position:absolute;
       top:0.75rem;
@@ -145,6 +171,7 @@
       text-align:center;
     }
 
+    /* DRAWER DEL CARRITO */
     .cart-backdrop {
       position:fixed;
       inset:0;
@@ -167,7 +194,9 @@
       flex-direction:column;
       padding:1rem;
     }
-    .cart-drawer.open { right:0; }
+    .cart-drawer.open {
+      right:0;
+    }
 
     .cart-drawer-header {
       display:flex;
@@ -187,6 +216,11 @@
       font-size:1.2rem;
       padding:0.1rem 0.3rem;
       cursor:pointer;
+      box-shadow:none;
+    }
+    .icon-button:active {
+      transform:scale(0.9);
+      box-shadow:none;
     }
 
     .cart-drawer-body {
@@ -198,27 +232,61 @@
       padding:0.5rem 0;
     }
 
-    .cart-item-row { margin-bottom:0.5rem; }
+    .cart-item-row {
+      margin-bottom:0.5rem;
+    }
 
-    .cart-drawer-footer { margin-top:0.75rem; }
+    .cart-drawer-footer {
+      margin-top:0.75rem;
+    }
 
-    .w-full { width:100%; }
+    .w-full {
+      width:100%;
+    }
 
     #discount-code {
       text-transform:uppercase;
+    }
+
+    .promo-box {
+      margin-top:0.75rem;
+      padding-top:0.5rem;
+      border-top:1px dashed #374151;
+      font-size:0.85rem;
+    }
+
+    .promo-box label {
+      display:flex;
+      align-items:center;
+      gap:0.4rem;
+      margin-bottom:0.4rem;
+    }
+
+    .promo-box input[type="checkbox"] {
+      width:auto;
+      margin-bottom:0;
+    }
+
+    .promo-box input[type="email"] {
+      font-size:0.85rem;
+      padding:0.4rem 0.6rem;
+      margin-bottom:0.25rem;
     }
   </style>
 </head>
 
 <body>
-  <h1>Monte Alto – Calculadora  3:15</h1>
+  <h1>Monte Alto – Calculadora  3:27</h1>
 
   <div class="card">
+
+    <!-- ICONO CARRITO -->
     <div id="cart-icon">
       <span class="cart-emoji">🛒</span>
       <span id="cart-count">0</span>
     </div>
 
+    <!-- PASO 1: DATOS -->
     <div id="step-datos" class="step active">
       <h3>Paso 1 · Tus datos</h3>
 
@@ -240,6 +308,7 @@
       <button id="btn-ir-productos" class="primary">Continuar</button>
     </div>
 
+    <!-- PASO 2: PRODUCTOS -->
     <div id="step-producto" class="step">
       <h3>Paso 2 · Escogé tu chorizo</h3>
 
@@ -269,6 +338,7 @@
       <button id="btn-comprar-ya" class="primary">Comprar de una vez</button>
     </div>
 
+    <!-- PASO 3: CONFIRMAR -->
     <div id="step-cliente" class="step">
       <h3>Paso 3 · Confirmación del pedido</h3>
 
@@ -284,10 +354,14 @@
       <button id="btn-confirmar" class="primary">Confirmar pedido</button>
 
       <div id="status" class="muted"></div>
+      <button id="btn-nuevo-pedido" class="secondary" style="margin-top:0.75rem; display:none;">
+        Hacer otro pedido
+      </button>
     </div>
 
   </div>
 
+  <!-- BACKDROP + DRAWER DEL CARRITO -->
   <div id="cart-backdrop" class="cart-backdrop"></div>
 
   <div id="cart-drawer" class="cart-drawer">
@@ -300,30 +374,59 @@
     </div>
     <div class="cart-drawer-footer">
       <div class="muted">Total: <strong id="cart-drawer-total">₡0</strong></div>
+
+      <div class="promo-box">
+        <label>
+          <input type="checkbox" id="chk-promos" />
+          <span>Quiero recibir promociones y novedades.</span>
+        </label>
+        <input
+          type="email"
+          id="promo-email"
+          placeholder="Correo electrónico (opcional)"
+        />
+        <div class="muted">
+          Si no ponés correo, usaremos tu número de teléfono para avisos por WhatsApp.
+        </div>
+      </div>
+
       <button id="btn-go-confirm" class="primary w-full" style="margin-top:0.5rem;">
         Ir a confirmar pedido
       </button>
     </div>
   </div>
 
+  <!-- LIBRERÍA DE CONFETTI -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
 <script>
+/* ---------------------------------------------------------
+   CONFIG
+--------------------------------------------------------- */
 const CONFIG = {
   SHEETS_ENDPOINT:
     "https://script.google.com/macros/s/AKfycby9Y5YlZPbttjxy85uL1zguMmd4G3sOEIlirbTozvGcYLl837cfgZKhZ1u4MQeSEja4/exec",
+
   POINTS_PER_1000: 10,
+
   products: [
-    { id: "brat",  name: "Chorizo Bratwurst",   imageUrl: "Bratwurst.png",  pricePerKg: 7800 },
-    { id: "tex",   name: "Chorizo Tex-Mex",     imageUrl: "Tex-Mex.png",    pricePerKg: 7900 },
-    { id: "criollo", name: "Criollo argentino", imageUrl: "Argentino.png",  pricePerKg: 8000 },
-    { id: "carib", name: "Chorizo Caribeño",    imageUrl: "Caribeño.png",   pricePerKg: 7900 },
-    { id: "tico",  name: "Costarricense casero",imageUrl: "Criollo.png",    pricePerKg: 7800 }
+    { id: "brat",   name: "Chorizo Bratwurst",    imageUrl: "Bratwurst.png",  pricePerKg: 7800 },
+    { id: "tex",    name: "Chorizo Tex-Mex",      imageUrl: "Tex-Mex.png",    pricePerKg: 7900 },
+    { id: "criollo",name: "Criollo argentino",    imageUrl: "Argentino.png",  pricePerKg: 8000 },
+    { id: "carib",  name: "Chorizo Caribeño",     imageUrl: "Caribeño.png",   pricePerKg: 7900 },
+    { id: "tico",   name: "Costarricense casero", imageUrl: "Criollo.png",    pricePerKg: 7800 }
   ],
+
   weights: [
     { id: "500",  grams: 500,  label: "½ kilo (500g)" },
     { id: "1000", grams: 1000, label: "1 kilo (1000g)" }
   ]
 };
 
+
+/* ---------------------------------------------------------
+   ESTADO
+--------------------------------------------------------- */
 let sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 let cart = [];
 
@@ -335,15 +438,24 @@ const state = {
   currentProductId:"",
   currentWeightId:"",
   currentQuantity:1,
+  wantsPromos:false,
+  promoEmail:""
 };
 
+
+/* ---------------------------------------------------------
+   UTILIDADES
+--------------------------------------------------------- */
 function formatCRC(v){ return "₡"+(v||0).toLocaleString("es-CR"); }
+
 function getSelectedProduct(){
   return CONFIG.products.find(p=>p.id===state.currentProductId) || null;
 }
+
 function getSelectedWeight(){
   return CONFIG.weights.find(w=>w.id===state.currentWeightId) || null;
 }
+
 function calculateSubtotal(){
   const p=getSelectedProduct();
   const w=getSelectedWeight();
@@ -351,14 +463,52 @@ function calculateSubtotal(){
   const kg = w.grams /1000;
   return Math.round(p.pricePerKg * kg * state.currentQuantity);
 }
+
+/** Próximo sábado (incluye hoy si hoy es sábado) */
 function getNextSaturday(fromDate = new Date()){
   const d = new Date(fromDate);
-  const day = d.getDay();
+  const day = d.getDay(); // 0=dom, 6=sáb
   const diff = (6 - day + 7) % 7;
   d.setDate(d.getDate() + diff);
   return d;
 }
 
+
+/* ---------------------------------------------------------
+   CONFETTI
+--------------------------------------------------------- */
+function burstConfettiSmallFromElement(el) {
+  if (typeof confetti !== "function" || !el) return;
+
+  const rect = el.getBoundingClientRect();
+  const x = (rect.left + rect.width / 2) / window.innerWidth;
+  const y = (rect.top + rect.height / 2) / window.innerHeight;
+
+  confetti({
+    particleCount: 25,
+    spread: 45,
+    startVelocity: 35,
+    scalar: 0.7,
+    origin: { x, y }
+  });
+}
+
+function burstConfettiBigCenter() {
+  if (typeof confetti !== "function") return;
+
+  confetti({
+    particleCount: 90,
+    spread: 70,
+    startVelocity: 40,
+    scalar: 1.1,
+    origin: { x: 0.5, y: 0.5 }
+  });
+}
+
+
+/* ---------------------------------------------------------
+   LOG (DESACTIVADO)
+--------------------------------------------------------- */
 const ENABLE_LOGS = false;
 function logEvent(event, data){
   if(!ENABLE_LOGS) return;
@@ -375,9 +525,14 @@ function logEvent(event, data){
   });
 }
 
+
+/* ---------------------------------------------------------
+   CONSULTA DE PUNTOS POR TELÉFONO
+--------------------------------------------------------- */
 async function fetchPointsForPhone(phone){
   const infoEl = document.getElementById("puntos-info");
   const clean = (phone || "").trim();
+
   if (clean.length < 8) {
     infoEl.textContent = "";
     return;
@@ -387,7 +542,10 @@ async function fetchPointsForPhone(phone){
     const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
       method:"POST",
       headers:{ "Content-Type":"text/plain;charset=utf-8" },
-      body: JSON.stringify({ action:"getPoints", telefono: clean })
+      body: JSON.stringify({
+        action:"getPoints",
+        telefono: clean
+      })
     });
 
     if(!res.ok){
@@ -397,6 +555,7 @@ async function fetchPointsForPhone(phone){
     }
 
     const data = await res.json();
+
     if (data.success) {
       const pts = Number(data.points || 0);
       if (pts > 0) {
@@ -413,6 +572,10 @@ async function fetchPointsForPhone(phone){
   }
 }
 
+
+/* ---------------------------------------------------------
+   DRAWER DEL CARRITO
+--------------------------------------------------------- */
 function openCartDrawer(){
   if(cart.length===0){
     alert("Tu carrito está vacío.");
@@ -421,6 +584,7 @@ function openCartDrawer(){
   document.getElementById("cart-drawer").classList.add("open");
   document.getElementById("cart-backdrop").style.display = "block";
 }
+
 function closeCartDrawer(){
   document.getElementById("cart-drawer").classList.remove("open");
   document.getElementById("cart-backdrop").style.display = "none";
@@ -454,8 +618,44 @@ function updateCartUI(){
   totalEl.textContent = formatCRC(total);
 }
 
+
+/* ---------------------------------------------------------
+   SUSCRIPCIÓN A PROMOS
+--------------------------------------------------------- */
+async function sendPromoSubscriptionIfNeeded(){
+  if (!state.wantsPromos) return;
+
+  const telefono = (state.telefono || "").trim();
+  const email    = (state.promoEmail || "").trim();
+
+  if (!telefono && !email) return; // nada que suscribir
+
+  try {
+    await fetch(CONFIG.SHEETS_ENDPOINT, {
+      method:"POST",
+      headers:{ "Content-Type":"text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "subscribePromo",
+        nombre: state.nombre || "",
+        telefono,
+        email
+      })
+    });
+  } catch (err) {
+    console.error("Error al suscribir a promos:", err);
+  }
+}
+
+
+/* ---------------------------------------------------------
+   UI ENVÍO
+--------------------------------------------------------- */
 async function sendOrder() {
   const statusEl = document.getElementById("status");
+  const btnNuevo = document.getElementById("btn-nuevo-pedido");
+  statusEl.classList.remove("status-box-success");
+  btnNuevo.style.display = "none";
+
   const nombreSeguro = ((state && state.nombre) || "").trim() || "cliente";
 
   try {
@@ -466,18 +666,34 @@ async function sendOrder() {
 
     statusEl.textContent = `Enviando tu pedido, ${nombreSeguro}...`;
 
-    const totalColones = cart.reduce((suma, item) => suma + Number(item.lineTotal || 0), 0);
+    const totalColones = cart.reduce((suma, item) => {
+      const lineTotal = Number(item.lineTotal || 0);
+      return suma + lineTotal;
+    }, 0);
 
     const cartLines = cart
-      .map(item => `${item.quantity} x ${item.productName} (${item.packLabel}) – ${formatCRC(item.lineTotal)}`)
+      .map(item => {
+        const qty = item.quantity ?? 0;
+        const name = item.productName ?? "Producto";
+        const pack = item.packLabel ?? "";
+        const lineTotal = Number(item.lineTotal || 0);
+        return `${qty} x ${name} (${pack}) – ${formatCRC(lineTotal)}`;
+      })
       .join("\n");
 
     const presentacionResumen = cart
-      .map(item => `${item.quantity} x ${item.packLabel}`)
+      .map(item => {
+        const qty = item.quantity ?? 0;
+        const pack = item.packLabel ?? "";
+        return `${qty} x ${pack}`;
+      })
       .join(", ");
 
-    const pesoTotalGramos = cart.reduce((suma, item) =>
-      suma + Number(item.grams || 0) * Number(item.quantity || 0), 0);
+    const pesoTotalGramos = cart.reduce((suma, item) => {
+      const g = Number(item.grams || 0);
+      const q = Number(item.quantity || 0);
+      return suma + g * q;
+    }, 0);
 
     const primerProducto = cart[0]?.productName || "Calculadora Monte Alto";
 
@@ -489,22 +705,24 @@ async function sendOrder() {
 
     const payload = {
       action: "saveOrder",
-      sessionId,
+      sessionId: sessionId,
       nombre: state.nombre || "",
       telefono: state.telefono || "",
       comentarios: comentariosFinal,
       cantidad: cart.length,
-      totalColones,
+      totalColones: totalColones,
       puntos: 0,
       productoId: primerProducto,
-      presentacionResumen,
-      pesoTotalGramos,
+      presentacionResumen: presentacionResumen,
+      pesoTotalGramos: pesoTotalGramos,
       discountCode: state.discountCode || ""
     };
 
     const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
       method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
       body: JSON.stringify(payload)
     });
 
@@ -516,13 +734,20 @@ async function sendOrder() {
 
     try { await res.text(); } catch(e){}
 
+    // Confetti grande al éxito
+    burstConfettiBigCenter();
+
     const resumenHtml = cart
-      .map(item => `${item.quantity} x ${item.productName} (${item.packLabel}) – ${formatCRC(item.lineTotal)}`)
+      .map(item =>
+        `${item.quantity} x ${item.productName} (${item.packLabel}) – ${formatCRC(item.lineTotal)}`
+      )
       .join("<br>");
 
     const entregaDate = getNextSaturday(new Date());
     const entregaStr = entregaDate.toLocaleDateString("es-CR", {
-      weekday: "long", day: "numeric", month: "long"
+      weekday: "long",
+      day: "numeric",
+      month: "long"
     });
 
     statusEl.innerHTML =
@@ -532,6 +757,13 @@ async function sendOrder() {
       `<strong>Total:</strong> ${formatCRC(totalColones)}<br>` +
       `<strong>Fecha estimada de entrega:</strong> ${entregaStr}`;
 
+    statusEl.classList.add("status-box-success");
+    btnNuevo.style.display = "inline-block";
+
+    // Enviar suscripción a promos si aplica (no detiene el flujo aunque falle)
+    sendPromoSubscriptionIfNeeded();
+
+    // Limpiar carrito y UI de resumen
     cart = [];
     updateCartUI();
     document.getElementById("resumen-final").innerHTML = "";
@@ -543,12 +775,68 @@ async function sendOrder() {
   }
 }
 
+
+/* ---------------------------------------------------------
+   RESET COMPLETO PARA NUEVO PEDIDO
+--------------------------------------------------------- */
+function resetForNewOrder(){
+  // nuevo sessionId
+  sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+  // reset estado
+  state.nombre = "";
+  state.telefono = "";
+  state.comentarios = "";
+  state.discountCode = "";
+  state.currentProductId = "";
+  state.currentWeightId = "";
+  state.currentQuantity = 1;
+  state.wantsPromos = false;
+  state.promoEmail = "";
+
+  cart = [];
+  updateCartUI();
+
+  // reset inputs
+  document.getElementById("nombre").value = "";
+  document.getElementById("telefono").value = "";
+  document.getElementById("comentarios").value = "";
+  document.getElementById("discount-code").value = "";
+  document.getElementById("datos-error").textContent = "";
+  document.getElementById("puntos-info").textContent = "";
+  document.getElementById("subtotal-linea").textContent = "₡0";
+  document.getElementById("producto").value = "";
+  document.getElementById("peso").value = "";
+  document.getElementById("cantidad").value = 1;
+  document.getElementById("product-image-wrapper").style.display = "none";
+
+  document.getElementById("status").textContent = "";
+  document.getElementById("status").classList.remove("status-box-success");
+  document.getElementById("btn-nuevo-pedido").style.display = "none";
+
+  document.getElementById("chk-promos").checked = false;
+  document.getElementById("promo-email").value = "";
+
+  // volver al paso 1
+  document.getElementById("step-datos").classList.add("active");
+  document.getElementById("step-producto").classList.remove("active");
+  document.getElementById("step-cliente").classList.remove("active");
+}
+
+
+/* ---------------------------------------------------------
+   SETUP
+--------------------------------------------------------- */
 function setup(){
   const productoSelect = document.getElementById("producto");
   const pesoSelect = document.getElementById("peso");
   const telInput = document.getElementById("telefono");
   const discountInput = document.getElementById("discount-code");
+  const chkPromos = document.getElementById("chk-promos");
+  const promoEmailInput = document.getElementById("promo-email");
+  const btnNuevo = document.getElementById("btn-nuevo-pedido");
 
+  // Poblar productos
   CONFIG.products.forEach(p=>{
     const o=document.createElement("option");
     o.value=p.id;
@@ -556,6 +844,7 @@ function setup(){
     productoSelect.appendChild(o);
   });
 
+  // Poblar pesos
   CONFIG.weights.forEach(w=>{
     const o=document.createElement("option");
     o.value=w.id;
@@ -563,10 +852,11 @@ function setup(){
     pesoSelect.appendChild(o);
   });
 
+  // Teléfono -> buscar puntos automáticamente al tener 8 dígitos
   let lastPointsPhone = "";
   telInput.addEventListener("input", ()=> {
     const raw   = telInput.value || "";
-    const clean = raw.replace(/\D/g,"").trim();
+    const clean = raw.replace(/\D/g,"").trim(); // solo dígitos
 
     if (clean.length >= 8 && clean !== lastPointsPhone) {
       lastPointsPhone = clean;
@@ -577,10 +867,20 @@ function setup(){
     }
   });
 
+  // Código de descuento siempre en mayúsculas
   discountInput.addEventListener("input", ()=>{
     discountInput.value = discountInput.value.toUpperCase();
   });
 
+  // Promos
+  chkPromos.addEventListener("change", ()=>{
+    state.wantsPromos = chkPromos.checked;
+  });
+  promoEmailInput.addEventListener("input", ()=>{
+    state.promoEmail = promoEmailInput.value.trim();
+  });
+
+  // Paso 1 -> Paso 2
   document.getElementById("btn-ir-productos").onclick = ()=>{
     const n=document.getElementById("nombre").value.trim();
     const t=telInput.value.trim();
@@ -629,7 +929,10 @@ function setup(){
       formatCRC(calculateSubtotal());
   };
 
-  document.getElementById("btn-agregar-carrito").onclick = ()=>{
+
+  /* ----- AGREGAR AL CARRITO ----- */
+  const btnAgregar = document.getElementById("btn-agregar-carrito");
+  btnAgregar.onclick = ()=>{
     const p=getSelectedProduct();
     const w=getSelectedWeight();
     if(!p || !w){
@@ -650,6 +953,10 @@ function setup(){
 
     updateCartUI();
 
+    // confetti pequeño en agregar al carrito
+    burstConfettiSmallFromElement(btnAgregar);
+
+    // limpiar selecciones
     state.currentProductId="";
     state.currentWeightId="";
     state.currentQuantity=1;
@@ -661,27 +968,38 @@ function setup(){
     document.getElementById("subtotal-linea").textContent="₡0";
   };
 
+
+  /* ----- COMPRAR YA ----- */
   document.getElementById("btn-comprar-ya").onclick = ()=>{
     if(cart.length===0){
       alert("Agregá algo al carrito.");
       return;
     }
+
     document.getElementById("step-producto").classList.remove("active");
     document.getElementById("step-cliente").classList.add("active");
     updateResumenFinal();
   };
 
+
+  /* ----- VOLVER ----- */
   document.getElementById("btn-volver-productos").onclick = ()=>{
     document.getElementById("step-cliente").classList.remove("active");
     document.getElementById("step-producto").classList.add("active");
   };
 
+
+  /* ----- CONFIRMAR ----- */
   document.getElementById("btn-confirmar").onclick = ()=>{
     state.comentarios = document.getElementById("comentarios").value.trim();
     state.discountCode = document.getElementById("discount-code").value.trim().toUpperCase();
     sendOrder();
   };
 
+  /* ----- NUEVO PEDIDO ----- */
+  btnNuevo.onclick = resetForNewOrder;
+
+  /* ----- ICONO CARRITO + DRAWER ----- */
   document.getElementById("cart-icon").onclick = openCartDrawer;
   document.getElementById("cart-backdrop").onclick = closeCartDrawer;
   document.getElementById("btn-cart-close").onclick = closeCartDrawer;
@@ -697,9 +1015,14 @@ function setup(){
     updateResumenFinal();
   };
 
+  // iniciar carrito vacío en UI
   updateCartUI();
 }
 
+
+/* ---------------------------------------------------------
+   RESUMEN FINAL
+--------------------------------------------------------- */
 function updateResumenFinal(){
   const total = cart.reduce((s,c)=>s+c.lineTotal,0);
   const list = cart.map(i =>
@@ -711,7 +1034,13 @@ function updateResumenFinal(){
      <strong>Total:</strong> ${formatCRC(total)}`;
 }
 
+
+/* ---------------------------------------------------------
+   INICIAR
+--------------------------------------------------------- */
 window.onload = ()=> setup();
+
 </script>
+
 </body>
 </html>
