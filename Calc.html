@@ -265,11 +265,19 @@
     #discount-code {
       text-transform:uppercase;
     }
+
+    /* Caja de debug para los valores Z1–AC1 */
+    #server-config {
+      max-width: 680px;
+      margin: 0.75rem auto 0;
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
   </style>
 </head>
 
 <body>
-  <h1>Monte Alto – Calculadora 5:04</h1>
+  <h1>Monte Alto – Calculadora 5:18</h1>
 
   <div class="card">
 
@@ -368,6 +376,11 @@
 
   </div>
 
+  <!-- Caja de debug: aquí mostraremos Z1–AC1 -->
+  <div id="server-config" class="summary-box muted">
+    Cargando configuración desde Google Sheets...
+  </div>
+
   <div id="cart-backdrop" class="cart-backdrop"></div>
 
   <div id="cart-drawer" class="cart-drawer">
@@ -410,8 +423,8 @@ const CONFIG = {
 };
 
 /* <<< AQUÍ EDITÁS LOS PRECIOS POR GRAMO >>> */
-const PRICE_PER_GRAM_CHORIZO = 8.5;  // colones por gramo
-const PRICE_PER_GRAM_BACON   = 11.0; // colones por gramo
+const PRICE_PER_GRAM_CHORIZO = 7.8;  // colones por gramo
+const PRICE_PER_GRAM_BACON   = 12.0; // colones por gramo
 
 /* ===================== ESTADO ===================== */
 let sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -533,6 +546,41 @@ async function fetchPointsForPhone(phone){
   } catch (err){
     console.error("Error en fetchPointsForPhone:", err);
     infoEl.textContent = "";
+  }
+}
+
+/* ===================== PRUEBA: GET CONFIG Z1–AC1 ===================== */
+async function loadConfigFromSheet(){
+  const box = document.getElementById("server-config");
+  try {
+    const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
+      method:"POST",
+      headers:{ "Content-Type":"text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "getConfig" })
+    });
+
+    if(!res.ok){
+      box.textContent = "No se pudo leer configuración (HTTP " + res.status + ").";
+      console.warn("Error HTTP getConfig:", res.status, res.statusText);
+      return;
+    }
+
+    const data = await res.json();
+    console.log("Config recibida de Sheets:", data);
+
+    if (data.success) {
+      box.innerHTML =
+        `<strong>Config GS (prueba):</strong><br>` +
+        `Z1: <code>${data.Z1 ?? ""}</code><br>` +
+        `AA1: <code>${data.AA1 ?? ""}</code><br>` +
+        `AB1: <code>${data.AB1 ?? ""}</code><br>` +
+        `AC1: <code>${data.AC1 ?? ""}</code>`;
+    } else {
+      box.textContent = "getConfig respondió sin éxito: " + (data.message || "");
+    }
+  } catch (err) {
+    console.error("Error en loadConfigFromSheet:", err);
+    box.textContent = "Error leyendo configuración: " + err;
   }
 }
 
@@ -904,6 +952,7 @@ function setup(){
   };
 
   updateCartUI();
+  loadConfigFromSheet();   // ← AQUÍ PROBAMOS Z1–AC1
 }
 
 function updateResumenFinal(){
@@ -921,5 +970,3 @@ window.onload = ()=> setup();
 
 </body>
 </html>
-
-
