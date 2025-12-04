@@ -158,6 +158,7 @@
       </div>
 
       <div id="datos-error" class="error-text"></div>
+      <div id="puntos-info" class="muted"></div>
 
       <button id="btn-ir-productos" class="primary">Continuar</button>
     </div>
@@ -175,6 +176,11 @@
         <img id="product-image" src="" />
         <div class="muted" id="product-image-caption"></div>
       </div>
+
+      <label>Peso por paquete</label>
+      <select id="peso">
+        <option value="">Selecciona el peso...</option>
+      </select>
 
       <label>Número de paquetes</label>
       <input id="cantidad" type="number" min="1" value="1"/>
@@ -232,49 +238,42 @@ const CONFIG = {
 
   POINTS_PER_1000: 10,
 
-  // Asumo que la forma más popular es ½ kilo (500g)
-  // Si querés 1 kilo, cambiá grams:1000 y el packLabel.
   products: [
     {
       id: "brat",
       name: "Chorizo Bratwurst",
       imageUrl: "Bratwurst.png",
-      grams: 500,
-      pricePerKg: 7800,
-      packLabel: "½ kilo (500g)"
+      pricePerKg: 7800
     },
     {
       id: "tex",
       name: "Chorizo Tex-Mex",
       imageUrl: "Tex-Mex.png",
-      grams: 500,
-      pricePerKg: 7900,
-      packLabel: "½ kilo (500g)"
+      pricePerKg: 7900
     },
     {
       id: "criollo",
       name: "Criollo argentino",
       imageUrl: "Argentino.png",
-      grams: 500,
-      pricePerKg: 8000,
-      packLabel: "½ kilo (500g)"
+      pricePerKg: 8000
     },
     {
       id: "carib",
       name: "Chorizo Caribeño",
       imageUrl: "Caribeño.png",
-      grams: 500,
-      pricePerKg: 7900,
-      packLabel: "½ kilo (500g)"
+      pricePerKg: 7900
     },
     {
       id: "tico",
       name: "Costarricense casero",
       imageUrl: "Criollo.png",
-      grams: 500,
-      pricePerKg: 7800,
-      packLabel: "½ kilo (500g)"
+      pricePerKg: 7800
     }
+  ],
+
+  weights: [
+    { id: "500",  grams: 500,  label: "½ kilo (500g)" },
+    { id: "1000", grams: 1000, label: "1 kilo (1000g)" }
   ]
 };
 
@@ -290,6 +289,7 @@ const state = {
   telefono:"",
   comentarios:"",
   currentProductId:"",
+  currentWeightId:"",
   currentQuantity:1,
 };
 
@@ -301,10 +301,14 @@ function formatCRC(v){ return "₡"+(v||0).toLocaleString("es-CR"); }
 function getSelectedProduct(){
   return CONFIG.products.find(p=>p.id===state.currentProductId) || null;
 }
+function getSelectedWeight(){
+  return CONFIG.weights.find(w=>w.id===state.currentWeightId) || null;
+}
 function calculateSubtotal(){
   const p=getSelectedProduct();
-  if(!p) return 0;
-  const kg = p.grams /1000;
+  const w=getSelectedWeight();
+  if(!p || !w) return 0;
+  const kg = w.grams /1000;
   return Math.round(p.pricePerKg * kg * state.currentQuantity);
 }
 
@@ -327,6 +331,52 @@ function logEvent(event, data){
       data:JSON.stringify(data||{})
     })
   });
+}
+
+
+/* ---------------------------------------------------------
+   CONSULTA DE PUNTOS POR TELÉFONO
+--------------------------------------------------------- */
+async function fetchPointsForPhone(phone){
+  const infoEl = document.getElementById("puntos-info");
+  const clean = (phone || "").trim();
+
+  if (clean.length < 8) {
+    infoEl.textContent = "";
+    return;
+  }
+
+  try {
+    const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({
+        action:"getPoints",
+        telefono: clean
+      })
+    });
+
+    if(!res.ok){
+      console.warn("Error HTTP getPoints:", res.status, res.statusText);
+      infoEl.textContent = "";
+      return;
+    }
+
+    const data = await res.json();
+    if (data.success) {
+      const pts = Number(data.points || 0);
+      if (pts > 0) {
+        infoEl.textContent = `Tenés ${pts} puntos acumulados.`;
+      } else {
+        infoEl.textContent = "No registramos puntos acumulados aún.";
+      }
+    } else {
+      infoEl.textContent = "";
+    }
+  } catch (err){
+    console.error("Error en fetchPointsForPhone:", err);
+    infoEl.textContent = "";
+  }
 }
 
 
@@ -384,7 +434,7 @@ async function sendOrder() {
       comentarios: ((state && state.comentarios) || "") + "\n" + cartLines,
       cantidad: cart.length,
       totalColones: totalColones,
-      puntos: 0,
+      puntos: 0, // luego podés calcular puntos de este pedido si querés
       productoId: primerProducto,
       presentacionResumen: presentacionResumen,
       pesoTotalGramos: pesoTotalGramos
@@ -417,11 +467,6 @@ async function sendOrder() {
 
     statusEl.textContent = `¡Pedido enviado con éxito! Gracias, ${nombreSeguro}.`;
 
-    // Aquí luego podemos añadir: limpiar carrito, limpiar formulario, etc.
-    // cart.length = 0;
-    // renderCart();
-    // limpiarFormularioCliente();
-
   } catch (err) {
     console.error("Error en sendOrder():", err);
     statusEl.textContent = "Hubo un problema enviando tu pedido. Revisá tu conexión e intentá de nuevo.";
@@ -434,16 +479,33 @@ async function sendOrder() {
 --------------------------------------------------------- */
 function setup(){
   const productoSelect = document.getElementById("producto");
+  const pesoSelect = document.getElementById("peso");
+  const telInput = document.getElementById("telefono");
+
+  // Poblar productos
   CONFIG.products.forEach(p=>{
     const o=document.createElement("option");
     o.value=p.id;
-    o.textContent=p.name + " ("+p.packLabel+")";
+    o.textContent=p.name;  // sin peso
     productoSelect.appendChild(o);
+  });
+
+  // Poblar pesos
+  CONFIG.weights.forEach(w=>{
+    const o=document.createElement("option");
+    o.value=w.id;
+    o.textContent=w.label;
+    pesoSelect.appendChild(o);
+  });
+
+  // Cuando el teléfono pierde foco, buscamos puntos
+  telInput.addEventListener("blur", ()=> {
+    fetchPointsForPhone(telInput.value);
   });
 
   document.getElementById("btn-ir-productos").onclick = ()=>{
     const n=document.getElementById("nombre").value.trim();
-    const t=document.getElementById("telefono").value.trim();
+    const t=telInput.value.trim();
     const err=document.getElementById("datos-error");
 
     if(!n){ err.textContent="Ingresá tu nombre."; return; }
@@ -466,13 +528,19 @@ function setup(){
 
     if(p){
       img.src=p.imageUrl;
-      caption.textContent=p.name + " – " + p.packLabel;
+      caption.textContent=p.name;
       imgWrap.style.display="block";
     } else {
       imgWrap.style.display="none";
       img.src="";
     }
 
+    document.getElementById("subtotal-linea").textContent =
+      formatCRC(calculateSubtotal());
+  };
+
+  pesoSelect.onchange = ()=>{
+    state.currentWeightId = pesoSelect.value;
     document.getElementById("subtotal-linea").textContent =
       formatCRC(calculateSubtotal());
   };
@@ -487,8 +555,9 @@ function setup(){
   /* ----- AGREGAR AL CARRITO ----- */
   document.getElementById("btn-agregar-carrito").onclick = ()=>{
     const p=getSelectedProduct();
-    if(!p){
-      alert("Revisá el tipo de chorizo.");
+    const w=getSelectedWeight();
+    if(!p || !w){
+      alert("Revisá que escogiste el chorizo y el peso.");
       return;
     }
     const qty = state.currentQuantity;
@@ -497,8 +566,8 @@ function setup(){
     cart.push({
       productId: p.id,
       productName: p.name,
-      packLabel: p.packLabel,
-      grams: p.grams,
+      packLabel: w.label,
+      grams: w.grams,
       quantity: qty,
       lineTotal
     });
@@ -507,9 +576,11 @@ function setup(){
 
     // limpiar selecciones
     state.currentProductId="";
+    state.currentWeightId="";
     state.currentQuantity=1;
 
     document.getElementById("producto").value="";
+    document.getElementById("peso").value="";
     document.getElementById("cantidad").value=1;
     document.getElementById("product-image-wrapper").style.display="none";
     document.getElementById("subtotal-linea").textContent="₡0";
@@ -564,7 +635,7 @@ function updateCartTable(){
   cart.forEach(i=>{
     const tr=document.createElement("tr");
     tr.innerHTML =
-      `<td>${i.productName} (${i.packLabel})</td>
+      `<td>${i.quantity} x ${i.productName} (${i.packLabel})</td>
        <td>${i.quantity}</td>
        <td>${formatCRC(i.lineTotal)}</td>`;
     body.appendChild(tr);
