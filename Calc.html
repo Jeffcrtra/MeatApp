@@ -224,7 +224,7 @@
 </head>
 
 <body>
-  <h1>Monte Alto – Calculadora 1:38</h1>
+  <h1>Monte Alto – Calculadora 1:43</h1>
 
   <div class="card">
 
@@ -440,7 +440,7 @@ async function fetchPointsForPhone(phone){
   const infoEl = document.getElementById("puntos-info");
   const clean = (phone || "").trim();
 
-  if (clean.length < 8) {
+  if (clean.length < 7) {
     infoEl.textContent = "";
     return;
   }
@@ -820,3 +820,4 @@ window.onload = ()=> setup();
 
 </body>
 </html>
+
