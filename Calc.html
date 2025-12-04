@@ -269,7 +269,7 @@
 </head>
 
 <body>
-  <h1>Monte Alto – Calculadora  4:44</h1>
+  <h1>Monte Alto – Calculadora</h1>
 
   <div class="card">
 
@@ -389,7 +389,7 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 <script>
-/* ------------------------------ CONFIG ------------------------------ */
+/* ===================== CONFIG BÁSICA ===================== */
 const CONFIG = {
   SHEETS_ENDPOINT:
     "https://script.google.com/macros/s/AKfycby9Y5YlZPbttjxy85uL1zguMmd4G3sOEIlirbTozvGcYLl837cfgZKhZ1u4MQeSEja4/exec",
@@ -409,16 +409,11 @@ const CONFIG = {
   ]
 };
 
-/* Fallbacks si AA1/AC1 vienen en 0
-   Ajustá estos números a tus precios reales por gramo
-   (ej: 7800 colones/kg => 7.8 colones/gramo) */
-const FALLBACK_PRICE_CHORIZO_PER_GRAM = 7.8;
-const FALLBACK_PRICE_BACON_PER_GRAM   = 12.0;
+/* <<< AQUÍ EDITÁS LOS PRECIOS POR GRAMO >>> */
+const PRICE_PER_GRAM_CHORIZO = 7.8;  // colones por gramo
+const PRICE_PER_GRAM_BACON   = 12.0; // colones por gramo
 
-/* ------------------------------ ESTADO ------------------------------ */
-let pricePerGramChorizo = 0;
-let pricePerGramBacon   = 0;
-
+/* ===================== ESTADO ===================== */
 let sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 let cart = [];
 
@@ -433,7 +428,7 @@ const state = {
   wantsPromos:false
 };
 
-/* ------------------------------ UTILIDADES ------------------------------ */
+/* ===================== UTILIDADES ===================== */
 function formatCRC(v){ return "₡"+(v||0).toLocaleString("es-CR"); }
 
 function getSelectedProduct(){
@@ -448,18 +443,10 @@ function calculateLineTotal(product, grams, quantity){
   if(!product || !grams || !quantity) return 0;
 
   const totalGrams = grams * quantity;
-
-  const dynamicPerGram =
+  const perGram =
     product.type === "bacon"
-      ? pricePerGramBacon
-      : pricePerGramChorizo;
-
-  const fallbackPerGram =
-    product.type === "bacon"
-      ? FALLBACK_PRICE_BACON_PER_GRAM
-      : FALLBACK_PRICE_CHORIZO_PER_GRAM;
-
-  const perGram = dynamicPerGram || fallbackPerGram;
+      ? PRICE_PER_GRAM_BACON
+      : PRICE_PER_GRAM_CHORIZO;
 
   return Math.round(totalGrams * perGram);
 }
@@ -479,7 +466,7 @@ function getNextSaturday(fromDate = new Date()){
   return d;
 }
 
-/* ------------------------------ CONFETTI ------------------------------ */
+/* ===================== CONFETTI ===================== */
 function burstConfettiSmallFromElement(el) {
   if (typeof confetti !== "function" || !el) return;
   const rect = el.getBoundingClientRect();
@@ -505,7 +492,7 @@ function burstConfettiBigCenter() {
   });
 }
 
-/* ------------------------------ PUNTOS TELÉFONO ------------------------------ */
+/* ===================== PUNTOS TELÉFONO ===================== */
 async function fetchPointsForPhone(phone){
   const infoEl = document.getElementById("puntos-info");
   const clean = (phone || "").trim();
@@ -549,7 +536,7 @@ async function fetchPointsForPhone(phone){
   }
 }
 
-/* ------------------------------ CARRITO DRAWER ------------------------------ */
+/* ===================== CARRITO ===================== */
 function openCartDrawer(){
   if(cart.length===0){
     alert("Tu carrito está vacío.");
@@ -592,7 +579,7 @@ function updateCartUI(){
   totalEl.textContent = formatCRC(total);
 }
 
-/* ------------------------------ ENVÍO PEDIDO ------------------------------ */
+/* ===================== SEND ORDER ===================== */
 async function sendOrder() {
   const statusEl = document.getElementById("status");
   const btnNuevo = document.getElementById("btn-nuevo-pedido");
@@ -609,10 +596,7 @@ async function sendOrder() {
 
     statusEl.textContent = `Enviando tu pedido, ${nombreSeguro}...`;
 
-    const totalColones = cart.reduce((suma, item) => {
-      const lineTotal = Number(item.lineTotal || 0);
-      return suma + lineTotal;
-    }, 0);
+    const totalColones = cart.reduce((suma, item) => suma + Number(item.lineTotal || 0), 0);
 
     const cartLines = cart
       .map(item => {
@@ -625,18 +609,13 @@ async function sendOrder() {
       .join("\n");
 
     const presentacionResumen = cart
-      .map(item => {
-        const qty = item.quantity ?? 0;
-        const pack = item.packLabel ?? "";
-        return `${qty} x ${pack}`;
-      })
+      .map(item => `${item.quantity ?? 0} x ${item.packLabel ?? ""}`)
       .join(", ");
 
-    const pesoTotalGramos = cart.reduce((suma, item) => {
-      const g = Number(item.grams || 0);
-      const q = Number(item.quantity || 0);
-      return suma + g * q;
-    }, 0);
+    const pesoTotalGramos = cart.reduce(
+      (suma, item) => suma + (Number(item.grams || 0) * Number(item.quantity || 0)),
+      0
+    );
 
     const primerProducto = cart[0]?.productName || "Calculadora Monte Alto";
 
@@ -722,7 +701,7 @@ async function sendOrder() {
   }
 }
 
-/* ------------------------------ RESET ------------------------------ */
+/* ===================== RESET ===================== */
 function resetForNewOrder(){
   sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
@@ -769,32 +748,7 @@ function resetForNewOrder(){
   document.getElementById("btn-confirmar").style.display = "";
 }
 
-/* ------------------------------ PRECIOS DESDE SHEET ------------------------------ */
-async function loadPricesFromSheet(){
-  try {
-    const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
-      method:"POST",
-      headers:{ "Content-Type":"text/plain;charset=utf-8" },
-      body: JSON.stringify({ action:"getPrices" })
-    });
-    if(!res.ok){
-      console.warn("Error HTTP getPrices:", res.status, res.statusText);
-      return;
-    }
-    const data = await res.json();
-    if(data.success){
-      pricePerGramChorizo = Number(data.priceChorizoPerGram || 0);
-      pricePerGramBacon   = Number(data.priceBaconPerGram   || 0);
-      console.log("Precios cargados:", {pricePerGramChorizo, pricePerGramBacon});
-    } else {
-      console.warn("getPrices no success:", data);
-    }
-  } catch(err){
-    console.error("Error en loadPricesFromSheet:", err);
-  }
-}
-
-/* ------------------------------ SETUP ------------------------------ */
+/* ===================== SETUP ===================== */
 function setup(){
   const productoSelect = document.getElementById("producto");
   const pesoSelect = document.getElementById("peso");
@@ -950,7 +904,6 @@ function setup(){
   };
 
   updateCartUI();
-  loadPricesFromSheet();
 }
 
 function updateResumenFinal(){
@@ -968,4 +921,3 @@ window.onload = ()=> setup();
 
 </body>
 </html>
-
