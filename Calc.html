@@ -355,71 +355,95 @@ function logEvent(event, data){
 /* ---------------------------------------------------------
    UI ENVÍO
 --------------------------------------------------------- */
-async function sendOrder(){
-  const statusEl=document.getElementById("status");
-  const nombreSeguro=(state.nombre||"").trim();
+async function sendOrder() {
+  const statusEl = document.getElementById("status");
+  const nombreSeguro = ((state && state.nombre) || "").trim() || "cliente";
 
-  statusEl.textContent = `Enviando tu pedido, ${nombreSeguro}...`;
-
-  const total = cart.reduce((s,c)=>s+c.lineTotal,0);
-
-  const cartLines = cart
-    .map(i=>`${i.quantity} x ${i.productName} (${i.presentationLabel}) – ${formatCRC(i.lineTotal)}`)
-    .join("\n");
-
-  // 🔹 Resumen de presentaciones (para la columna "Presentacion")
-  const presentacionResumen = cart
-    .map(i => `${i.quantity} x ${i.presentationLabel}`)
-    .join(", ");
-  
-  // 🔹 Peso total en gramos (para la columna "Weight")
-  const pesoTotalGramos = cart.reduce((s, i) => {
-    const g = Number(i.grams || 0);
-    const q = Number(i.quantity || 0);
-    return s + g * q;
-  }, 0);
-  
-const payload = {
-  action: "saveOrder",
-  sessionId,
-  productoId: i.productName, // o MULTIPLE, como quieras
-  nombre: state.nombre,
-  telefono: state.telefono,
-  comentarios: state.comentarios + "\n" + cartLines,
-  cantidad: cart.length,
-  totalColones: total,
-  puntos: total/100,
-  presentacionResumen,   // 🔹 NUEVO
-  pesoTotalGramos        // 🔹 NUEVO
-};
-
-  try{
-    await fetch(CONFIG.SHEETS_ENDPOINT,{
-      method:"POST",
-      mode:"no-cors",
-      headers:{ "Content-Type":"application/json"},
-      body:JSON.stringify(payload)
-    });
-
-    statusEl.textContent =
-      `Hola ${nombreSeguro}, tu compra fue registrada correctamente. 🎉\n`+
-      `Te contactaremos por WhatsApp para confirmar.`;
-
-    const mensaje = encodeURIComponent(
-      `Hola Monte Alto, soy ${state.nombre} (${state.telefono}).\n`+
-      `Pedido:\n${cartLines}\n\nTotal estimado: ${formatCRC(total)}`
-    );
-
-    const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent);
-    if(isMobile){
-      window.open(`https://wa.me/50660228322?text=${mensaje}`,"_blank");
-    } else {
-      statusEl.textContent +=
-        `\n\nNota: Estás en computadora, por eso no se abrió WhatsApp automáticamente.`;
+  try {
+    if (!Array.isArray(cart) || cart.length === 0) {
+      statusEl.textContent = "Agregá al menos un producto al carrito antes de confirmar.";
+      return;
     }
 
-  }catch(e){
-    statusEl.textContent="Error al enviar el pedido.";
+    statusEl.textContent = `Enviando tu pedido, ${nombreSeguro}...`;
+
+    const totalColones = cart.reduce((suma, item) => {
+      const lineTotal = Number(item.lineTotal || 0);
+      return suma + lineTotal;
+    }, 0);
+
+    const cartLines = cart
+      .map(item => {
+        const qty = item.quantity ?? 0;
+        const name = item.productName ?? "Producto";
+        const pres = item.presentationLabel ?? "";
+        const lineTotal = Number(item.lineTotal || 0);
+        return `${qty} x ${name} (${pres}) – ${formatCRC(lineTotal)}`;
+      })
+      .join("\n");
+
+    const presentacionResumen = cart
+      .map(item => {
+        const qty = item.quantity ?? 0;
+        const pres = item.presentationLabel ?? "";
+        return `${qty} x ${pres}`;
+      })
+      .join(", ");
+
+    const pesoTotalGramos = cart.reduce((suma, item) => {
+      const g = Number(item.grams || 0);
+      const q = Number(item.quantity || 0);
+      return suma + g * q;
+    }, 0);
+
+    const payload = {
+      action: "saveOrder",
+      sessionId: typeof sessionId !== "undefined" ? sessionId : "",
+      nombre: (state && state.nombre) || "",
+      telefono: (state && state.telefono) || "",
+      comentarios: ((state && state.comentarios) || "") + "\n" + cartLines,
+      cantidad: cart.length,
+      totalColones: totalColones,
+      puntos: 0,
+      presentacion: presentacionResumen,
+      pesoTotalGramos: pesoTotalGramos
+    };
+
+    console.log("Payload que se enviará:", payload);
+
+    const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    console.log("Respuesta HTTP de Apps Script:", res.status, res.statusText);
+
+    if (!res.ok) {
+      statusEl.textContent = `Error enviando el pedido (HTTP ${res.status}). Revisá la URL del Apps Script.`;
+      return;
+    }
+
+    let textoRespuesta;
+    try {
+      textoRespuesta = await res.text();
+      console.log("Cuerpo de la respuesta:", textoRespuesta);
+    } catch (e) {
+      console.warn("No se pudo leer el cuerpo de la respuesta:", e);
+    }
+
+    statusEl.textContent = `¡Pedido enviado con éxito! Gracias, ${nombreSeguro}.`;
+
+    // Aquí luego podemos añadir: limpiar carrito, limpiar formulario, etc.
+    // cart.length = 0;
+    // renderCart();
+    // limpiarFormularioCliente();
+
+  } catch (err) {
+    console.error("Error en sendOrder():", err);
+    statusEl.textContent = "Hubo un problema enviando tu pedido. Revisá tu conexión e intentá de nuevo.";
   }
 }
 
@@ -607,6 +631,7 @@ window.onload = ()=> setup();
 
 </body>
 </html>
+
 
 
 
