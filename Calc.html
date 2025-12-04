@@ -164,9 +164,9 @@
 
     <!-- PASO 2: PRODUCTOS -->
     <div id="step-producto" class="step">
-      <h3>Paso 2 · Escogé tu embutido</h3>
+      <h3>Paso 2 · Escogé tu chorizo</h3>
 
-      <label>Tipo de embutido</label>
+      <label>Tipo de chorizo</label>
       <select id="producto">
         <option value="">— Selecciona un producto —</option>
       </select>
@@ -175,11 +175,6 @@
         <img id="product-image" src="" />
         <div class="muted" id="product-image-caption"></div>
       </div>
-
-      <label>Presentación</label>
-      <select id="presentacion">
-        <option value="">Selecciona la presentación...</option>
-      </select>
 
       <label>Número de paquetes</label>
       <input id="cantidad" type="number" min="1" value="1"/>
@@ -207,15 +202,15 @@
       <div id="status" class="muted"></div>
     </div>
 
-    <!-- CARRITO -->
-    <div id="cart-panel" class="summary-box">
+    <!-- CARRITO (OCULTO AL INICIO) -->
+    <div id="cart-panel" class="summary-box" style="display:none">
       <h3>Carrito</h3>
       <table class="cart-table">
         <thead>
-          <tr><th>Producto</th><th>Presentación</th><th>Cant</th><th>Subtotal</th></tr>
+          <tr><th>Producto</th><th>Cant</th><th>Subtotal</th></tr>
         </thead>
         <tbody id="cart-body">
-          <tr><td colspan="4" class="muted">Sin productos todavía.</td></tr>
+          <tr><td colspan="3" class="muted">Sin productos todavía.</td></tr>
         </tbody>
       </table>
 
@@ -237,60 +232,48 @@ const CONFIG = {
 
   POINTS_PER_1000: 10,
 
+  // Asumo que la forma más popular es ½ kilo (500g)
+  // Si querés 1 kilo, cambiá grams:1000 y el packLabel.
   products: [
     {
       id: "brat",
       name: "Chorizo Bratwurst",
       imageUrl: "Bratwurst.png",
-      presentations: [
-        { id: "medio", label: "½ kilo (500g)", grams: 500, pricePerKg: 7800 },
-        { id: "kilo",  label: "1 kilo (1000g)", grams:1000, pricePerKg: 7500 }
-      ]
+      grams: 500,
+      pricePerKg: 7800,
+      packLabel: "½ kilo (500g)"
     },
     {
       id: "tex",
       name: "Chorizo Tex-Mex",
       imageUrl: "Tex-Mex.png",
-      presentations: [
-        { id: "medio", label: "½ kilo (500g)", grams:500, pricePerKg: 7900 },
-        { id: "kilo",  label: "1 kilo (1000g)", grams:1000, pricePerKg: 7600 }
-      ]
+      grams: 500,
+      pricePerKg: 7900,
+      packLabel: "½ kilo (500g)"
     },
     {
       id: "criollo",
       name: "Criollo argentino",
       imageUrl: "Argentino.png",
-      presentations: [
-        { id: "medio", label: "½ kilo (500g)", grams:500, pricePerKg: 8000 },
-        { id: "kilo",  label: "1 kilo (1000g)", grams:1000, pricePerKg: 7800 }
-      ]
+      grams: 500,
+      pricePerKg: 8000,
+      packLabel: "½ kilo (500g)"
     },
     {
       id: "carib",
       name: "Chorizo Caribeño",
       imageUrl: "Caribeño.png",
-      presentations: [
-        { id: "medio", label: "½ kilo (500g)", grams:500, pricePerKg: 7900 },
-        { id: "kilo",  label: "1 kilo (1000g)", grams:1000, pricePerKg: 7700 }
-      ]
+      grams: 500,
+      pricePerKg: 7900,
+      packLabel: "½ kilo (500g)"
     },
     {
       id: "tico",
       name: "Costarricense casero",
       imageUrl: "Criollo.png",
-      presentations: [
-        { id: "medio", label:"½ kilo (500g)", grams:500, pricePerKg: 7800 },
-        { id: "kilo",  label:"1 kilo (1000g)", grams:1000, pricePerKg:7600 }
-      ]
-    },
-    {
-      id:"bacon",
-      name:"Bacon Ahumado",
-      imageUrl:"Tocineta.png",
-      presentations:[
-        { id:"medio", label:"½ kilo (500g)", grams:500, pricePerKg:12000 },
-        { id:"kilo",  label:"1 kilo (1000g)", grams:1000, pricePerKg:11500 }
-      ]
+      grams: 500,
+      pricePerKg: 7800,
+      packLabel: "½ kilo (500g)"
     }
   ]
 };
@@ -307,7 +290,6 @@ const state = {
   telefono:"",
   comentarios:"",
   currentProductId:"",
-  currentPresentationId:"",
   currentQuantity:1,
 };
 
@@ -319,15 +301,11 @@ function formatCRC(v){ return "₡"+(v||0).toLocaleString("es-CR"); }
 function getSelectedProduct(){
   return CONFIG.products.find(p=>p.id===state.currentProductId) || null;
 }
-function getSelectedPresentation(){
-  const p=getSelectedProduct();
-  return p ? p.presentations.find(x=>x.id===state.currentPresentationId) : null;
-}
 function calculateSubtotal(){
-  const pr=getSelectedPresentation();
-  if(!pr) return 0;
-  const kg = pr.grams /1000;
-  return Math.round(pr.pricePerKg * kg * state.currentQuantity);
+  const p=getSelectedProduct();
+  if(!p) return 0;
+  const kg = p.grams /1000;
+  return Math.round(p.pricePerKg * kg * state.currentQuantity);
 }
 
 
@@ -376,17 +354,17 @@ async function sendOrder() {
       .map(item => {
         const qty = item.quantity ?? 0;
         const name = item.productName ?? "Producto";
-        const pres = item.presentationLabel ?? "";
+        const pack = item.packLabel ?? "";
         const lineTotal = Number(item.lineTotal || 0);
-        return `${qty} x ${name} (${pres}) – ${formatCRC(lineTotal)}`;
+        return `${qty} x ${name} (${pack}) – ${formatCRC(lineTotal)}`;
       })
       .join("\n");
 
     const presentacionResumen = cart
       .map(item => {
         const qty = item.quantity ?? 0;
-        const pres = item.presentationLabel ?? "";
-        return `${qty} x ${pres}`;
+        const pack = item.packLabel ?? "";
+        return `${qty} x ${pack}`;
       })
       .join(", ");
 
@@ -395,6 +373,8 @@ async function sendOrder() {
       const q = Number(item.quantity || 0);
       return suma + g * q;
     }, 0);
+
+    const primerProducto = cart[0]?.productName || "Calculadora Monte Alto";
 
     const payload = {
       action: "saveOrder",
@@ -405,7 +385,8 @@ async function sendOrder() {
       cantidad: cart.length,
       totalColones: totalColones,
       puntos: 0,
-      presentacion: presentacionResumen,
+      productoId: primerProducto,
+      presentacionResumen: presentacionResumen,
       pesoTotalGramos: pesoTotalGramos
     };
 
@@ -456,7 +437,7 @@ function setup(){
   CONFIG.products.forEach(p=>{
     const o=document.createElement("option");
     o.value=p.id;
-    o.textContent=p.name;
+    o.textContent=p.name + " ("+p.packLabel+")";
     productoSelect.appendChild(o);
   });
 
@@ -485,27 +466,13 @@ function setup(){
 
     if(p){
       img.src=p.imageUrl;
-      caption.textContent=p.name;
+      caption.textContent=p.name + " – " + p.packLabel;
       imgWrap.style.display="block";
     } else {
       imgWrap.style.display="none";
       img.src="";
     }
 
-    const sel=document.getElementById("presentacion");
-    sel.innerHTML='<option value="">Selecciona la presentación...</option>';
-    if(p){
-      p.presentations.forEach(pr=>{
-        const o=document.createElement("option");
-        o.value=pr.id;
-        o.textContent=pr.label;
-        sel.appendChild(o);
-      });
-    }
-  };
-
-  document.getElementById("presentacion").onchange = ()=>{
-    state.currentPresentationId = document.getElementById("presentacion").value;
     document.getElementById("subtotal-linea").textContent =
       formatCRC(calculateSubtotal());
   };
@@ -520,9 +487,8 @@ function setup(){
   /* ----- AGREGAR AL CARRITO ----- */
   document.getElementById("btn-agregar-carrito").onclick = ()=>{
     const p=getSelectedProduct();
-    const pr=getSelectedPresentation();
-    if(!p || !pr){
-      alert("Revisá producto y presentación.");
+    if(!p){
+      alert("Revisá el tipo de chorizo.");
       return;
     }
     const qty = state.currentQuantity;
@@ -531,9 +497,8 @@ function setup(){
     cart.push({
       productId: p.id,
       productName: p.name,
-      presentationId: pr.id,
-      presentationLabel: pr.label,
-      grams: pr.grams,
+      packLabel: p.packLabel,
+      grams: p.grams,
       quantity: qty,
       lineTotal
     });
@@ -542,12 +507,9 @@ function setup(){
 
     // limpiar selecciones
     state.currentProductId="";
-    state.currentPresentationId="";
     state.currentQuantity=1;
 
     document.getElementById("producto").value="";
-    document.getElementById("presentacion").innerHTML =
-      '<option value="">Selecciona la presentación...</option>';
     document.getElementById("cantidad").value=1;
     document.getElementById("product-image-wrapper").style.display="none";
     document.getElementById("subtotal-linea").textContent="₡0";
@@ -587,19 +549,22 @@ function setup(){
 --------------------------------------------------------- */
 function updateCartTable(){
   const body=document.getElementById("cart-body");
+  const panel=document.getElementById("cart-panel");
   body.innerHTML="";
 
   if(cart.length===0){
-    body.innerHTML='<tr><td colspan="4" class="muted">Sin productos todavía.</td></tr>';
+    body.innerHTML='<tr><td colspan="3" class="muted">Sin productos todavía.</td></tr>';
     document.getElementById("cart-total").textContent="₡0";
+    panel.style.display = "none";   // oculto si está vacío
     return;
   }
+
+  panel.style.display = "block";     // muestro solo cuando hay productos
 
   cart.forEach(i=>{
     const tr=document.createElement("tr");
     tr.innerHTML =
-      `<td>${i.productName}</td>
-       <td>${i.presentationLabel}</td>
+      `<td>${i.productName} (${i.packLabel})</td>
        <td>${i.quantity}</td>
        <td>${formatCRC(i.lineTotal)}</td>`;
     body.appendChild(tr);
@@ -613,7 +578,7 @@ function updateCartTable(){
 function updateResumenFinal(){
   const total = cart.reduce((s,c)=>s+c.lineTotal,0);
   const list = cart.map(i =>
-    `${i.quantity} x ${i.productName} (${i.presentationLabel}) – ${formatCRC(i.lineTotal)}`
+    `${i.quantity} x ${i.productName} (${i.packLabel}) – ${formatCRC(i.lineTotal)}`
   ).join("<br>");
 
   document.getElementById("resumen-final").innerHTML =
@@ -631,11 +596,3 @@ window.onload = ()=> setup();
 
 </body>
 </html>
-
-
-
-
-
-
-
-
