@@ -224,7 +224,7 @@
 </head>
 
 <body>
-  <h1>Monte Alto – Calculadora 1:43</h1>
+  <h1>Monte Alto – Calculadora 1:49</h1>
 
   <div class="card">
 
@@ -421,7 +421,7 @@ function logEvent(event, data){
   fetch(CONFIG.SHEETS_ENDPOINT, {
     method:"POST",
     mode:"no-cors",
-    headers:{ "Content-Type":"application/json" },
+    headers:{ "Content-Type":"text/plain;charset=utf-8" },
     body:JSON.stringify({
       action:"logEvent",
       sessionId,
@@ -440,7 +440,7 @@ async function fetchPointsForPhone(phone){
   const infoEl = document.getElementById("puntos-info");
   const clean = (phone || "").trim();
 
-  if (clean.length < 7) {
+  if (clean.length < 8) {
     infoEl.textContent = "";
     return;
   }
@@ -448,7 +448,7 @@ async function fetchPointsForPhone(phone){
   try {
     const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
       method:"POST",
-      headers:{ "Content-Type":"application/json" },
+      headers:{ "Content-Type":"text/plain;charset=utf-8" },
       body: JSON.stringify({
         action:"getPoints",
         telefono: clean
@@ -598,7 +598,7 @@ async function sendOrder() {
     const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "text/plain;charset=utf-8"
       },
       body: JSON.stringify(payload)
     });
@@ -654,9 +654,19 @@ function setup(){
     pesoSelect.appendChild(o);
   });
 
-  // Teléfono -> buscar puntos al salir del campo
-  telInput.addEventListener("blur", ()=> {
-    fetchPointsForPhone(telInput.value);
+  // Teléfono -> buscar puntos automáticamente al tener 8 dígitos
+  let lastPointsPhone = "";
+  telInput.addEventListener("input", ()=> {
+    const raw   = telInput.value || "";
+    const clean = raw.replace(/\D/g,"").trim(); // solo dígitos
+
+    if (clean.length >= 8 && clean !== lastPointsPhone) {
+      lastPointsPhone = clean;
+      fetchPointsForPhone(clean);
+    } else if (clean.length < 8) {
+      document.getElementById("puntos-info").textContent = "";
+      lastPointsPhone = "";
+    }
   });
 
   // Código de descuento siempre en mayúsculas
@@ -670,7 +680,7 @@ function setup(){
     const err=document.getElementById("datos-error");
 
     if(!n){ err.textContent="Ingresá tu nombre."; return; }
-    if(!t || t.length<8){ err.textContent="Teléfono inválido."; return; }
+    if(!t || t.replace(/\D/g,"").length<8){ err.textContent="Teléfono inválido."; return; }
 
     state.nombre=n;
     state.telefono=t;
@@ -820,4 +830,3 @@ window.onload = ()=> setup();
 
 </body>
 </html>
-
