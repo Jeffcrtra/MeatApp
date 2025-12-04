@@ -26,7 +26,7 @@
       border-radius: 0.75rem;
       padding: 1rem 1.25rem 1.5rem;
       box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-      position: relative; /* para el icono de carrito */
+      position: relative;
     }
 
     label {
@@ -64,7 +64,6 @@
       color: white;
     }
 
-    /* BOTÓN AMARILLO */
     #btn-agregar-carrito {
       background: #fbbf24;
       color: #111827;
@@ -104,7 +103,7 @@
     }
 
     .product-image-wrapper img {
-      max-width: 50%;      /* más pequeña */
+      max-width: 50%;
       display: block;
       margin: 0 auto;
       border-radius: 0.75rem;
@@ -117,7 +116,6 @@
 
     #status { white-space:pre-line; margin-top:0.75rem; }
 
-    /* ICONO DE CARRITO */
     #cart-icon {
       position:absolute;
       top:0.75rem;
@@ -147,7 +145,6 @@
       text-align:center;
     }
 
-    /* DRAWER DEL CARRITO */
     .cart-backdrop {
       position:fixed;
       inset:0;
@@ -170,9 +167,7 @@
       flex-direction:column;
       padding:1rem;
     }
-    .cart-drawer.open {
-      right:0;
-    }
+    .cart-drawer.open { right:0; }
 
     .cart-drawer-header {
       display:flex;
@@ -203,38 +198,27 @@
       padding:0.5rem 0;
     }
 
-    .cart-item-row {
-      margin-bottom:0.5rem;
-    }
+    .cart-item-row { margin-bottom:0.5rem; }
 
-    .cart-drawer-footer {
-      margin-top:0.75rem;
-    }
+    .cart-drawer-footer { margin-top:0.75rem; }
 
-    .w-full {
-      width:100%;
-    }
+    .w-full { width:100%; }
 
-    /* Código descuento: visualmente mayúsculas */
     #discount-code {
       text-transform:uppercase;
     }
-
   </style>
 </head>
 
 <body>
-  <h1>Monte Alto – Calculadora 2:55</h1>
+  <h1>Monte Alto – Calculadora  3:15</h1>
 
   <div class="card">
-
-    <!-- ICONO CARRITO -->
     <div id="cart-icon">
       <span class="cart-emoji">🛒</span>
       <span id="cart-count">0</span>
     </div>
 
-    <!-- PASO 1: DATOS -->
     <div id="step-datos" class="step active">
       <h3>Paso 1 · Tus datos</h3>
 
@@ -256,7 +240,6 @@
       <button id="btn-ir-productos" class="primary">Continuar</button>
     </div>
 
-    <!-- PASO 2: PRODUCTOS -->
     <div id="step-producto" class="step">
       <h3>Paso 2 · Escogé tu chorizo</h3>
 
@@ -286,7 +269,6 @@
       <button id="btn-comprar-ya" class="primary">Comprar de una vez</button>
     </div>
 
-    <!-- PASO 3: CONFIRMAR -->
     <div id="step-cliente" class="step">
       <h3>Paso 3 · Confirmación del pedido</h3>
 
@@ -306,7 +288,6 @@
 
   </div>
 
-  <!-- BACKDROP + DRAWER DEL CARRITO -->
   <div id="cart-backdrop" class="cart-backdrop"></div>
 
   <div id="cart-drawer" class="cart-drawer">
@@ -325,60 +306,24 @@
     </div>
   </div>
 
-
 <script>
-/* ---------------------------------------------------------
-   CONFIG
---------------------------------------------------------- */
 const CONFIG = {
   SHEETS_ENDPOINT:
     "https://script.google.com/macros/s/AKfycby9Y5YlZPbttjxy85uL1zguMmd4G3sOEIlirbTozvGcYLl837cfgZKhZ1u4MQeSEja4/exec",
-
   POINTS_PER_1000: 10,
-
   products: [
-    {
-      id: "brat",
-      name: "Chorizo Bratwurst",
-      imageUrl: "Bratwurst.png",
-      pricePerKg: 7800
-    },
-    {
-      id: "tex",
-      name: "Chorizo Tex-Mex",
-      imageUrl: "Tex-Mex.png",
-      pricePerKg: 7900
-    },
-    {
-      id: "criollo",
-      name: "Criollo argentino",
-      imageUrl: "Argentino.png",
-      pricePerKg: 8000
-    },
-    {
-      id: "carib",
-      name: "Chorizo Caribeño",
-      imageUrl: "Caribeño.png",
-      pricePerKg: 7900
-    },
-    {
-      id: "tico",
-      name: "Costarricense casero",
-      imageUrl: "Criollo.png",
-      pricePerKg: 7800
-    }
+    { id: "brat",  name: "Chorizo Bratwurst",   imageUrl: "Bratwurst.png",  pricePerKg: 7800 },
+    { id: "tex",   name: "Chorizo Tex-Mex",     imageUrl: "Tex-Mex.png",    pricePerKg: 7900 },
+    { id: "criollo", name: "Criollo argentino", imageUrl: "Argentino.png",  pricePerKg: 8000 },
+    { id: "carib", name: "Chorizo Caribeño",    imageUrl: "Caribeño.png",   pricePerKg: 7900 },
+    { id: "tico",  name: "Costarricense casero",imageUrl: "Criollo.png",    pricePerKg: 7800 }
   ],
-
   weights: [
     { id: "500",  grams: 500,  label: "½ kilo (500g)" },
     { id: "1000", grams: 1000, label: "1 kilo (1000g)" }
   ]
 };
 
-
-/* ---------------------------------------------------------
-   ESTADO
---------------------------------------------------------- */
 let sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 let cart = [];
 
@@ -392,10 +337,6 @@ const state = {
   currentQuantity:1,
 };
 
-
-/* ---------------------------------------------------------
-   UTILIDADES
---------------------------------------------------------- */
 function formatCRC(v){ return "₡"+(v||0).toLocaleString("es-CR"); }
 function getSelectedProduct(){
   return CONFIG.products.find(p=>p.id===state.currentProductId) || null;
@@ -410,20 +351,14 @@ function calculateSubtotal(){
   const kg = w.grams /1000;
   return Math.round(p.pricePerKg * kg * state.currentQuantity);
 }
-
-/** Próximo sábado (incluye hoy si hoy es sábado) */
 function getNextSaturday(fromDate = new Date()){
   const d = new Date(fromDate);
-  const day = d.getDay(); // 0=dom, 6=sáb
+  const day = d.getDay();
   const diff = (6 - day + 7) % 7;
   d.setDate(d.getDate() + diff);
   return d;
 }
 
-
-/* ---------------------------------------------------------
-   LOG (DESACTIVADO)
---------------------------------------------------------- */
 const ENABLE_LOGS = false;
 function logEvent(event, data){
   if(!ENABLE_LOGS) return;
@@ -440,29 +375,19 @@ function logEvent(event, data){
   });
 }
 
-
-/* ---------------------------------------------------------
-   CONSULTA DE PUNTOS POR TELÉFONO
---------------------------------------------------------- */
 async function fetchPointsForPhone(phone){
   const infoEl = document.getElementById("puntos-info");
   const clean = (phone || "").trim();
-
   if (clean.length < 8) {
     infoEl.textContent = "";
     return;
   }
 
-  console.log("Buscando puntos para teléfono:", clean);
-
   try {
     const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
       method:"POST",
       headers:{ "Content-Type":"text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        action:"getPoints",
-        telefono: clean
-      })
+      body: JSON.stringify({ action:"getPoints", telefono: clean })
     });
 
     if(!res.ok){
@@ -472,8 +397,6 @@ async function fetchPointsForPhone(phone){
     }
 
     const data = await res.json();
-    console.log("Respuesta getPoints:", data);
-
     if (data.success) {
       const pts = Number(data.points || 0);
       if (pts > 0) {
@@ -490,10 +413,6 @@ async function fetchPointsForPhone(phone){
   }
 }
 
-
-/* ---------------------------------------------------------
-   DRAWER DEL CARRITO
---------------------------------------------------------- */
 function openCartDrawer(){
   if(cart.length===0){
     alert("Tu carrito está vacío.");
@@ -502,7 +421,6 @@ function openCartDrawer(){
   document.getElementById("cart-drawer").classList.add("open");
   document.getElementById("cart-backdrop").style.display = "block";
 }
-
 function closeCartDrawer(){
   document.getElementById("cart-drawer").classList.remove("open");
   document.getElementById("cart-backdrop").style.display = "none";
@@ -536,10 +454,6 @@ function updateCartUI(){
   totalEl.textContent = formatCRC(total);
 }
 
-
-/* ---------------------------------------------------------
-   UI ENVÍO
---------------------------------------------------------- */
 async function sendOrder() {
   const statusEl = document.getElementById("status");
   const nombreSeguro = ((state && state.nombre) || "").trim() || "cliente";
@@ -552,38 +466,21 @@ async function sendOrder() {
 
     statusEl.textContent = `Enviando tu pedido, ${nombreSeguro}...`;
 
-    const totalColones = cart.reduce((suma, item) => {
-      const lineTotal = Number(item.lineTotal || 0);
-      return suma + lineTotal;
-    }, 0);
+    const totalColones = cart.reduce((suma, item) => suma + Number(item.lineTotal || 0), 0);
 
     const cartLines = cart
-      .map(item => {
-        const qty = item.quantity ?? 0;
-        const name = item.productName ?? "Producto";
-        const pack = item.packLabel ?? "";
-        const lineTotal = Number(item.lineTotal || 0);
-        return `${qty} x ${name} (${pack}) – ${formatCRC(lineTotal)}`;
-      })
+      .map(item => `${item.quantity} x ${item.productName} (${item.packLabel}) – ${formatCRC(item.lineTotal)}`)
       .join("\n");
 
     const presentacionResumen = cart
-      .map(item => {
-        const qty = item.quantity ?? 0;
-        const pack = item.packLabel ?? "";
-        return `${qty} x ${pack}`;
-      })
+      .map(item => `${item.quantity} x ${item.packLabel}`)
       .join(", ");
 
-    const pesoTotalGramos = cart.reduce((suma, item) => {
-      const g = Number(item.grams || 0);
-      const q = Number(item.quantity || 0);
-      return suma + g * q;
-    }, 0);
+    const pesoTotalGramos = cart.reduce((suma, item) =>
+      suma + Number(item.grams || 0) * Number(item.quantity || 0), 0);
 
     const primerProducto = cart[0]?.productName || "Calculadora Monte Alto";
 
-    // comentarios + código de descuento
     let comentariosBase = (state && state.comentarios) || "";
     if (state.discountCode) {
       comentariosBase += `\nCódigo de descuento: ${state.discountCode}`;
@@ -592,30 +489,24 @@ async function sendOrder() {
 
     const payload = {
       action: "saveOrder",
-      sessionId: typeof sessionId !== "undefined" ? sessionId : "",
-      nombre: (state && state.nombre) || "",
-      telefono: (state && state.telefono) || "",
+      sessionId,
+      nombre: state.nombre || "",
+      telefono: state.telefono || "",
       comentarios: comentariosFinal,
       cantidad: cart.length,
-      totalColones: totalColones,
+      totalColones,
       puntos: 0,
       productoId: primerProducto,
-      presentacionResumen: presentacionResumen,
-      pesoTotalGramos: pesoTotalGramos,
+      presentacionResumen,
+      pesoTotalGramos,
       discountCode: state.discountCode || ""
     };
 
-    console.log("Payload que se enviará:", payload);
-
     const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
       method: "POST",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8"
-      },
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload)
     });
-
-    console.log("Respuesta HTTP de Apps Script:", res.status, res.statusText);
 
     if (!res.ok) {
       statusEl.textContent =
@@ -623,27 +514,15 @@ async function sendOrder() {
       return;
     }
 
-    // Leer respuesta por si queremos debug
-    let textoRespuesta;
-    try {
-      textoRespuesta = await res.text();
-      console.log("Cuerpo de la respuesta:", textoRespuesta);
-    } catch (e) {
-      console.warn("No se pudo leer el cuerpo de la respuesta:", e);
-    }
+    try { await res.text(); } catch(e){}
 
-    // ---- MENSAJE AMIGABLE CON RESUMEN Y FECHA DE ENTREGA ----
     const resumenHtml = cart
-      .map(item =>
-        `${item.quantity} x ${item.productName} (${item.packLabel}) – ${formatCRC(item.lineTotal)}`
-      )
+      .map(item => `${item.quantity} x ${item.productName} (${item.packLabel}) – ${formatCRC(item.lineTotal)}`)
       .join("<br>");
 
     const entregaDate = getNextSaturday(new Date());
     const entregaStr = entregaDate.toLocaleDateString("es-CR", {
-      weekday: "long",
-      day: "numeric",
-      month: "long"
+      weekday: "long", day: "numeric", month: "long"
     });
 
     statusEl.innerHTML =
@@ -653,7 +532,6 @@ async function sendOrder() {
       `<strong>Total:</strong> ${formatCRC(totalColones)}<br>` +
       `<strong>Fecha estimada de entrega:</strong> ${entregaStr}`;
 
-    // Limpiar carrito y UI
     cart = [];
     updateCartUI();
     document.getElementById("resumen-final").innerHTML = "";
@@ -665,17 +543,12 @@ async function sendOrder() {
   }
 }
 
-
-/* ---------------------------------------------------------
-   SETUP
---------------------------------------------------------- */
 function setup(){
   const productoSelect = document.getElementById("producto");
   const pesoSelect = document.getElementById("peso");
   const telInput = document.getElementById("telefono");
   const discountInput = document.getElementById("discount-code");
 
-  // Poblar productos
   CONFIG.products.forEach(p=>{
     const o=document.createElement("option");
     o.value=p.id;
@@ -683,7 +556,6 @@ function setup(){
     productoSelect.appendChild(o);
   });
 
-  // Poblar pesos
   CONFIG.weights.forEach(w=>{
     const o=document.createElement("option");
     o.value=w.id;
@@ -691,11 +563,10 @@ function setup(){
     pesoSelect.appendChild(o);
   });
 
-  // Teléfono -> buscar puntos automáticamente al tener 8 dígitos
   let lastPointsPhone = "";
   telInput.addEventListener("input", ()=> {
     const raw   = telInput.value || "";
-    const clean = raw.replace(/\D/g,"").trim(); // solo dígitos
+    const clean = raw.replace(/\D/g,"").trim();
 
     if (clean.length >= 8 && clean !== lastPointsPhone) {
       lastPointsPhone = clean;
@@ -706,7 +577,6 @@ function setup(){
     }
   });
 
-  // Código de descuento siempre en mayúsculas
   discountInput.addEventListener("input", ()=>{
     discountInput.value = discountInput.value.toUpperCase();
   });
@@ -759,8 +629,6 @@ function setup(){
       formatCRC(calculateSubtotal());
   };
 
-
-  /* ----- AGREGAR AL CARRITO ----- */
   document.getElementById("btn-agregar-carrito").onclick = ()=>{
     const p=getSelectedProduct();
     const w=getSelectedWeight();
@@ -782,7 +650,6 @@ function setup(){
 
     updateCartUI();
 
-    // limpiar selecciones
     state.currentProductId="";
     state.currentWeightId="";
     state.currentQuantity=1;
@@ -794,35 +661,27 @@ function setup(){
     document.getElementById("subtotal-linea").textContent="₡0";
   };
 
-
-  /* ----- COMPRAR YA ----- */
   document.getElementById("btn-comprar-ya").onclick = ()=>{
     if(cart.length===0){
       alert("Agregá algo al carrito.");
       return;
     }
-
     document.getElementById("step-producto").classList.remove("active");
     document.getElementById("step-cliente").classList.add("active");
     updateResumenFinal();
   };
 
-
-  /* ----- VOLVER ----- */
   document.getElementById("btn-volver-productos").onclick = ()=>{
     document.getElementById("step-cliente").classList.remove("active");
     document.getElementById("step-producto").classList.add("active");
   };
 
-
-  /* ----- CONFIRMAR ----- */
   document.getElementById("btn-confirmar").onclick = ()=>{
     state.comentarios = document.getElementById("comentarios").value.trim();
     state.discountCode = document.getElementById("discount-code").value.trim().toUpperCase();
     sendOrder();
   };
 
-  /* ----- ICONO CARRITO + DRAWER ----- */
   document.getElementById("cart-icon").onclick = openCartDrawer;
   document.getElementById("cart-backdrop").onclick = closeCartDrawer;
   document.getElementById("btn-cart-close").onclick = closeCartDrawer;
@@ -838,14 +697,9 @@ function setup(){
     updateResumenFinal();
   };
 
-  // iniciar contador/cart vacío
   updateCartUI();
 }
 
-
-/* ---------------------------------------------------------
-   RESUMEN FINAL
---------------------------------------------------------- */
 function updateResumenFinal(){
   const total = cart.reduce((s,c)=>s+c.lineTotal,0);
   const list = cart.map(i =>
@@ -857,13 +711,7 @@ function updateResumenFinal(){
      <strong>Total:</strong> ${formatCRC(total)}`;
 }
 
-
-/* ---------------------------------------------------------
-   INICIAR
---------------------------------------------------------- */
 window.onload = ()=> setup();
-
 </script>
-
 </body>
 </html>
