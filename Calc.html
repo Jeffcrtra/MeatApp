@@ -6,6 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
     body {
       font-family: system-ui, sans-serif;
       background: #111827;
@@ -75,7 +80,6 @@
       color: white;
     }
 
-    /* BOTÓN AMARILLO */
     #btn-agregar-carrito {
       background: #fbbf24;
       color: #111827;
@@ -171,7 +175,22 @@
       text-align:center;
     }
 
-    /* DRAWER DEL CARRITO */
+    .promo-box {
+      margin-top:0.5rem;
+      font-size:0.85rem;
+    }
+    .promo-box label {
+      display:flex;
+      align-items:center;
+      gap:0.4rem;
+      margin-bottom:0.4rem;
+    }
+    .promo-box input[type="checkbox"] {
+      width:auto;
+      margin-bottom:0;
+    }
+
+    /* BACKDROP + DRAWER DEL CARRITO */
     .cart-backdrop {
       position:fixed;
       inset:0;
@@ -183,19 +202,20 @@
     .cart-drawer {
       position:fixed;
       top:0;
-      right:-320px;
+      right:0;
       width:320px;
       height:100vh;
       background:#020617;
       box-shadow:-4px 0 20px rgba(0,0,0,0.6);
-      transition:right 0.25s ease;
       z-index:1000;
       display:flex;
       flex-direction:column;
       padding:1rem;
+      transform: translateX(100%);
+      transition: transform 0.25s ease;
     }
     .cart-drawer.open {
-      right:0;
+      transform: translateX(0);
     }
 
     .cart-drawer-header {
@@ -247,36 +267,11 @@
     #discount-code {
       text-transform:uppercase;
     }
-
-    .promo-box {
-      margin-top:0.75rem;
-      padding-top:0.5rem;
-      border-top:1px dashed #374151;
-      font-size:0.85rem;
-    }
-
-    .promo-box label {
-      display:flex;
-      align-items:center;
-      gap:0.4rem;
-      margin-bottom:0.4rem;
-    }
-
-    .promo-box input[type="checkbox"] {
-      width:auto;
-      margin-bottom:0;
-    }
-
-    .promo-box input[type="email"] {
-      font-size:0.85rem;
-      padding:0.4rem 0.6rem;
-      margin-bottom:0.25rem;
-    }
   </style>
 </head>
 
 <body>
-  <h1>Monte Alto – Calculadora  3:27</h1>
+  <h1>Monte Alto – Calculadora  4:07 </h1>
 
   <div class="card">
 
@@ -342,11 +337,28 @@
     <div id="step-cliente" class="step">
       <h3>Paso 3 · Confirmación del pedido</h3>
 
-      <label>Notas (opcional)</label>
+      <label id="label-notas">Notas (opcional)</label>
       <textarea id="comentarios" rows="3" placeholder="Ej: Entregar en la tarde"></textarea>
 
-      <label>Código de descuento (opcional)</label>
+      <label id="label-descuento">Código de descuento (opcional)</label>
       <input id="discount-code" type="text" placeholder="Ej: MONTEALTO10" />
+
+      <!-- Pago SINPE -->
+      <div id="sinpe-box" class="summary-box">
+        <strong>Pago por SINPE móvil (BAC):</strong><br>
+        Enviá el monto total al número <strong>XXXX-XXXX</strong> (Monte Alto).<br>
+        En el detalle indicá tu nombre y “Monte Alto”.<br>
+        Luego presioná <strong>Confirmar pedido</strong> para registrar tu orden.
+        <!-- Reemplazá XXXX-XXXX por tu número SINPE real -->
+      </div>
+
+      <!-- Checkbox promos en la pantalla de pago -->
+      <div class="promo-box">
+        <label>
+          <input type="checkbox" id="chk-promos" />
+          <span>Quiero recibir promociones por WhatsApp a este mismo número.</span>
+        </label>
+      </div>
 
       <div id="resumen-final" class="summary-box"></div>
 
@@ -374,22 +386,6 @@
     </div>
     <div class="cart-drawer-footer">
       <div class="muted">Total: <strong id="cart-drawer-total">₡0</strong></div>
-
-      <div class="promo-box">
-        <label>
-          <input type="checkbox" id="chk-promos" />
-          <span>Quiero recibir promociones y novedades.</span>
-        </label>
-        <input
-          type="email"
-          id="promo-email"
-          placeholder="Correo electrónico (opcional)"
-        />
-        <div class="muted">
-          Si no ponés correo, usaremos tu número de teléfono para avisos por WhatsApp.
-        </div>
-      </div>
-
       <button id="btn-go-confirm" class="primary w-full" style="margin-top:0.5rem;">
         Ir a confirmar pedido
       </button>
@@ -407,14 +403,13 @@ const CONFIG = {
   SHEETS_ENDPOINT:
     "https://script.google.com/macros/s/AKfycby9Y5YlZPbttjxy85uL1zguMmd4G3sOEIlirbTozvGcYLl837cfgZKhZ1u4MQeSEja4/exec",
 
-  POINTS_PER_1000: 10,
-
   products: [
-    { id: "brat",   name: "Chorizo Bratwurst",    imageUrl: "Bratwurst.png",  pricePerKg: 7800 },
-    { id: "tex",    name: "Chorizo Tex-Mex",      imageUrl: "Tex-Mex.png",    pricePerKg: 7900 },
-    { id: "criollo",name: "Criollo argentino",    imageUrl: "Argentino.png",  pricePerKg: 8000 },
-    { id: "carib",  name: "Chorizo Caribeño",     imageUrl: "Caribeño.png",   pricePerKg: 7900 },
-    { id: "tico",   name: "Costarricense casero", imageUrl: "Criollo.png",    pricePerKg: 7800 }
+    { id: "brat",    type: "chorizo", name: "Chorizo Bratwurst",    imageUrl: "Bratwurst.png" },
+    { id: "tex",     type: "chorizo", name: "Chorizo Tex-Mex",      imageUrl: "Tex-Mex.png" },
+    { id: "criollo", type: "chorizo", name: "Criollo argentino",    imageUrl: "Argentino.png" },
+    { id: "carib",   type: "chorizo", name: "Chorizo Caribeño",     imageUrl: "Caribeño.png" },
+    { id: "tico",    type: "chorizo", name: "Costarricense casero", imageUrl: "Criollo.png" },
+    { id: "bacon",   type: "bacon",   name: "Bacon ahumado",        imageUrl: "Tocineta.png" }
   ],
 
   weights: [
@@ -423,6 +418,8 @@ const CONFIG = {
   ]
 };
 
+let pricePerGramChorizo = 0;
+let pricePerGramBacon   = 0;
 
 /* ---------------------------------------------------------
    ESTADO
@@ -438,8 +435,7 @@ const state = {
   currentProductId:"",
   currentWeightId:"",
   currentQuantity:1,
-  wantsPromos:false,
-  promoEmail:""
+  wantsPromos:false
 };
 
 
@@ -456,12 +452,21 @@ function getSelectedWeight(){
   return CONFIG.weights.find(w=>w.id===state.currentWeightId) || null;
 }
 
+function calculateLineTotal(product, grams, quantity){
+  if(!product || !grams || !quantity) return 0;
+  const totalGrams = grams * quantity;
+  const perGram =
+    product.type === "bacon"
+      ? pricePerGramBacon
+      : pricePerGramChorizo;
+  return Math.round(totalGrams * perGram);
+}
+
 function calculateSubtotal(){
   const p=getSelectedProduct();
   const w=getSelectedWeight();
   if(!p || !w) return 0;
-  const kg = w.grams /1000;
-  return Math.round(p.pricePerKg * kg * state.currentQuantity);
+  return calculateLineTotal(p, w.grams, state.currentQuantity);
 }
 
 /** Próximo sábado (incluye hoy si hoy es sábado) */
@@ -620,34 +625,6 @@ function updateCartUI(){
 
 
 /* ---------------------------------------------------------
-   SUSCRIPCIÓN A PROMOS
---------------------------------------------------------- */
-async function sendPromoSubscriptionIfNeeded(){
-  if (!state.wantsPromos) return;
-
-  const telefono = (state.telefono || "").trim();
-  const email    = (state.promoEmail || "").trim();
-
-  if (!telefono && !email) return; // nada que suscribir
-
-  try {
-    await fetch(CONFIG.SHEETS_ENDPOINT, {
-      method:"POST",
-      headers:{ "Content-Type":"text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        action: "subscribePromo",
-        nombre: state.nombre || "",
-        telefono,
-        email
-      })
-    });
-  } catch (err) {
-    console.error("Error al suscribir a promos:", err);
-  }
-}
-
-
-/* ---------------------------------------------------------
    UI ENVÍO
 --------------------------------------------------------- */
 async function sendOrder() {
@@ -701,6 +678,7 @@ async function sendOrder() {
     if (state.discountCode) {
       comentariosBase += `\nCódigo de descuento: ${state.discountCode}`;
     }
+    comentariosBase += `\nMétodo de pago: SINPE móvil BAC`;
     const comentariosFinal = comentariosBase + "\n" + cartLines;
 
     const payload = {
@@ -715,7 +693,8 @@ async function sendOrder() {
       productoId: primerProducto,
       presentacionResumen: presentacionResumen,
       pesoTotalGramos: pesoTotalGramos,
-      discountCode: state.discountCode || ""
+      discountCode: state.discountCode || "",
+      promoAccepted: state.wantsPromos ? "Si" : ""
     };
 
     const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
@@ -760,8 +739,15 @@ async function sendOrder() {
     statusEl.classList.add("status-box-success");
     btnNuevo.style.display = "inline-block";
 
-    // Enviar suscripción a promos si aplica (no detiene el flujo aunque falle)
-    sendPromoSubscriptionIfNeeded();
+    // Ocultar la parte de arriba
+    document.getElementById("label-notas").style.display = "none";
+    document.getElementById("comentarios").style.display = "none";
+    document.getElementById("label-descuento").style.display = "none";
+    document.getElementById("discount-code").style.display = "none";
+    document.getElementById("sinpe-box").style.display = "none";
+    document.getElementById("chk-promos").disabled = true;
+    document.getElementById("btn-volver-productos").style.display = "none";
+    document.getElementById("btn-confirmar").style.display = "none";
 
     // Limpiar carrito y UI de resumen
     cart = [];
@@ -780,10 +766,8 @@ async function sendOrder() {
    RESET COMPLETO PARA NUEVO PEDIDO
 --------------------------------------------------------- */
 function resetForNewOrder(){
-  // nuevo sessionId
   sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-  // reset estado
   state.nombre = "";
   state.telefono = "";
   state.comentarios = "";
@@ -792,12 +776,10 @@ function resetForNewOrder(){
   state.currentWeightId = "";
   state.currentQuantity = 1;
   state.wantsPromos = false;
-  state.promoEmail = "";
 
   cart = [];
   updateCartUI();
 
-  // reset inputs
   document.getElementById("nombre").value = "";
   document.getElementById("telefono").value = "";
   document.getElementById("comentarios").value = "";
@@ -810,17 +792,53 @@ function resetForNewOrder(){
   document.getElementById("cantidad").value = 1;
   document.getElementById("product-image-wrapper").style.display = "none";
 
-  document.getElementById("status").textContent = "";
-  document.getElementById("status").classList.remove("status-box-success");
+  const statusEl = document.getElementById("status");
+  statusEl.textContent = "";
+  statusEl.classList.remove("status-box-success");
   document.getElementById("btn-nuevo-pedido").style.display = "none";
 
   document.getElementById("chk-promos").checked = false;
-  document.getElementById("promo-email").value = "";
+  document.getElementById("chk-promos").disabled = false;
 
-  // volver al paso 1
   document.getElementById("step-datos").classList.add("active");
   document.getElementById("step-producto").classList.remove("active");
   document.getElementById("step-cliente").classList.remove("active");
+
+  document.getElementById("label-notas").style.display = "";
+  document.getElementById("comentarios").style.display = "";
+  document.getElementById("label-descuento").style.display = "";
+  document.getElementById("discount-code").style.display = "";
+  document.getElementById("sinpe-box").style.display = "";
+  document.getElementById("btn-volver-productos").style.display = "";
+  document.getElementById("btn-confirmar").style.display = "";
+}
+
+
+/* ---------------------------------------------------------
+   CARGAR PRECIOS DESDE EL SHEET
+--------------------------------------------------------- */
+async function loadPricesFromSheet(){
+  try {
+    const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
+      method:"POST",
+      headers:{ "Content-Type":"text/plain;charset=utf-8" },
+      body: JSON.stringify({ action:"getPrices" })
+    });
+    if(!res.ok){
+      console.warn("Error HTTP getPrices:", res.status, res.statusText);
+      return;
+    }
+    const data = await res.json();
+    if(data.success){
+      pricePerGramChorizo = Number(data.priceChorizoPerGram || 0);
+      pricePerGramBacon   = Number(data.priceBaconPerGram   || 0);
+      console.log("Precios cargados:", {pricePerGramChorizo, pricePerGramBacon});
+    } else {
+      console.warn("getPrices no success:", data);
+    }
+  } catch(err){
+    console.error("Error en loadPricesFromSheet:", err);
+  }
 }
 
 
@@ -833,10 +851,8 @@ function setup(){
   const telInput = document.getElementById("telefono");
   const discountInput = document.getElementById("discount-code");
   const chkPromos = document.getElementById("chk-promos");
-  const promoEmailInput = document.getElementById("promo-email");
   const btnNuevo = document.getElementById("btn-nuevo-pedido");
 
-  // Poblar productos
   CONFIG.products.forEach(p=>{
     const o=document.createElement("option");
     o.value=p.id;
@@ -844,7 +860,6 @@ function setup(){
     productoSelect.appendChild(o);
   });
 
-  // Poblar pesos
   CONFIG.weights.forEach(w=>{
     const o=document.createElement("option");
     o.value=w.id;
@@ -852,11 +867,10 @@ function setup(){
     pesoSelect.appendChild(o);
   });
 
-  // Teléfono -> buscar puntos automáticamente al tener 8 dígitos
   let lastPointsPhone = "";
   telInput.addEventListener("input", ()=> {
     const raw   = telInput.value || "";
-    const clean = raw.replace(/\D/g,"").trim(); // solo dígitos
+    const clean = raw.replace(/\D/g,"").trim();
 
     if (clean.length >= 8 && clean !== lastPointsPhone) {
       lastPointsPhone = clean;
@@ -867,20 +881,14 @@ function setup(){
     }
   });
 
-  // Código de descuento siempre en mayúsculas
   discountInput.addEventListener("input", ()=>{
     discountInput.value = discountInput.value.toUpperCase();
   });
 
-  // Promos
   chkPromos.addEventListener("change", ()=>{
     state.wantsPromos = chkPromos.checked;
   });
-  promoEmailInput.addEventListener("input", ()=>{
-    state.promoEmail = promoEmailInput.value.trim();
-  });
 
-  // Paso 1 -> Paso 2
   document.getElementById("btn-ir-productos").onclick = ()=>{
     const n=document.getElementById("nombre").value.trim();
     const t=telInput.value.trim();
@@ -930,17 +938,16 @@ function setup(){
   };
 
 
-  /* ----- AGREGAR AL CARRITO ----- */
   const btnAgregar = document.getElementById("btn-agregar-carrito");
   btnAgregar.onclick = ()=>{
     const p=getSelectedProduct();
     const w=getSelectedWeight();
     if(!p || !w){
-      alert("Revisá que escogiste el chorizo y el peso.");
+      alert("Revisá que escogiste el chorizo/tocineta y el peso.");
       return;
     }
     const qty = state.currentQuantity;
-    const lineTotal = calculateSubtotal();
+    const lineTotal = calculateLineTotal(p, w.grams, qty);
 
     cart.push({
       productId: p.id,
@@ -952,11 +959,8 @@ function setup(){
     });
 
     updateCartUI();
-
-    // confetti pequeño en agregar al carrito
     burstConfettiSmallFromElement(btnAgregar);
 
-    // limpiar selecciones
     state.currentProductId="";
     state.currentWeightId="";
     state.currentQuantity=1;
@@ -969,7 +973,6 @@ function setup(){
   };
 
 
-  /* ----- COMPRAR YA ----- */
   document.getElementById("btn-comprar-ya").onclick = ()=>{
     if(cart.length===0){
       alert("Agregá algo al carrito.");
@@ -982,24 +985,20 @@ function setup(){
   };
 
 
-  /* ----- VOLVER ----- */
   document.getElementById("btn-volver-productos").onclick = ()=>{
     document.getElementById("step-cliente").classList.remove("active");
     document.getElementById("step-producto").classList.add("active");
   };
 
 
-  /* ----- CONFIRMAR ----- */
   document.getElementById("btn-confirmar").onclick = ()=>{
     state.comentarios = document.getElementById("comentarios").value.trim();
     state.discountCode = document.getElementById("discount-code").value.trim().toUpperCase();
     sendOrder();
   };
 
-  /* ----- NUEVO PEDIDO ----- */
   btnNuevo.onclick = resetForNewOrder;
 
-  /* ----- ICONO CARRITO + DRAWER ----- */
   document.getElementById("cart-icon").onclick = openCartDrawer;
   document.getElementById("cart-backdrop").onclick = closeCartDrawer;
   document.getElementById("btn-cart-close").onclick = closeCartDrawer;
@@ -1015,8 +1014,8 @@ function setup(){
     updateResumenFinal();
   };
 
-  // iniciar carrito vacío en UI
   updateCartUI();
+  loadPricesFromSheet();
 }
 
 
