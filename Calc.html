@@ -277,7 +277,7 @@
 </head>
 
 <body>
-  <h1>Monte Alto – Calculadora 6:48</h1>
+  <h1>Monte Alto – Calculadora 6:52</h1>
 
   <div class="card">
 
@@ -422,59 +422,55 @@ const CONFIG = {
   ]
 };
 
-/* Precios por gramo:
-   - Se inicializan con valores por defecto
-   - Luego se sobre-escriben con AA1 y AC1 si vienen del Sheet
-*/
-let pricePerGramChorizo = 8.5; // fallback: 7.8 col/gramo
-let pricePerGramBacon   = 11.0; // fallback: 12 col/gramo
+/* Precios por gramo (fallback) */
+let pricePerGramChorizo = 8.5;
+let pricePerGramBacon   = 11.0;
 
 /* ===================== ESTADO ===================== */
 let sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 let cart = [];
 
 const state = {
-  nombre:"",
-  telefono:"",
-  comentarios:"",
-  discountCode:"",
-  currentProductId:"",
-  currentWeightId:"",
-  currentQuantity:1,
-  wantsPromos:false
+  nombre: "",
+  telefono: "",
+  comentarios: "",
+  discountCode: "",
+  currentProductId: "",
+  currentWeightId: "",
+  currentQuantity: 1,
+  wantsPromos: false
 };
 
 /* ===================== UTILIDADES ===================== */
-function formatCRC(v){ return "₡"+(v||0).toLocaleString("es-CR"); }
-
-function getSelectedProduct(){
-  return CONFIG.products.find(p=>p.id===state.currentProductId) || null;
+function formatCRC(v) {
+  return "₡" + (v || 0).toLocaleString("es-CR");
 }
 
-function getSelectedWeight(){
-  return CONFIG.weights.find(w=>w.id===state.currentWeightId) || null;
+function getSelectedProduct() {
+  return CONFIG.products.find(p => p.id === state.currentProductId) || null;
 }
 
-function calculateLineTotal(product, grams, quantity){
-  if(!product || !grams || !quantity) return 0;
+function getSelectedWeight() {
+  return CONFIG.weights.find(w => w.id === state.currentWeightId) || null;
+}
+
+function calculateLineTotal(product, grams, quantity) {
+  if (!product || !grams || !quantity) return 0;
 
   const totalGrams = grams * quantity;
-  const perGram =
-    product.type === "bacon"
-      ? pricePerGramBacon
-      : pricePerGramChorizo;
+  const perGram = product.type === "bacon" ? pricePerGramBacon : pricePerGramChorizo;
 
   return Math.round(totalGrams * perGram);
 }
 
-function calculateSubtotal(){
-  const p=getSelectedProduct();
-  const w=getSelectedWeight();
-  if(!p || !w) return 0;
+function calculateSubtotal() {
+  const p = getSelectedProduct();
+  const w = getSelectedWeight();
+  if (!p || !w) return 0;
   return calculateLineTotal(p, w.grams, state.currentQuantity);
 }
 
-function getNextSaturday(fromDate = new Date()){
+function getNextSaturday(fromDate = new Date()) {
   const d = new Date(fromDate);
   const day = d.getDay();
   const diff = (6 - day + 7) % 7;
@@ -509,7 +505,7 @@ function burstConfettiBigCenter() {
 }
 
 /* ===================== PUNTOS TELÉFONO ===================== */
-async function fetchPointsForPhone(phone){
+async function fetchPointsForPhone(phone) {
   const infoEl = document.getElementById("puntos-info");
   const clean = (phone || "").trim();
 
@@ -520,15 +516,15 @@ async function fetchPointsForPhone(phone){
 
   try {
     const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
-      method:"POST",
-      headers:{ "Content-Type":"text/plain;charset=utf-8" },
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({
-        action:"getPoints",
+        action: "getPoints",
         telefono: clean
       })
     });
 
-    if(!res.ok){
+    if (!res.ok) {
       console.warn("Error HTTP getPoints:", res.status, res.statusText);
       infoEl.textContent = "";
       return;
@@ -546,23 +542,23 @@ async function fetchPointsForPhone(phone){
     } else {
       infoEl.textContent = "";
     }
-  } catch (err){
+  } catch (err) {
     console.error("Error en fetchPointsForPhone:", err);
     infoEl.textContent = "";
   }
 }
 
-/* ===================== PRUEBA + CONFIG: GET Z1–AC1 ===================== */
-async function loadConfigFromSheet(){
+/* ===================== CONFIG: GET Z1–AC1 ===================== */
+async function loadConfigFromSheet() {
   const box = document.getElementById("server-config");
   try {
     const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
-      method:"POST",
-      headers:{ "Content-Type":"text/plain;charset=utf-8" },
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "getConfig" })
     });
 
-    if(!res.ok){
+    if (!res.ok) {
       box.textContent = "No se pudo leer configuración (HTTP " + res.status + ").";
       console.warn("Error HTTP getConfig:", res.status, res.statusText);
       return;
@@ -586,11 +582,11 @@ async function loadConfigFromSheet(){
       const precioKiloBacon   = pricePerGramBacon * 1000;
 
       box.innerHTML =
-        `<strong>Config GS (prueba):</strong><br>` +
-        `Z1: <code>${data.Z1 ?? ""}</code><br>` +
-        `AA1 (¢/g chorizo): <code>${pricePerGramChorizo}</code> ≈ <code>${formatCRC(precioKiloChorizo)}</code> / kg<br>` +
-        `AB1: <code>${data.AB1 ?? ""}</code><br>` +
-        `AC1 (¢/g bacon): <code>${pricePerGramBacon}</code> ≈ <code>${formatCRC(precioKiloBacon)}</code> / kg`;
+        "<strong>Config GS (prueba):</strong><br>" +
+        "Z1: <code>" + (data.Z1 ?? "") + "</code><br>" +
+        "AA1 (¢/g chorizo): <code>" + pricePerGramChorizo + "</code> ≈ <code>" + formatCRC(precioKiloChorizo) + "</code> / kg<br>" +
+        "AB1: <code>" + (data.AB1 ?? "") + "</code><br>" +
+        "AC1 (¢/g bacon): <code>" + pricePerGramBacon + "</code> ≈ <code>" + formatCRC(precioKiloBacon) + "</code> / kg";
     } else {
       box.textContent = "getConfig respondió sin éxito: " + (data.message || "");
     }
@@ -601,8 +597,8 @@ async function loadConfigFromSheet(){
 }
 
 /* ===================== CARRITO ===================== */
-function openCartDrawer(){
-  if(cart.length===0){
+function openCartDrawer() {
+  if (cart.length === 0) {
     alert("Tu carrito está vacío.");
     return;
   }
@@ -610,12 +606,12 @@ function openCartDrawer(){
   document.getElementById("cart-backdrop").style.display = "block";
 }
 
-function closeCartDrawer(){
+function closeCartDrawer() {
   document.getElementById("cart-drawer").classList.remove("open");
   document.getElementById("cart-backdrop").style.display = "none";
 }
 
-function updateCartUI(){
+function updateCartUI() {
   const countEl = document.getElementById("cart-count");
   const bodyEl  = document.getElementById("cart-drawer-body");
   const totalEl = document.getElementById("cart-drawer-total");
@@ -623,23 +619,23 @@ function updateCartUI(){
   countEl.textContent = cart.length.toString();
   bodyEl.innerHTML = "";
 
-  if(cart.length===0){
+  if (cart.length === 0) {
     bodyEl.innerHTML = '<p class="muted">Tu carrito está vacío.</p>';
     totalEl.textContent = "₡0";
     return;
   }
 
-  cart.forEach(item=>{
+  cart.forEach(item => {
     const div = document.createElement("div");
     div.className = "cart-item-row";
     div.innerHTML =
-      `<div><strong>${item.quantity} x ${item.productName}</strong></div>
-       <div class="muted">${item.packLabel}</div>
-       <div>${formatCRC(item.lineTotal)}</div>`;
+      "<div><strong>" + item.quantity + " x " + item.productName + "</strong></div>" +
+      '<div class="muted">' + item.packLabel + "</div>" +
+      "<div>" + formatCRC(item.lineTotal) + "</div>";
     bodyEl.appendChild(div);
   });
 
-  const total = cart.reduce((s,c)=>s+c.lineTotal,0);
+  const total = cart.reduce((s, c) => s + c.lineTotal, 0);
   totalEl.textContent = formatCRC(total);
 }
 
@@ -658,22 +654,25 @@ async function sendOrder() {
       return;
     }
 
-    statusEl.textContent = `Enviando tu pedido, ${nombreSeguro}...`;
+    statusEl.textContent = "Enviando tu pedido, " + nombreSeguro + "...";
 
-    const totalColones = cart.reduce((suma, item) => suma + Number(item.lineTotal || 0), 0);
+    const totalColones = cart.reduce(
+      (suma, item) => suma + Number(item.lineTotal || 0),
+      0
+    );
 
     const cartLines = cart
       .map(item => {
-        const qty = item.quantity ?? 0;
-        const name = item.productName ?? "Producto";
-        const pack = item.packLabel ?? "";
+        const qty = item.quantity || 0;
+        const name = item.productName || "Producto";
+        const pack = item.packLabel || "";
         const lineTotal = Number(item.lineTotal || 0);
-        return `${qty} x ${name} (${pack}) – ${formatCRC(lineTotal)}`;
+        return qty + " x " + name + " (" + pack + ") – " + formatCRC(lineTotal);
       })
       .join("\n");
 
     const presentacionResumen = cart
-      .map(item => `${item.quantity ?? 0} x ${item.packLabel ?? ""}`)
+      .map(item => (item.quantity || 0) + " x " + (item.packLabel || ""))
       .join(", ");
 
     const pesoTotalGramos = cart.reduce(
@@ -681,15 +680,14 @@ async function sendOrder() {
       0
     );
 
-    const primerProducto = cart[0]?.productName || "Calculadora Monte Alto";
+    const primerProducto = (cart[0] && cart[0].productName) || "Calculadora Monte Alto";
 
     let comentariosBase = (state && state.comentarios) || "";
     if (state.discountCode) {
-      comentariosBase += `
-Código de descuento: ${state.discountCode}`;
+      comentariosBase += "\nCódigo de descuento: " + state.discountCode;
     }
-    comentariosBase += `
-Método de pago: SINPE móvil BAC`;
+    comentariosBase += "\nMétodo de pago: SINPE móvil BAC";
+
     const comentariosFinal = comentariosBase + "\n" + cartLines;
 
     const payload = {
@@ -710,25 +708,28 @@ Método de pago: SINPE móvil BAC`;
 
     const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
       method: "POST",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8"
-      },
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload)
     });
 
     if (!res.ok) {
       statusEl.textContent =
-        `Error enviando el pedido (HTTP ${res.status}: ${res.statusText}). Verificá la URL del Apps Script.`;
+        "Error enviando el pedido (HTTP " + res.status + ": " + res.statusText + "). Verificá la URL del Apps Script.";
       return;
     }
 
-    try { await res.text(); } catch(e){}
+    try {
+      await res.text();
+    } catch (e) {
+      // ignorar
+    }
 
     burstConfettiBigCenter();
 
     const resumenHtml = cart
       .map(item =>
-        `${item.quantity} x ${item.productName} (${item.packLabel}) – ${formatCRC(item.lineTotal)}`
+        (item.quantity || 0) + " x " + item.productName +
+        " (" + item.packLabel + ") – " + formatCRC(item.lineTotal)
       )
       .join("<br>");
 
@@ -740,11 +741,11 @@ Método de pago: SINPE móvil BAC`;
     });
 
     statusEl.innerHTML =
-      `¡Gracias por tu compra, ${nombreSeguro}! 🧡<br><br>` +
-      `<strong>Resumen de tu pedido:</strong><br>` +
-      `${resumenHtml}<br><br>` +
-      `<strong>Total:</strong> ${formatCRC(totalColones)}<br>` +
-      `<strong>Fecha estimada de entrega:</strong> ${entregaStr}`;
+      "¡Gracias por tu compra, " + nombreSeguro + "! 🧡<br><br>" +
+      "<strong>Resumen de tu pedido:</strong><br>" +
+      resumenHtml + "<br><br>" +
+      "<strong>Total:</strong> " + formatCRC(totalColones) + "<br>" +
+      "<strong>Fecha estimada de entrega:</strong> " + entregaStr;
 
     statusEl.classList.add("status-box-success");
     btnNuevo.style.display = "inline-block";
@@ -760,15 +761,16 @@ Método de pago: SINPE móvil BAC`;
     updateCartUI();
     document.getElementById("resumen-final").innerHTML = "";
 
-} catch (err) {
-  console.error("Error en sendOrder():", err);
-  statusEl.textContent =
-    "Hubo un problema enviando tu pedido.\nDetalle técnico: " +
-    (err && err.message ? err.message : String(err));
+  } catch (err) {
+    console.error("Error en sendOrder():", err);
+    statusEl.textContent =
+      "Hubo un problema enviando tu pedido.\nDetalle técnico: " +
+      (err && err.message ? err.message : String(err));
+  }
 }
 
 /* ===================== RESET ===================== */
-function resetForNewOrder(){
+function resetForNewOrder() {
   sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
   state.nombre = "";
@@ -814,8 +816,24 @@ function resetForNewOrder(){
   document.getElementById("btn-confirmar").style.display = "";
 }
 
+/* ===================== RESUMEN FINAL ===================== */
+function updateResumenFinal() {
+  const total = cart.reduce((s, c) => s + c.lineTotal, 0);
+  const list = cart
+    .map(i =>
+      (i.quantity || 0) + " x " + i.productName +
+      " (" + i.packLabel + ") – " + formatCRC(i.lineTotal)
+    )
+    .join("<br>");
+
+  document.getElementById("resumen-final").innerHTML =
+    "<strong>Resumen de tu compra:</strong><br>" +
+    list +
+    "<br><br><strong>Total:</strong> " + formatCRC(total);
+}
+
 /* ===================== SETUP ===================== */
-function setup(){
+function setup() {
   const productoSelect = document.getElementById("producto");
   const pesoSelect = document.getElementById("peso");
   const telInput = document.getElementById("telefono");
@@ -823,24 +841,24 @@ function setup(){
   const chkPromos = document.getElementById("chk-promos");
   const btnNuevo = document.getElementById("btn-nuevo-pedido");
 
-  CONFIG.products.forEach(p=>{
-    const o=document.createElement("option");
-    o.value=p.id;
-    o.textContent=p.name;
+  CONFIG.products.forEach(p => {
+    const o = document.createElement("option");
+    o.value = p.id;
+    o.textContent = p.name;
     productoSelect.appendChild(o);
   });
 
-  CONFIG.weights.forEach(w=>{
-    const o=document.createElement("option");
-    o.value=w.id;
-    o.textContent=w.label;
+  CONFIG.weights.forEach(w => {
+    const o = document.createElement("option");
+    o.value = w.id;
+    o.textContent = w.label;
     pesoSelect.appendChild(o);
   });
 
   let lastPointsPhone = "";
-  telInput.addEventListener("input", ()=> {
+  telInput.addEventListener("input", () => {
     const raw   = telInput.value || "";
-    const clean = raw.replace(/\D/g,"").trim();
+    const clean = raw.replace(/\D/g, "").trim();
     if (clean.length >= 8 && clean !== lastPointsPhone) {
       lastPointsPhone = clean;
       fetchPointsForPhone(clean);
@@ -850,61 +868,68 @@ function setup(){
     }
   });
 
-  discountInput.addEventListener("input", ()=>{
+  discountInput.addEventListener("input", () => {
     discountInput.value = discountInput.value.toUpperCase();
   });
 
-  chkPromos.addEventListener("change", ()=>{
+  chkPromos.addEventListener("change", () => {
     state.wantsPromos = chkPromos.checked;
   });
 
-  document.getElementById("btn-ir-productos").onclick = ()=>{
-    const n=document.getElementById("nombre").value.trim();
-    const t=telInput.value.trim();
-    const err=document.getElementById("datos-error");
-    if(!n){ err.textContent="Ingresá tu nombre."; return; }
-    if(!t || t.replace(/\D/g,"").length<8){ err.textContent="Teléfono inválido."; return; }
-    state.nombre=n;
-    state.telefono=t;
+  document.getElementById("btn-ir-productos").onclick = () => {
+    const n = document.getElementById("nombre").value.trim();
+    const t = telInput.value.trim();
+    const err = document.getElementById("datos-error");
+    if (!n) {
+      err.textContent = "Ingresá tu nombre.";
+      return;
+    }
+    if (!t || t.replace(/\D/g, "").length < 8) {
+      err.textContent = "Teléfono inválido.";
+      return;
+    }
+    state.nombre = n;
+    state.telefono = t;
     document.getElementById("step-datos").classList.remove("active");
     document.getElementById("step-producto").classList.add("active");
   };
 
-  productoSelect.onchange = ()=>{
+  productoSelect.onchange = () => {
     state.currentProductId = productoSelect.value;
     const p = getSelectedProduct();
-    const imgWrap=document.getElementById("product-image-wrapper");
-    const img=document.getElementById("product-image");
-    const caption=document.getElementById("product-image-caption");
-    if(p){
-      img.src=p.imageUrl;
-      caption.textContent=p.name;
-      imgWrap.style.display="block";
+    const imgWrap = document.getElementById("product-image-wrapper");
+    const img = document.getElementById("product-image");
+    const caption = document.getElementById("product-image-caption");
+    if (p) {
+      img.src = p.imageUrl;
+      caption.textContent = p.name;
+      imgWrap.style.display = "block";
     } else {
-      imgWrap.style.display="none";
-      img.src="";
+      imgWrap.style.display = "none";
+      img.src = "";
     }
     document.getElementById("subtotal-linea").textContent =
       formatCRC(calculateSubtotal());
   };
 
-  pesoSelect.onchange = ()=>{
+  pesoSelect.onchange = () => {
     state.currentWeightId = pesoSelect.value;
     document.getElementById("subtotal-linea").textContent =
       formatCRC(calculateSubtotal());
   };
 
-  document.getElementById("cantidad").oninput = ()=>{
-    state.currentQuantity = Number(document.getElementById("cantidad").value)||1;
+  document.getElementById("cantidad").oninput = () => {
+    state.currentQuantity =
+      Number(document.getElementById("cantidad").value) || 1;
     document.getElementById("subtotal-linea").textContent =
       formatCRC(calculateSubtotal());
   };
 
   const btnAgregar = document.getElementById("btn-agregar-carrito");
-  btnAgregar.onclick = ()=>{
-    const p=getSelectedProduct();
-    const w=getSelectedWeight();
-    if(!p || !w){
+  btnAgregar.onclick = () => {
+    const p = getSelectedProduct();
+    const w = getSelectedWeight();
+    if (!p || !w) {
       alert("Revisá que escogiste el chorizo/tocineta y el peso.");
       return;
     }
@@ -917,22 +942,22 @@ function setup(){
       packLabel: w.label,
       grams: w.grams,
       quantity: qty,
-      lineTotal
+      lineTotal: lineTotal
     });
     updateCartUI();
     burstConfettiSmallFromElement(btnAgregar);
-    state.currentProductId="";
-    state.currentWeightId="";
-    state.currentQuantity=1;
-    document.getElementById("producto").value="";
-    document.getElementById("peso").value="";
-    document.getElementById("cantidad").value=1;
-    document.getElementById("product-image-wrapper").style.display="none";
-    document.getElementById("subtotal-linea").textContent="₡0";
+    state.currentProductId = "";
+    state.currentWeightId = "";
+    state.currentQuantity = 1;
+    document.getElementById("producto").value = "";
+    document.getElementById("peso").value = "";
+    document.getElementById("cantidad").value = 1;
+    document.getElementById("product-image-wrapper").style.display = "none";
+    document.getElementById("subtotal-linea").textContent = "₡0";
   };
 
-  document.getElementById("btn-comprar-ya").onclick = ()=>{
-    if(cart.length===0){
+  document.getElementById("btn-comprar-ya").onclick = () => {
+    if (cart.length === 0) {
       alert("Agregá algo al carrito.");
       return;
     }
@@ -942,13 +967,14 @@ function setup(){
     updateResumenFinal();
   };
 
-  document.getElementById("btn-volver-productos").onclick = ()=>{
+  document.getElementById("btn-volver-productos").onclick = () => {
     document.getElementById("step-cliente").classList.remove("active");
     document.getElementById("step-producto").classList.add("active");
   };
 
-  document.getElementById("btn-confirmar").onclick = ()=>{
-    state.discountCode = document.getElementById("discount-code").value.trim().toUpperCase();
+  document.getElementById("btn-confirmar").onclick = () => {
+    state.discountCode =
+      document.getElementById("discount-code").value.trim().toUpperCase();
     sendOrder();
   };
 
@@ -958,8 +984,8 @@ function setup(){
   document.getElementById("cart-backdrop").onclick = closeCartDrawer;
   document.getElementById("btn-cart-close").onclick = closeCartDrawer;
 
-  document.getElementById("btn-go-confirm").onclick = ()=>{
-    if(cart.length===0){
+  document.getElementById("btn-go-confirm").onclick = () => {
+    if (cart.length === 0) {
       alert("Tu carrito está vacío.");
       return;
     }
@@ -970,24 +996,16 @@ function setup(){
   };
 
   updateCartUI();
-  loadConfigFromSheet();   // ← aquí leemos Z1–AC1 y actualizamos precios
+  loadConfigFromSheet();
 }
 
-function updateResumenFinal(){
-  const total = cart.reduce((s,c)=>s+c.lineTotal,0);
-  const list = cart.map(i =>
-    `${i.quantity} x ${i.productName} (${i.packLabel}) – ${formatCRC(i.lineTotal)}`
-  ).join("<br>");
-  document.getElementById("resumen-final").innerHTML =
-    `<strong>Resumen de tu compra:</strong><br>${list}<br><br>
-     <strong>Total:</strong> ${formatCRC(total)}`;
-}
-
-window.onload = ()=> setup();
+window.onload = () => setup();
 </script>
+
 
 </body>
 </html>
+
 
 
 
