@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>12 am Monte Alto – Calculadora de Embutidos</title>
+  <title>12:20 Monte Alto – Calculadora de Embutidos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
@@ -17,12 +17,19 @@
       color: #f9fafb;
       margin: 0;
       padding: 1rem;
-      transition: background-color 0.2s ease, color 0.2s ease;
     }
 
     h1 {
       text-align: center;
       margin-bottom: 1rem;
+    }
+
+    a {
+      color: #93c5fd;
+    }
+
+    a:hover {
+      text-decoration: underline;
     }
 
     .card {
@@ -33,7 +40,6 @@
       padding: 1rem 1.25rem 1.5rem;
       box-shadow: 0 10px 25px rgba(0,0,0,0.3);
       position: relative;
-      overflow: hidden;
     }
 
     label {
@@ -53,7 +59,6 @@
       color: #f9fafb;
       margin-bottom: 0.75rem;
       font-size: 0.95rem;
-      transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
     }
 
     button {
@@ -175,7 +180,6 @@
       font-size:0.9rem;
       cursor:pointer;
       user-select:none;
-      z-index:20;
     }
     #cart-icon span.cart-emoji {
       font-size:1.1rem;
@@ -270,34 +274,11 @@
 
     .cart-item-row {
       margin-bottom:0.5rem;
-      padding-bottom:0.4rem;
-      border-bottom:1px dashed #1f2937;
-      display:flex;
-      gap:0.5rem;
-      align-items:flex-start;
-    }
-    .cart-item-icon {
-      font-size:1.1rem;
-      margin-top:0.1rem;
-    }
-    .cart-item-main {
-      flex:1;
-    }
-    .cart-item-name {
-      font-weight:600;
-    }
-    .cart-item-pack {
-      font-size:0.8rem;
-      color:#9ca3af;
-    }
-    .cart-item-price {
-      font-weight:600;
-      white-space:nowrap;
     }
 
     .cart-drawer-footer {
       margin-top:0.75rem;
-      padding-bottom: 2.5rem;
+      padding-bottom: 2.5rem; /* para no pegar con la barra inferior de los celulares */
     }
 
     .w-full {
@@ -322,133 +303,105 @@
       color: #9ca3af;
     }
 
-    #recom-info {
-      min-height: 1em;
-      margin-top: 0.25rem;
-      font-size: 0.85rem;
-      color:#9ca3af;
-    }
-
-    /* TOGGLE TEMA */
+    /* ===================== TOGGLE TEMA ===================== */
     .theme-toggle {
-      position:absolute;
-      top:0.75rem;
-      left:0.75rem;
-      display:flex;
-      gap:0.4rem;
-      z-index:20;
+      position: fixed;
+      top: 0.75rem;
+      left: 0.75rem;
+      z-index: 1100;
+      display: flex;
+      gap: 0.25rem;
+      font-size: 0.8rem;
     }
+
     .theme-pill {
-      display:flex;
-      align-items:center;
-      gap:0.25rem;
-      padding:0.15rem 0.55rem;
-      border-radius:999px;
-      border:1px solid #374151;
-      background:#020617;
-      font-size:0.75rem;
-      color:#9ca3af;
-      cursor:pointer;
-      box-shadow:none;
-    }
-    .theme-pill span.icon {
-      font-size:0.85rem;
-    }
-    .theme-pill.active {
-      background:#fbbf24;
-      color:#111827;
-      border-color:#fbbf24;
-      font-weight:600;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      background: #111827;
+      color: #f9fafb;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      transition: background 0.15s ease, color 0.15s ease, transform 0.08s ease;
     }
 
-    /* CREDITS */
-    .credits {
-      max-width:680px;
-      margin:0.5rem auto 0;
-      text-align:center;
-      font-size:0.75rem;
-      color:#6b7280;
-    }
-    .credits a {
-      color:#9ca3af;
-      text-decoration:none;
-    }
-    .credits a:hover {
-      text-decoration:underline;
+    .theme-pill:active {
+      transform: scale(0.95);
     }
 
-    /* LIGHT THEME OVERRIDES */
-    body.theme-light {
-      background:#e5e7eb;
-      color:#111827;
-    }
-    body.theme-light .card {
-      background:#ffffff;
-      box-shadow:0 6px 18px rgba(15,23,42,0.25);
-    }
-    body.theme-light select,
-    body.theme-light input,
-    body.theme-light textarea {
-      background:#f9fafb;
-      color:#111827;
-      border-color:#d1d5db;
-    }
-    body.theme-light .summary-box {
-      background:#f9fafb;
-      border-color:#d1d5db;
-    }
-    body.theme-light .muted {
-      color:#6b7280;
-    }
-    body.theme-light #status.status-box-success {
-      background:#ecfdf5;
-      border-color:#16a34a;
-      color:#14532d;
-    }
-    body.theme-light #cart-icon {
-      background:#f9fafb;
-      border-color:#d1d5db;
-    }
-    body.theme-light .cart-drawer {
-      background:#ffffff;
-    }
-    body.theme-light .cart-drawer-body {
-      border-top-color:#e5e7eb;
-      border-bottom-color:#e5e7eb;
+    .theme-pill-active {
+      box-shadow: 0 0 0 2px #fbbf24;
     }
 
-    /* CART ICON FLOATING ON MOBILE */
-    @media (max-width: 640px) {
-      #cart-icon {
-        position:fixed;
-        top:auto;
-        right:1rem;
-        bottom:1rem;
-      }
+    /* TEMA CLARO */
+    body[data-theme="light"] {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    body[data-theme="light"] .card {
+      background: #ffffff;
+    }
+
+    body[data-theme="light"] select,
+    body[data-theme="light"] input,
+    body[data-theme="light"] button,
+    body[data-theme="light"] textarea {
+      background: #f9fafb;
+      color: #111827;
+      border-color: #d1d5db;
+    }
+
+    body[data-theme="light"] .summary-box {
+      background: #f3f4f6;
+      border-color: #d1d5db;
+    }
+
+    body[data-theme="light"] .muted {
+      color: #6b7280;
+    }
+
+    body[data-theme="light"] #cart-icon {
+      background: #f9fafb;
+      border-color: #e5e7eb;
+    }
+
+    body[data-theme="light"] .cart-drawer {
+      background: #f9fafb;
+    }
+
+    body[data-theme="light"] .cart-drawer-body {
+      border-top-color: #e5e7eb;
+      border-bottom-color: #e5e7eb;
+    }
+
+    body[data-theme="light"] #status.status-box-success {
+      background: #ecfdf5;
+      border-color: #16a34a;
+      color: #166534;
+    }
+
+    body[data-theme="light"] a {
+      color: #2563eb;
     }
   </style>
 </head>
 
-<body>
+<body data-theme="dark">
+  <!-- Toggle claro / oscuro -->
+  <div class="theme-toggle">
+    <button id="btn-theme-dark" class="theme-pill theme-pill-active">🌙</button>
+    <button id="btn-theme-light" class="theme-pill">☀️</button>
+  </div>
+
   <h1>Monte Alto – Calculadora</h1>
 
   <!-- Sonidos -->
-<audio id="sound-add" src="click-add-pop.wav" preload="auto"></audio>
-<audio id="sound-send" src="click-send-confirm.wav" preload="auto"></audio>
+  <audio id="sound-add" src="click-add.mp3" preload="auto"></audio>
+  <audio id="sound-send" src="click-send.mp3" preload="auto"></audio>
 
   <div class="card">
 
-    <!-- Toggle tema -->
-    <div class="theme-toggle">
-      <button class="theme-pill" data-theme="light">
-        <span class="icon">☀️</span><span>Claro</span>
-      </button>
-      <button class="theme-pill active" data-theme="dark">
-        <span class="icon">🌙</span><span>Oscuro</span>
-      </button>
-    </div>
-
-    <!-- Carrito -->
     <div id="cart-icon">
       <span class="cart-emoji">🛒</span>
       <span id="cart-count">0</span>
@@ -471,7 +424,6 @@
       </div>
 
       <div id="puntos-info"></div>
-      <div id="recom-info"></div>
       <div id="datos-error" class="error-text"></div>
 
       <button id="btn-ir-productos" class="primary" disabled>Continuar</button>
@@ -530,6 +482,8 @@
         </label>
       </div>
 
+      <!-- se eliminó el div resumen-final para no mostrar caja vacía -->
+
       <button id="btn-volver-productos" class="secondary">Volver</button>
       <button id="btn-confirmar" class="primary">Confirmar pedido</button>
 
@@ -540,6 +494,12 @@
     </div>
 
   </div>
+
+  <p class="muted" style="text-align:center; margin-top:0.75rem; font-size:0.75rem;">
+    Calculadora web realizada por
+    <a href="https://www.linkedin.com/in/jeffrey-trigueros-371191123/"
+       target="_blank" rel="noopener noreferrer">Jeffrey Trigueros</a>.
+  </p>
 
   <div id="cart-backdrop" class="cart-backdrop"></div>
 
@@ -552,27 +512,54 @@
       <p class="muted">Tu carrito está vacío.</p>
     </div>
     <div class="cart-drawer-footer">
-      <div class="muted">Subtotal: <strong id="cart-drawer-subtotal">₡0</strong></div>
-      <div class="muted" id="cart-drawer-discount" style="display:none;">
-        Descuento: <strong id="cart-drawer-discount-amount">₡0</strong>
+      <div class="muted">
+        Total: <strong id="cart-drawer-total">₡0</strong>
       </div>
-      <div class="muted"><strong>Total:</strong> <strong id="cart-drawer-total">₡0</strong></div>
       <button id="btn-go-confirm" class="primary w-full" style="margin-top:0.5rem;">
         Ir a confirmar pedido
       </button>
     </div>
   </div>
 
-  <p class="credits">
-    Calculadora web realizada por
-    <a href="https://www.linkedin.com/in/jeffrey-trigueros-371191123/" target="_blank" rel="noopener noreferrer">
-      Jeffrey Trigueros
-    </a>.
-  </p>
-
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <script>
+  /* ===================== TEMA CLARO/OSCURO ===================== */
+  function applyTheme(theme) {
+    const body = document.body;
+    const btnDark = document.getElementById("btn-theme-dark");
+    const btnLight = document.getElementById("btn-theme-light");
+
+    if (!body || !btnDark || !btnLight) return;
+
+    if (theme === "light") {
+      body.setAttribute("data-theme", "light");
+    } else {
+      theme = "dark";
+      body.setAttribute("data-theme", "dark");
+    }
+
+    btnDark.classList.toggle("theme-pill-active", theme === "dark");
+    btnLight.classList.toggle("theme-pill-active", theme === "light");
+
+    try {
+      localStorage.setItem("montealto_theme", theme);
+    } catch (e) {}
+  }
+
+  function initTheme() {
+    let theme = "dark";
+    try {
+      const saved = localStorage.getItem("montealto_theme");
+      if (saved === "light" || saved === "dark") {
+        theme = saved;
+      } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) {
+        theme = "light";
+      }
+    } catch (e) {}
+    applyTheme(theme);
+  }
+
   /* ===================== CONFIG BÁSICA ===================== */
   const CONFIG = {
     SHEETS_ENDPOINT:
@@ -610,18 +597,7 @@
     currentWeightId: "",
     currentQuantity: 1,
     wantsPromos: false,
-    pointsChecked: false,
-    customerProfile: {
-      pointsBefore: 0,
-      totalOrders: 0,
-      usedFirstDiscount: false,
-      lastProduct: "",
-      lastPresentacion: ""
-    },
-    discount: {
-      percent: 0,
-      label: ""
-    }
+    pointsChecked: false   // para controlar el botón Continuar
   };
 
   /* ===================== UTILIDADES ===================== */
@@ -708,56 +684,15 @@
     });
   }
 
-  /* ===================== TEMA CLARO/OSCURO ===================== */
-  function applyTheme(theme) {
-    const body = document.body;
-    const pills = document.querySelectorAll(".theme-pill");
-    if (theme === "light") {
-      body.classList.add("theme-light");
-    } else {
-      body.classList.remove("theme-light");
-      theme = "dark";
-    }
-    pills.forEach(p => {
-      p.classList.toggle("active", p.dataset.theme === theme);
-    });
-    try {
-      localStorage.setItem("ma_theme", theme);
-    } catch (e) {}
-  }
-
-  function initTheme() {
-    let saved = null;
-    try {
-      saved = localStorage.getItem("ma_theme");
-    } catch (e) {}
-    if (!saved) {
-      const prefersDark = window.matchMedia &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches;
-      saved = prefersDark ? "dark" : "light";
-    }
-    applyTheme(saved);
-  }
-
-  /* ===================== PUNTOS + PERFIL CLIENTE ===================== */
+  /* ===================== PUNTOS TELÉFONO ===================== */
   async function fetchPointsForPhone(phone) {
     const infoEl = document.getElementById("puntos-info");
-    const recomEl = document.getElementById("recom-info");
     const clean = (phone || "").trim();
-
-    recomEl.textContent = "";
 
     if (clean.length < 8) {
       infoEl.textContent = "";
       infoEl.classList.remove("has-points", "no-points");
       state.pointsChecked = false;
-      state.customerProfile = {
-        pointsBefore: 0,
-        totalOrders: 0,
-        usedFirstDiscount: false,
-        lastProduct: "",
-        lastPresentacion: ""
-      };
       updateContinueButtonState();
       return;
     }
@@ -767,13 +702,13 @@
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
-          action: "getCustomerProfile",
+          action: "getPoints",
           telefono: clean
         })
       });
 
       if (!res.ok) {
-        console.warn("Error HTTP getCustomerProfile:", res.status, res.statusText);
+        console.warn("Error HTTP getPoints:", res.status, res.statusText);
         infoEl.textContent = "";
         infoEl.classList.remove("has-points", "no-points");
         state.pointsChecked = false;
@@ -785,19 +720,6 @@
 
       if (data.success) {
         const pts = Number(data.points || 0);
-        const totalOrders = Number(data.totalOrders || 0);
-        const usedFirstDiscount = !!data.usedFirstDiscount;
-        const lastProduct = data.lastProduct || "";
-        const lastPresentacion = data.lastPresentacion || "";
-
-        state.customerProfile = {
-          pointsBefore: pts,
-          totalOrders,
-          usedFirstDiscount,
-          lastProduct,
-          lastPresentacion
-        };
-
         if (pts > 0) {
           infoEl.innerHTML = "🎉 <strong>Tenés " + pts + " puntos</strong> acumulados en Monte Alto 🧡";
           infoEl.classList.add("has-points");
@@ -807,16 +729,6 @@
           infoEl.classList.add("no-points");
           infoEl.classList.remove("has-points");
         }
-
-        if (totalOrders > 0 && lastProduct) {
-          let texto = "La última vez compraste " + lastProduct;
-          if (lastPresentacion) {
-            texto += " (" + lastPresentacion + ")";
-          }
-          texto += ". ¿Querés repetir algo similar?";
-          recomEl.textContent = texto;
-        }
-
         state.pointsChecked = true;
         updateContinueButtonState();
       } else {
@@ -869,43 +781,6 @@
     }
   }
 
-  /* ===================== DESCUENTOS ===================== */
-  function computeDiscount(subtotal) {
-    const profile = state.customerProfile;
-    let percent = 0;
-    let label = "";
-
-    if (profile.totalOrders === 0 && !profile.usedFirstDiscount) {
-      // Primera compra
-      percent = 15;
-      label = "PRIMERA15 (15%)";
-      state.discountCode = "PRIMERA15";
-    } else if (profile.totalOrders > 0) {
-      // Cliente recurrente
-      percent = 5;
-      if (cart.length > 1) {
-        percent = 10;
-      }
-      label = "Cliente frecuente (" + percent + "%)";
-    } else {
-      // nada
-      percent = 0;
-      label = "";
-    }
-
-    const discountAmount = Math.round(subtotal * (percent / 100));
-    const totalAfter = subtotal - discountAmount;
-
-    state.discount = { percent, label };
-
-    return {
-      percent,
-      label,
-      discountAmount,
-      totalAfter
-    };
-  }
-
   /* ===================== CARRITO ===================== */
   function openCartDrawer() {
     if (cart.length === 0) {
@@ -924,9 +799,6 @@
   function updateCartUI() {
     const countEl = document.getElementById("cart-count");
     const bodyEl  = document.getElementById("cart-drawer-body");
-    const subtotalEl = document.getElementById("cart-drawer-subtotal");
-    const discountBox = document.getElementById("cart-drawer-discount");
-    const discountAmountEl = document.getElementById("cart-drawer-discount-amount");
     const totalEl = document.getElementById("cart-drawer-total");
 
     countEl.textContent = cart.length.toString();
@@ -934,8 +806,6 @@
 
     if (cart.length === 0) {
       bodyEl.innerHTML = '<p class="muted">Tu carrito está vacío.</p>';
-      subtotalEl.textContent = "₡0";
-      discountBox.style.display = "none";
       totalEl.textContent = "₡0";
       return;
     }
@@ -943,40 +813,15 @@
     cart.forEach(item => {
       const div = document.createElement("div");
       div.className = "cart-item-row";
-      const icon = document.createElement("div");
-      icon.className = "cart-item-icon";
-      icon.textContent = item.icon || "🌭";
-      const main = document.createElement("div");
-      main.className = "cart-item-main";
-      const nameEl = document.createElement("div");
-      nameEl.className = "cart-item-name";
-      nameEl.textContent = item.quantity + " x " + item.productName;
-      const packEl = document.createElement("div");
-      packEl.className = "cart-item-pack";
-      packEl.textContent = item.packLabel;
-      main.appendChild(nameEl);
-      main.appendChild(packEl);
-      const priceEl = document.createElement("div");
-      priceEl.className = "cart-item-price";
-      priceEl.textContent = formatCRC(item.lineTotal);
-      div.appendChild(icon);
-      div.appendChild(main);
-      div.appendChild(priceEl);
+      div.innerHTML =
+        "<div><strong>" + item.quantity + " x " + item.productName + "</strong></div>" +
+        '<div class="muted">' + item.packLabel + "</div>" +
+        "<div>" + formatCRC(item.lineTotal) + "</div>";
       bodyEl.appendChild(div);
     });
 
-    const subtotal = cart.reduce((s, c) => s + c.lineTotal, 0);
-    subtotalEl.textContent = formatCRC(subtotal);
-
-    const disc = computeDiscount(subtotal);
-    if (disc.percent > 0) {
-      discountBox.style.display = "block";
-      discountAmountEl.textContent = "- " + formatCRC(disc.discountAmount);
-      totalEl.textContent = formatCRC(disc.totalAfter);
-    } else {
-      discountBox.style.display = "none";
-      totalEl.textContent = formatCRC(subtotal);
-    }
+    const total = cart.reduce((s, c) => s + c.lineTotal, 0);
+    totalEl.textContent = formatCRC(total);
   }
 
   /* ===================== SEND ORDER ===================== */
@@ -997,22 +842,15 @@
       statusEl.textContent = "Enviando tu pedido, " + nombreSeguro + "...";
       playFeedback("send");
 
-      // Total bruto (antes de cualquier descuento)
+      // Total bruto (antes de cualquier descuento) – base para puntos
       const totalBrutoColones = cart.reduce(
         (suma, item) => suma + Number(item.lineTotal || 0),
         0
       );
 
-      // Por ahora el total cobrado es igual al bruto.
-      // Cuando apliquemos PRIMERA15 / descuentos recurrentes,
-      // solo ajustamos totalColones, pero dejamos totalBrutoColones intacto.
+      // Por ahora el total cobrado es igual al bruto (cuando tengas lógica
+      // de descuentos, aquí se ajusta totalColones, pero NO totalBrutoColones).
       let totalColones = totalBrutoColones;
-
-      const discountInfo = computeDiscount(subtotalColones);
-      const totalColones = discountInfo.totalAfter;
-      const discountAmount = discountInfo.discountAmount;
-      const discountLabel = discountInfo.label;
-      const discountPercent = discountInfo.percent;
 
       const cartLines = cart
         .map(item => {
@@ -1036,13 +874,8 @@
       const primerProducto = (cart[0] && cart[0].productName) || "Calculadora Monte Alto";
 
       let comentariosBase = (state && state.comentarios) || "";
-      if (discountPercent > 0) {
-        comentariosBase += "\nDescuento aplicado: " + discountLabel +
-          " (-" + formatCRC(discountAmount) + ")";
-        comentariosBase += "\nSubtotal sin descuento: " + formatCRC(subtotalColones);
-      }
-      if (state.discountCode && state.discountCode !== "PRIMERA15") {
-        comentariosBase += "\nCódigo de descuento adicional: " + state.discountCode;
+      if (state.discountCode) {
+        comentariosBase += "\nCódigo de descuento: " + state.discountCode;
       }
       comentariosBase += "\nMétodo de pago: SINPE móvil BAC";
 
@@ -1055,7 +888,7 @@
         telefono: state.telefono || "",
         comentarios: comentariosFinal,
         cantidad: cart.length,
-        totalColones: totalColones,           // total cobrado (con descuento)
+        totalColones: totalColones,           // total cobrado (con descuento en el futuro)
         totalBrutoColones: totalBrutoColones, // base para puntos
         puntos: 0,
         productoId: primerProducto,
@@ -1153,18 +986,6 @@
         orderLine = "<br><strong>Número de orden:</strong> " + orderId;
       }
 
-      let descuentoHtml = "";
-      if (discountPercent > 0) {
-        descuentoHtml =
-          "<br><br><strong>Detalle de montos:</strong><br>" +
-          "Subtotal: " + formatCRC(subtotalColones) + "<br>" +
-          "Descuento " + discountLabel + ": - " + formatCRC(discountAmount) + "<br>" +
-          "<strong>Total a pagar:</strong> " + formatCRC(totalColones);
-      } else {
-        descuentoHtml =
-          "<br><br><strong>Total:</strong> " + formatCRC(totalColones);
-      }
-
       const sinpeHtml =
         "<br><br><strong>Pago por SINPE móvil (BAC):</strong><br>" +
         "Enviá el monto total al número <strong>6066-8322</strong> (Marianela Esquivel).<br>" +
@@ -1173,11 +994,10 @@
       statusEl.innerHTML =
         "¡Gracias por tu compra, " + nombreSeguro + "! 🧡<br><br>" +
         "<strong>Resumen de tu pedido:</strong><br>" +
-        resumenHtml +
-        orderLine +
-        descuentoHtml +
-        "<br><br>" +
+        resumenHtml + "<br><br>" +
+        "<strong>Total:</strong> " + formatCRC(totalColones) + "<br>" +
         textoFechas +
+        orderLine +
         extraLoyalty +
         sinpeHtml;
 
@@ -1193,7 +1013,7 @@
       document.getElementById("btn-volver-productos").style.display = "none";
       document.getElementById("btn-confirmar").style.display = "none";
 
-      // ===== MENSAJE WHATSAPP A TU TELÉFONO 6022-8322 =====
+      // ===== MENSAJE WHATSAPP A 6022-8322 =====
       const waLines = [];
       waLines.push("Hola, soy " + nombreSeguro + ".");
       waLines.push("Quiero confirmar mi pedido en Monte Alto.");
@@ -1204,11 +1024,7 @@
       waLines.push("Detalle:");
       waLines.push(cartLines);
       waLines.push("");
-      if (discountPercent > 0) {
-        waLines.push("Subtotal: " + formatCRC(subtotalColones));
-        waLines.push("Descuento " + discountLabel + ": - " + formatCRC(discountAmount));
-      }
-      waLines.push("Total a pagar: " + formatCRC(totalColones));
+      waLines.push("Total: " + formatCRC(totalColones));
 
       // Fechas de entrega (mismo criterio que en la pantalla)
       waLines.push("");
@@ -1254,8 +1070,7 @@
 
     } catch (err) {
       console.error("Error en sendOrder():", err);
-      const statusEl2 = document.getElementById("status");
-      statusEl2.textContent =
+      statusEl.textContent =
         "Hubo un problema enviando tu pedido.\nDetalle técnico: " +
         (err && err.message ? err.message : String(err));
     }
@@ -1274,14 +1089,6 @@
     state.currentQuantity = 1;
     state.wantsPromos = false;
     state.pointsChecked = false;
-    state.customerProfile = {
-      pointsBefore: 0,
-      totalOrders: 0,
-      usedFirstDiscount: false,
-      lastProduct: "",
-      lastPresentacion: ""
-    };
-    state.discount = { percent: 0, label: "" };
 
     cart = [];
     updateCartUI();
@@ -1292,7 +1099,6 @@
     document.getElementById("discount-code").value = "";
     document.getElementById("datos-error").textContent = "";
     document.getElementById("puntos-info").textContent = "";
-    document.getElementById("recom-info").textContent = "";
     document.getElementById("puntos-info").classList.remove("has-points", "no-points");
     document.getElementById("subtotal-linea").textContent = "₡0";
     document.getElementById("producto").value = "";
@@ -1323,9 +1129,9 @@
     updateContinueButtonState();
   }
 
-  /* ===================== RESUMEN FINAL (no se usa caja aparte) ===================== */
+  /* ===================== RESUMEN FINAL (ya no se usa caja aparte) ===================== */
   function updateResumenFinal() {
-    // Intencionalmente vacío: usamos solo el status final y el drawer.
+    // Intencionalmente vacío: eliminamos el div resumen-final
   }
 
   /* ===================== BOTÓN CONTINUAR ===================== */
@@ -1355,6 +1161,15 @@
     const chkPromos = document.getElementById("chk-promos");
     const btnNuevo = document.getElementById("btn-nuevo-pedido");
 
+    // Tema
+    initTheme();
+    const btnThemeDark = document.getElementById("btn-theme-dark");
+    const btnThemeLight = document.getElementById("btn-theme-light");
+    if (btnThemeDark && btnThemeLight) {
+      btnThemeDark.addEventListener("click", () => applyTheme("dark"));
+      btnThemeLight.addEventListener("click", () => applyTheme("light"));
+    }
+
     CONFIG.products.forEach(p => {
       const o = document.createElement("option");
       o.value = p.id;
@@ -1380,7 +1195,6 @@
         const infoEl = document.getElementById("puntos-info");
         infoEl.textContent = "";
         infoEl.classList.remove("has-points", "no-points");
-        document.getElementById("recom-info").textContent = "";
         lastPointsPhone = "";
         state.pointsChecked = false;
         updateContinueButtonState();
@@ -1464,15 +1278,13 @@
       state.comentarios = document.getElementById("comentarios").value.trim();
       const qty = state.currentQuantity;
       const lineTotal = calculateLineTotal(p, w.grams, qty);
-      const icon = p.type === "bacon" ? "🥓" : "🌭";
       cart.push({
         productId: p.id,
         productName: p.name,
         packLabel: w.label,
         grams: w.grams,
         quantity: qty,
-        lineTotal: lineTotal,
-        icon: icon
+        lineTotal: lineTotal
       });
       updateCartUI();
       burstConfettiSmallFromElement(btnAgregar);
@@ -1485,6 +1297,7 @@
       document.getElementById("cantidad").value = 1;
       document.getElementById("product-image-wrapper").style.display = "none";
       document.getElementById("subtotal-linea").textContent = "₡0";
+      // Notas se mantienen, por si el cliente quiere la misma instrucción en varias líneas
     };
 
     document.getElementById("btn-comprar-ya").onclick = () => {
@@ -1504,10 +1317,8 @@
     };
 
     document.getElementById("btn-confirmar").onclick = () => {
-      const manualCode = document.getElementById("discount-code").value.trim().toUpperCase();
-      if (manualCode) {
-        state.discountCode = manualCode;
-      }
+      state.discountCode =
+        document.getElementById("discount-code").value.trim().toUpperCase();
       sendOrder();
     };
 
@@ -1528,14 +1339,6 @@
       updateResumenFinal();
     };
 
-    // Toggle tema
-    document.querySelectorAll(".theme-pill").forEach(pill => {
-      pill.addEventListener("click", () => {
-        applyTheme(pill.dataset.theme);
-      });
-    });
-
-    initTheme();
     updateCartUI();
     updateContinueButtonState();
     loadConfigFromSheet();
@@ -1546,5 +1349,3 @@
 
 </body>
 </html>
-
-
