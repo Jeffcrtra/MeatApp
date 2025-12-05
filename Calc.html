@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>11:15 Monte Alto – Calculadora de Embutidos</title>
+  <title>12 am Monte Alto – Calculadora de Embutidos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
@@ -433,8 +433,8 @@
   <h1>Monte Alto – Calculadora</h1>
 
   <!-- Sonidos -->
-  <audio id="sound-add" src="click-add.mp3" preload="auto"></audio>
-  <audio id="sound-send" src="click-send.mp3" preload="auto"></audio>
+<audio id="sound-add" src="click-add-pop.wav" preload="auto"></audio>
+<audio id="sound-send" src="click-send-confirm.wav" preload="auto"></audio>
 
   <div class="card">
 
@@ -997,10 +997,16 @@
       statusEl.textContent = "Enviando tu pedido, " + nombreSeguro + "...";
       playFeedback("send");
 
-      const subtotalColones = cart.reduce(
+      // Total bruto (antes de cualquier descuento)
+      const totalBrutoColones = cart.reduce(
         (suma, item) => suma + Number(item.lineTotal || 0),
         0
       );
+
+      // Por ahora el total cobrado es igual al bruto.
+      // Cuando apliquemos PRIMERA15 / descuentos recurrentes,
+      // solo ajustamos totalColones, pero dejamos totalBrutoColones intacto.
+      let totalColones = totalBrutoColones;
 
       const discountInfo = computeDiscount(subtotalColones);
       const totalColones = discountInfo.totalAfter;
@@ -1049,12 +1055,13 @@
         telefono: state.telefono || "",
         comentarios: comentariosFinal,
         cantidad: cart.length,
-        totalColones: totalColones, // total FINAL con descuento
+        totalColones: totalColones,           // total cobrado (con descuento)
+        totalBrutoColones: totalBrutoColones, // base para puntos
         puntos: 0,
         productoId: primerProducto,
         presentacionResumen: presentacionResumen,
         pesoTotalGramos: pesoTotalGramos,
-        discountCode: state.discountCode || state.discount.label || "",
+        discountCode: state.discountCode || "",
         promoAccepted: state.wantsPromos ? "Si" : ""
       };
 
@@ -1539,3 +1546,4 @@
 
 </body>
 </html>
+
