@@ -277,7 +277,7 @@
 </head>
 
 <body>
-  <h1>Monte Alto – Calculadora 6:37</h1>
+  <h1>Monte Alto – Calculadora 6:44</h1>
 
   <div class="card">
 
@@ -670,8 +670,7 @@ async function sendOrder() {
         const lineTotal = Number(item.lineTotal || 0);
         return `${qty} x ${name} (${pack}) – ${formatCRC(lineTotal)}`;
       })
-      .join("
-");
+      .join("\n");
 
     const presentacionResumen = cart
       .map(item => `${item.quantity ?? 0} x ${item.packLabel ?? ""}`)
@@ -691,8 +690,7 @@ Código de descuento: ${state.discountCode}`;
     }
     comentariosBase += `
 Método de pago: SINPE móvil BAC`;
-    const comentariosFinal = comentariosBase + "
-" + cartLines;
+    const comentariosFinal = comentariosBase + "\n" + cartLines;
 
     const payload = {
       action: "saveOrder",
@@ -762,12 +760,11 @@ Método de pago: SINPE móvil BAC`;
     updateCartUI();
     document.getElementById("resumen-final").innerHTML = "";
 
-  } catch (err) {
-    console.error("Error en sendOrder():", err);
-    statusEl.textContent =
-      "Hubo un problema enviando tu pedido.
-Detalle técnico: " + (err && err.message ? err.message : String(err));
-  }
+} catch (err) {
+  console.error("Error en sendOrder():", err);
+  statusEl.textContent =
+    "Hubo un problema enviando tu pedido.\nDetalle técnico: " +
+    (err && err.message ? err.message : String(err));
 }
 
 /* ===================== RESET ===================== */
@@ -991,6 +988,7 @@ window.onload = ()=> setup();
 
 </body>
 </html>
+
 
 
 
