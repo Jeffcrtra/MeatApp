@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>10.06 Monte Alto – Calculadora de Embutidos</title>
+  <title>10:20 Monte Alto – Calculadora de Embutidos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
@@ -297,7 +297,7 @@
 </head>
 
 <body>
-  <h1>Monte Alto – Calculadora</h1>
+  <h1>Monte Alto – Calculadora 7:07</h1>
 
   <!-- Sonidos -->
   <audio id="sound-add" src="click-add.mp3" preload="auto"></audio>
@@ -375,8 +375,7 @@
       <div id="sinpe-box" class="summary-box">
         <strong>Pago por SINPE móvil (BAC):</strong><br>
         Enviá el monto total al número <strong>6066-8322</strong> (Marianela Esquivel).<br>
-        En el detalle indicá tu nombre y “Monte Alto”.<br>
-        Luego presioná <strong>Confirmar pedido</strong> para registrar tu orden.
+        En el detalle indicá tu orden.
       </div>
 
       <div class="promo-box">
@@ -386,7 +385,7 @@
         </label>
       </div>
 
-      <div id="resumen-final" class="summary-box"></div>
+      <!-- Se eliminó el div resumen-final para quitar la caja vacía -->
 
       <button id="btn-volver-productos" class="secondary">Volver</button>
       <button id="btn-confirmar" class="primary">Confirmar pedido</button>
@@ -791,45 +790,41 @@
         )
         .join("<br>");
 
-// Calcular fechas según el tipo de producto
-function formatDate(d) {
-  return d.toLocaleDateString("es-CR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long"
-  });
-}
+      // ==== FECHAS: CHORIZO VS BACON ====
+      function formatDate(d) {
+        return d.toLocaleDateString("es-CR", {
+          weekday: "long",
+          day: "numeric",
+          month: "long"
+        });
+      }
 
-  // Detectar si el carrito tiene bacon
-  const contieneBacon = cart.some(i => i.productId === "bacon");
-  
-  // Fecha para chorizos → sábado siguiente
-  const fechaChorizos = getNextSaturday(new Date());
-  const fechaChorizosStr = formatDate(fechaChorizos);
-  
-  // Fecha para bacon → 10 días mínimo
-  let fechaBacon = new Date();
-  fechaBacon.setDate(fechaBacon.getDate() + 10);
-  const fechaBaconStr = formatDate(fechaBacon);
-  
-  // Construir mensaje final de fechas
-  let textoFechas = "";
-  if (contieneBacon && cart.length > 1) {
-    textoFechas =
-      "<strong>Fechas de entrega:</strong><br>" +
-      "• Chorizos: " + fechaChorizosStr + "<br>" +
-      "• Bacon: " + fechaBaconStr + "<br>" +
-      "<em>El bacon requiere un proceso mínimo de 10 días.</em>";
-  } else if (contieneBacon) {
-    textoFechas =
-      "<strong>Fecha estimada de entrega:</strong> " +
-      fechaBaconStr +
-      "<br><em>El bacon requiere un proceso mínimo de 10 días.</em>";
-  } else {
-    textoFechas =
-      "<strong>Fecha estimada de entrega:</strong> " + fechaChorizosStr;
-  }
+      const contieneBacon = cart.some(i => i.productId === "bacon");
 
+      const fechaChorizos = getNextSaturday(new Date());
+      const fechaChorizosStr = formatDate(fechaChorizos);
+
+      let fechaBacon = new Date();
+      fechaBacon.setDate(fechaBacon.getDate() + 10);
+      const fechaBaconStr = formatDate(fechaBacon);
+
+      let textoFechas = "";
+      if (contieneBacon && cart.length > 1) {
+        textoFechas =
+          "<strong>Fechas de entrega:</strong><br>" +
+          "• Chorizos: " + fechaChorizosStr + "<br>" +
+          "• Bacon: " + fechaBaconStr + "<br>" +
+          "<em>El bacon requiere un proceso mínimo de 10 días.</em>";
+      } else if (contieneBacon) {
+        textoFechas =
+          "<strong>Fecha estimada de entrega:</strong> " +
+          fechaBaconStr +
+          "<br><em>El bacon requiere un proceso mínimo de 10 días.</em>";
+      } else {
+        textoFechas =
+          "<strong>Fecha estimada de entrega:</strong> " + fechaChorizosStr;
+      }
+      // ==== FIN FECHAS ====
 
       let extraLoyalty = "";
       if (!isNaN(puntosPedido) && !isNaN(totalPointsAfter)) {
@@ -841,20 +836,20 @@ function formatDate(d) {
 
       let orderLine = "";
       if (orderId) {
-        orderLine = "<br><strong>Número de pedido:</strong> " + orderId;
+        orderLine = "<br><strong>Número de orden:</strong> " + orderId;
       }
 
       const sinpeHtml =
         "<br><br><strong>Pago por SINPE móvil (BAC):</strong><br>" +
         "Enviá el monto total al número <strong>6066-8322</strong> (Marianela Esquivel).<br>" +
-        "En el detalle indicá tu pedido #" + (orderId || "(pendiente)") + ".";
+        "En el detalle indicá tu orden #" + (orderId || "(pendiente)") + ".";
 
       statusEl.innerHTML =
         "¡Gracias por tu compra, " + nombreSeguro + "! 🧡<br><br>" +
         "<strong>Resumen de tu pedido:</strong><br>" +
         resumenHtml + "<br><br>" +
         "<strong>Total:</strong> " + formatCRC(totalColones) + "<br>" +
-        textoFechas + "<br>"
+        textoFechas +
         orderLine +
         extraLoyalty +
         sinpeHtml;
@@ -871,13 +866,13 @@ function formatDate(d) {
       document.getElementById("btn-volver-productos").style.display = "none";
       document.getElementById("btn-confirmar").style.display = "none";
 
-      // Preparar mensaje para WhatsApp (solo móvil)
+      // ===== MENSAJE WHATSAPP A TU TELÉFONO 6022-8322 =====
       const waLines = [];
       waLines.push("Hola, soy " + nombreSeguro + ".");
       waLines.push("Quiero confirmar mi pedido en Monte Alto.");
       waLines.push("");
       if (orderId) {
-        waLines.push("Pedido #" + orderId);
+        waLines.push("Orden #" + orderId);
       }
       waLines.push("Detalle:");
       waLines.push(cartLines);
@@ -895,7 +890,7 @@ function formatDate(d) {
       waLines.push("Pago por SINPE móvil (BAC):");
       waLines.push("Envío el monto total al número 6066-8322 (Marianela Esquivel).");
       if (orderId) {
-        waLines.push("En el detalle indico mi pedido #" + orderId + ".");
+        waLines.push("En el detalle indico mi orden #" + orderId + ".");
       }
 
       const waMessage = waLines.join("\n");
@@ -905,10 +900,10 @@ function formatDate(d) {
           "https://wa.me/50660228322?text=" + encodeURIComponent(waMessage);
         window.location.href = waUrl;
       }
+      // ============================================
 
       cart = [];
       updateCartUI();
-      document.getElementById("resumen-final").innerHTML = "";
 
     } catch (err) {
       console.error("Error en sendOrder():", err);
@@ -972,20 +967,9 @@ function formatDate(d) {
     updateContinueButtonState();
   }
 
-  /* ===================== RESUMEN FINAL ===================== */
+  /* ===================== RESUMEN FINAL (ya no se usa caja aparte) ===================== */
   function updateResumenFinal() {
-    const total = cart.reduce((s, c) => s + c.lineTotal, 0);
-    const list = cart
-      .map(i =>
-        (i.quantity || 0) + " x " + i.productName +
-        " (" + i.packLabel + ") – " + formatCRC(i.lineTotal)
-      )
-      .join("<br>");
-
-    document.getElementById("resumen-final").innerHTML =
-      "<strong>Resumen de tu compra:</strong><br>" +
-      list +
-      "<br><br><strong>Total:</strong> " + formatCRC(total);
+    // Intencionalmente vacío: eliminamos el div resumen-final
   }
 
   /* ===================== BOTÓN CONTINUAR ===================== */
@@ -1152,7 +1136,7 @@ function formatDate(d) {
       state.comentarios = document.getElementById("comentarios").value.trim();
       document.getElementById("step-producto").classList.remove("active");
       document.getElementById("step-cliente").classList.add("active");
-      updateResumenFinal();
+      updateResumenFinal(); // ahora no hace nada visible
     };
 
     document.getElementById("btn-volver-productos").onclick = () => {
@@ -1193,5 +1177,3 @@ function formatDate(d) {
 
 </body>
 </html>
-
-
