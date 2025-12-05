@@ -69,6 +69,13 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.5);
     }
 
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
     button.primary {
       background: #2563eb;
       color: white;
@@ -125,9 +132,16 @@
       border: 1px solid #374151;
     }
 
-    .muted { color:#6b7280; font-size:0.85rem; }
+    .muted {
+      color:#6b7280;
+      font-size:0.85rem;
+    }
 
-    .error-text { color:#fecaca; font-size:0.9rem; min-height:1em; }
+    .error-text {
+      color:#fecaca;
+      font-size:0.9rem;
+      min-height:1em;
+    }
 
     #status {
       white-space:pre-line;
@@ -266,18 +280,24 @@
       text-transform:uppercase;
     }
 
-    /* Caja de debug para los valores Z1–AC1 */
-    #server-config {
-      max-width: 680px;
-      margin: 0.75rem auto 0;
-      font-size: 0.8rem;
-      opacity: 0.8;
+    /* PUNTOS LEALTAD */
+    #puntos-info {
+      min-height: 1.2em;
+      margin-top: 0.25rem;
+      font-size: 0.9rem;
+    }
+    #puntos-info.has-points {
+      color: #fbbf24;
+      font-weight: 600;
+    }
+    #puntos-info.no-points {
+      color: #9ca3af;
     }
   </style>
 </head>
 
 <body>
-  <h1>Monte Alto – Calculadora 6:52</h1>
+  <h1>Monte Alto – Calculadora 7:04</h1>
 
   <div class="card">
 
@@ -292,20 +312,20 @@
 
       <div class="row">
         <div>
-          <label>Nombre</label>
-          <input id="nombre" type="text" placeholder="Tu nombre" />
+          <label>Teléfono</label>
+          <input id="telefono" type="tel" placeholder="Ej: 6066-8322" />
         </div>
 
         <div>
-          <label>Teléfono</label>
-          <input id="telefono" type="tel" placeholder="Ej: 12345678" />
+          <label>Nombre</label>
+          <input id="nombre" type="text" placeholder="Tu nombre" />
         </div>
       </div>
 
+      <div id="puntos-info"></div>
       <div id="datos-error" class="error-text"></div>
-      <div id="puntos-info" class="muted"></div>
 
-      <button id="btn-ir-productos" class="primary">Continuar</button>
+      <button id="btn-ir-productos" class="primary" disabled>Continuar</button>
     </div>
 
     <!-- PASO 2 -->
@@ -334,7 +354,6 @@
         Subtotal: <strong id="subtotal-linea">₡0</strong>
       </div>
 
-      <!-- Notas aquí -->
       <label id="label-notas">Notas (opcional)</label>
       <textarea id="comentarios" rows="3" placeholder="Ej: Entregar en la tarde"></textarea>
 
@@ -376,10 +395,7 @@
 
   </div>
 
-  <!-- Caja de debug: aquí mostraremos Z1–AC1 -->
-  <div id="server-config" class="summary-box muted">
-    Cargando configuración desde Google Sheets...
-  </div>
+  <!-- Quitamos la caja de debug de server-config -->
 
   <div id="cart-backdrop" class="cart-backdrop"></div>
 
@@ -401,616 +417,648 @@
 
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-<script>
-/* ===================== CONFIG BÁSICA ===================== */
-const CONFIG = {
-  SHEETS_ENDPOINT:
-    "https://script.google.com/macros/s/AKfycbx56k2TGXnhTVCySf9ikQP-_u91aYb-8wiK-yxQGknJTI4qJZIslZZOHvdSvgYGZQyP/exec",
+  <script>
+  /* ===================== CONFIG BÁSICA ===================== */
+  const CONFIG = {
+    SHEETS_ENDPOINT:
+      "https://script.google.com/macros/s/AKfycbx56k2TGXnhTVCySf9ikQP-_u91aYb-8wiK-yxQGknJTI4qJZIslZZOHvdSvgYGZQyP/exec",
 
-  products: [
-    { id: "brat",    type: "chorizo", name: "Chorizo Bratwurst",    imageUrl: "Bratwurst.png" },
-    { id: "tex",     type: "chorizo", name: "Chorizo Tex-Mex",      imageUrl: "Tex-Mex.png" },
-    { id: "criollo", type: "chorizo", name: "Criollo argentino",    imageUrl: "Argentino.png" },
-    { id: "carib",   type: "chorizo", name: "Chorizo Caribeño",     imageUrl: "Caribeño.png" },
-    { id: "tico",    type: "chorizo", name: "Costarricense casero", imageUrl: "Criollo.png" },
-    { id: "bacon",   type: "bacon",   name: "Bacon ahumado",        imageUrl: "Tocineta.png" }
-  ],
+    products: [
+      { id: "brat",    type: "chorizo", name: "Chorizo Bratwurst",    imageUrl: "Bratwurst.png" },
+      { id: "tex",     type: "chorizo", name: "Chorizo Tex-Mex",      imageUrl: "Tex-Mex.png" },
+      { id: "criollo", type: "chorizo", name: "Criollo argentino",    imageUrl: "Argentino.png" },
+      { id: "carib",   type: "chorizo", name: "Chorizo Caribeño",     imageUrl: "Caribeño.png" },
+      { id: "tico",    type: "chorizo", name: "Costarricense casero", imageUrl: "Criollo.png" },
+      { id: "bacon",   type: "bacon",   name: "Bacon ahumado",        imageUrl: "Tocineta.png" }
+    ],
 
-  weights: [
-    { id: "500",  grams: 500,  label: "½ kilo (500g)" },
-    { id: "1000", grams: 1000, label: "1 kilo (1000g)" }
-  ]
-};
+    weights: [
+      { id: "500",  grams: 500,  label: "½ kilo (500g)" },
+      { id: "1000", grams: 1000, label: "1 kilo (1000g)" }
+    ]
+  };
 
-/* Precios por gramo (fallback) */
-let pricePerGramChorizo = 8.5;
-let pricePerGramBacon   = 11.0;
+  /* Precios por gramo (fallback) */
+  let pricePerGramChorizo = 8.5;
+  let pricePerGramBacon   = 11.0;
 
-/* ===================== ESTADO ===================== */
-let sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-let cart = [];
+  /* ===================== ESTADO ===================== */
+  let sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  let cart = [];
 
-const state = {
-  nombre: "",
-  telefono: "",
-  comentarios: "",
-  discountCode: "",
-  currentProductId: "",
-  currentWeightId: "",
-  currentQuantity: 1,
-  wantsPromos: false
-};
+  const state = {
+    nombre: "",
+    telefono: "",
+    comentarios: "",
+    discountCode: "",
+    currentProductId: "",
+    currentWeightId: "",
+    currentQuantity: 1,
+    wantsPromos: false,
+    pointsChecked: false   // ← para controlar el botón Continuar
+  };
 
-/* ===================== UTILIDADES ===================== */
-function formatCRC(v) {
-  return "₡" + (v || 0).toLocaleString("es-CR");
-}
-
-function getSelectedProduct() {
-  return CONFIG.products.find(p => p.id === state.currentProductId) || null;
-}
-
-function getSelectedWeight() {
-  return CONFIG.weights.find(w => w.id === state.currentWeightId) || null;
-}
-
-function calculateLineTotal(product, grams, quantity) {
-  if (!product || !grams || !quantity) return 0;
-
-  const totalGrams = grams * quantity;
-  const perGram = product.type === "bacon" ? pricePerGramBacon : pricePerGramChorizo;
-
-  return Math.round(totalGrams * perGram);
-}
-
-function calculateSubtotal() {
-  const p = getSelectedProduct();
-  const w = getSelectedWeight();
-  if (!p || !w) return 0;
-  return calculateLineTotal(p, w.grams, state.currentQuantity);
-}
-
-function getNextSaturday(fromDate = new Date()) {
-  const d = new Date(fromDate);
-  const day = d.getDay();
-  const diff = (6 - day + 7) % 7;
-  d.setDate(d.getDate() + diff);
-  return d;
-}
-
-/* ===================== CONFETTI ===================== */
-function burstConfettiSmallFromElement(el) {
-  if (typeof confetti !== "function" || !el) return;
-  const rect = el.getBoundingClientRect();
-  const x = (rect.left + rect.width / 2) / window.innerWidth;
-  const y = (rect.top + rect.height / 2) / window.innerHeight;
-  confetti({
-    particleCount: 25,
-    spread: 45,
-    startVelocity: 35,
-    scalar: 0.7,
-    origin: { x, y }
-  });
-}
-
-function burstConfettiBigCenter() {
-  if (typeof confetti !== "function") return;
-  confetti({
-    particleCount: 90,
-    spread: 70,
-    startVelocity: 40,
-    scalar: 1.1,
-    origin: { x: 0.5, y: 0.5 }
-  });
-}
-
-/* ===================== PUNTOS TELÉFONO ===================== */
-async function fetchPointsForPhone(phone) {
-  const infoEl = document.getElementById("puntos-info");
-  const clean = (phone || "").trim();
-
-  if (clean.length < 8) {
-    infoEl.textContent = "";
-    return;
+  /* ===================== UTILIDADES ===================== */
+  function formatCRC(v) {
+    return "₡" + (v || 0).toLocaleString("es-CR");
   }
 
-  try {
-    const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        action: "getPoints",
-        telefono: clean
-      })
-    });
+  function getSelectedProduct() {
+    return CONFIG.products.find(p => p.id === state.currentProductId) || null;
+  }
 
-    if (!res.ok) {
-      console.warn("Error HTTP getPoints:", res.status, res.statusText);
+  function getSelectedWeight() {
+    return CONFIG.weights.find(w => w.id === state.currentWeightId) || null;
+  }
+
+  function calculateLineTotal(product, grams, quantity) {
+    if (!product || !grams || !quantity) return 0;
+
+    const totalGrams = grams * quantity;
+    const perGram = product.type === "bacon" ? pricePerGramBacon : pricePerGramChorizo;
+
+    return Math.round(totalGrams * perGram);
+  }
+
+  function calculateSubtotal() {
+    const p = getSelectedProduct();
+    const w = getSelectedWeight();
+    if (!p || !w) return 0;
+    return calculateLineTotal(p, w.grams, state.currentQuantity);
+  }
+
+  function getNextSaturday(fromDate = new Date()) {
+    const d = new Date(fromDate);
+    const day = d.getDay();
+    const diff = (6 - day + 7) % 7;
+    d.setDate(d.getDate() + diff);
+    return d;
+  }
+
+  /* ===================== CONFETTI ===================== */
+  function burstConfettiSmallFromElement(el) {
+    if (typeof confetti !== "function" || !el) return;
+    const rect = el.getBoundingClientRect();
+    const x = (rect.left + rect.width / 2) / window.innerWidth;
+    const y = (rect.top + rect.height / 2) / window.innerHeight;
+    confetti({
+      particleCount: 25,
+      spread: 45,
+      startVelocity: 35,
+      scalar: 0.7,
+      origin: { x, y }
+    });
+  }
+
+  function burstConfettiBigCenter() {
+    if (typeof confetti !== "function") return;
+    confetti({
+      particleCount: 90,
+      spread: 70,
+      startVelocity: 40,
+      scalar: 1.1,
+      origin: { x: 0.5, y: 0.5 }
+    });
+  }
+
+  /* ===================== PUNTOS TELÉFONO ===================== */
+  async function fetchPointsForPhone(phone) {
+    const infoEl = document.getElementById("puntos-info");
+    const clean = (phone || "").trim();
+
+    if (clean.length < 8) {
       infoEl.textContent = "";
-      return;
-    }
-
-    const data = await res.json();
-
-    if (data.success) {
-      const pts = Number(data.points || 0);
-      if (pts > 0) {
-        infoEl.textContent = `Tenés ${pts} puntos acumulados.`;
-      } else {
-        infoEl.textContent = "No registramos puntos acumulados aún.";
-      }
-    } else {
-      infoEl.textContent = "";
-    }
-  } catch (err) {
-    console.error("Error en fetchPointsForPhone:", err);
-    infoEl.textContent = "";
-  }
-}
-
-/* ===================== CONFIG: GET Z1–AC1 ===================== */
-async function loadConfigFromSheet() {
-  const box = document.getElementById("server-config");
-  try {
-    const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "getConfig" })
-    });
-
-    if (!res.ok) {
-      box.textContent = "No se pudo leer configuración (HTTP " + res.status + ").";
-      console.warn("Error HTTP getConfig:", res.status, res.statusText);
-      return;
-    }
-
-    const data = await res.json();
-    console.log("Config recibida de Sheets:", data);
-
-    if (data.success) {
-      const aa = Number(data.AA1);
-      const ac = Number(data.AC1);
-
-      if (!isNaN(aa) && aa > 0) {
-        pricePerGramChorizo = aa;
-      }
-      if (!isNaN(ac) && ac > 0) {
-        pricePerGramBacon = ac;
-      }
-
-      const precioKiloChorizo = pricePerGramChorizo * 1000;
-      const precioKiloBacon   = pricePerGramBacon * 1000;
-
-      box.innerHTML =
-        "<strong>Config GS (prueba):</strong><br>" +
-        "Z1: <code>" + (data.Z1 ?? "") + "</code><br>" +
-        "AA1 (¢/g chorizo): <code>" + pricePerGramChorizo + "</code> ≈ <code>" + formatCRC(precioKiloChorizo) + "</code> / kg<br>" +
-        "AB1: <code>" + (data.AB1 ?? "") + "</code><br>" +
-        "AC1 (¢/g bacon): <code>" + pricePerGramBacon + "</code> ≈ <code>" + formatCRC(precioKiloBacon) + "</code> / kg";
-    } else {
-      box.textContent = "getConfig respondió sin éxito: " + (data.message || "");
-    }
-  } catch (err) {
-    console.error("Error en loadConfigFromSheet:", err);
-    box.textContent = "Error leyendo configuración: " + err;
-  }
-}
-
-/* ===================== CARRITO ===================== */
-function openCartDrawer() {
-  if (cart.length === 0) {
-    alert("Tu carrito está vacío.");
-    return;
-  }
-  document.getElementById("cart-drawer").classList.add("open");
-  document.getElementById("cart-backdrop").style.display = "block";
-}
-
-function closeCartDrawer() {
-  document.getElementById("cart-drawer").classList.remove("open");
-  document.getElementById("cart-backdrop").style.display = "none";
-}
-
-function updateCartUI() {
-  const countEl = document.getElementById("cart-count");
-  const bodyEl  = document.getElementById("cart-drawer-body");
-  const totalEl = document.getElementById("cart-drawer-total");
-
-  countEl.textContent = cart.length.toString();
-  bodyEl.innerHTML = "";
-
-  if (cart.length === 0) {
-    bodyEl.innerHTML = '<p class="muted">Tu carrito está vacío.</p>';
-    totalEl.textContent = "₡0";
-    return;
-  }
-
-  cart.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "cart-item-row";
-    div.innerHTML =
-      "<div><strong>" + item.quantity + " x " + item.productName + "</strong></div>" +
-      '<div class="muted">' + item.packLabel + "</div>" +
-      "<div>" + formatCRC(item.lineTotal) + "</div>";
-    bodyEl.appendChild(div);
-  });
-
-  const total = cart.reduce((s, c) => s + c.lineTotal, 0);
-  totalEl.textContent = formatCRC(total);
-}
-
-/* ===================== SEND ORDER ===================== */
-async function sendOrder() {
-  const statusEl = document.getElementById("status");
-  const btnNuevo = document.getElementById("btn-nuevo-pedido");
-  statusEl.classList.remove("status-box-success");
-  btnNuevo.style.display = "none";
-
-  const nombreSeguro = ((state && state.nombre) || "").trim() || "cliente";
-
-  try {
-    if (!Array.isArray(cart) || cart.length === 0) {
-      statusEl.textContent = "Agregá al menos un producto al carrito antes de confirmar.";
-      return;
-    }
-
-    statusEl.textContent = "Enviando tu pedido, " + nombreSeguro + "...";
-
-    const totalColones = cart.reduce(
-      (suma, item) => suma + Number(item.lineTotal || 0),
-      0
-    );
-
-    const cartLines = cart
-      .map(item => {
-        const qty = item.quantity || 0;
-        const name = item.productName || "Producto";
-        const pack = item.packLabel || "";
-        const lineTotal = Number(item.lineTotal || 0);
-        return qty + " x " + name + " (" + pack + ") – " + formatCRC(lineTotal);
-      })
-      .join("\n");
-
-    const presentacionResumen = cart
-      .map(item => (item.quantity || 0) + " x " + (item.packLabel || ""))
-      .join(", ");
-
-    const pesoTotalGramos = cart.reduce(
-      (suma, item) => suma + (Number(item.grams || 0) * Number(item.quantity || 0)),
-      0
-    );
-
-    const primerProducto = (cart[0] && cart[0].productName) || "Calculadora Monte Alto";
-
-    let comentariosBase = (state && state.comentarios) || "";
-    if (state.discountCode) {
-      comentariosBase += "\nCódigo de descuento: " + state.discountCode;
-    }
-    comentariosBase += "\nMétodo de pago: SINPE móvil BAC";
-
-    const comentariosFinal = comentariosBase + "\n" + cartLines;
-
-    const payload = {
-      action: "saveOrder",
-      sessionId: sessionId,
-      nombre: state.nombre || "",
-      telefono: state.telefono || "",
-      comentarios: comentariosFinal,
-      cantidad: cart.length,
-      totalColones: totalColones,
-      puntos: 0,
-      productoId: primerProducto,
-      presentacionResumen: presentacionResumen,
-      pesoTotalGramos: pesoTotalGramos,
-      discountCode: state.discountCode || "",
-      promoAccepted: state.wantsPromos ? "Si" : ""
-    };
-
-    const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) {
-      statusEl.textContent =
-        "Error enviando el pedido (HTTP " + res.status + ": " + res.statusText + "). Verificá la URL del Apps Script.";
+      infoEl.classList.remove("has-points", "no-points");
+      state.pointsChecked = false;
+      updateContinueButtonState();
       return;
     }
 
     try {
-      await res.text();
-    } catch (e) {
-      // ignorar
+      const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "getPoints",
+          telefono: clean
+        })
+      });
+
+      if (!res.ok) {
+        console.warn("Error HTTP getPoints:", res.status, res.statusText);
+        infoEl.textContent = "";
+        infoEl.classList.remove("has-points", "no-points");
+        state.pointsChecked = false;
+        updateContinueButtonState();
+        return;
+      }
+
+      const data = await res.json();
+
+      if (data.success) {
+        const pts = Number(data.points || 0);
+        if (pts > 0) {
+          infoEl.innerHTML = "🎉 <strong>Tenés " + pts + " puntos</strong> acumulados en Monte Alto 🧡";
+          infoEl.classList.add("has-points");
+          infoEl.classList.remove("no-points");
+        } else {
+          infoEl.innerHTML = "⭐ <strong>Empezás desde cero.</strong> Este número aún no tiene puntos acumulados.";
+          infoEl.classList.add("no-points");
+          infoEl.classList.remove("has-points");
+        }
+        state.pointsChecked = true;
+        updateContinueButtonState();
+      } else {
+        infoEl.textContent = "";
+        infoEl.classList.remove("has-points", "no-points");
+        state.pointsChecked = false;
+        updateContinueButtonState();
+      }
+    } catch (err) {
+      console.error("Error en fetchPointsForPhone:", err);
+      infoEl.textContent = "";
+      infoEl.classList.remove("has-points", "no-points");
+      state.pointsChecked = false;
+      updateContinueButtonState();
     }
-
-    burstConfettiBigCenter();
-
-    const resumenHtml = cart
-      .map(item =>
-        (item.quantity || 0) + " x " + item.productName +
-        " (" + item.packLabel + ") – " + formatCRC(item.lineTotal)
-      )
-      .join("<br>");
-
-    const entregaDate = getNextSaturday(new Date());
-    const entregaStr = entregaDate.toLocaleDateString("es-CR", {
-      weekday: "long",
-      day: "numeric",
-      month: "long"
-    });
-
-    statusEl.innerHTML =
-      "¡Gracias por tu compra, " + nombreSeguro + "! 🧡<br><br>" +
-      "<strong>Resumen de tu pedido:</strong><br>" +
-      resumenHtml + "<br><br>" +
-      "<strong>Total:</strong> " + formatCRC(totalColones) + "<br>" +
-      "<strong>Fecha estimada de entrega:</strong> " + entregaStr;
-
-    statusEl.classList.add("status-box-success");
-    btnNuevo.style.display = "inline-block";
-
-    document.getElementById("label-descuento").style.display = "none";
-    document.getElementById("discount-code").style.display = "none";
-    document.getElementById("sinpe-box").style.display = "none";
-    document.getElementById("chk-promos").disabled = true;
-    document.getElementById("btn-volver-productos").style.display = "none";
-    document.getElementById("btn-confirmar").style.display = "none";
-
-    cart = [];
-    updateCartUI();
-    document.getElementById("resumen-final").innerHTML = "";
-
-  } catch (err) {
-    console.error("Error en sendOrder():", err);
-    statusEl.textContent =
-      "Hubo un problema enviando tu pedido.\nDetalle técnico: " +
-      (err && err.message ? err.message : String(err));
   }
-}
 
-/* ===================== RESET ===================== */
-function resetForNewOrder() {
-  sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  /* ===================== CONFIG: GET Z1–AC1 (solo precios) ===================== */
+  async function loadConfigFromSheet() {
+    try {
+      const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "getConfig" })
+      });
 
-  state.nombre = "";
-  state.telefono = "";
-  state.comentarios = "";
-  state.discountCode = "";
-  state.currentProductId = "";
-  state.currentWeightId = "";
-  state.currentQuantity = 1;
-  state.wantsPromos = false;
+      if (!res.ok) {
+        console.warn("Error HTTP getConfig:", res.status, res.statusText);
+        return;
+      }
 
-  cart = [];
-  updateCartUI();
+      const data = await res.json();
+      console.log("Config recibida de Sheets:", data);
 
-  document.getElementById("nombre").value = "";
-  document.getElementById("telefono").value = "";
-  document.getElementById("comentarios").value = "";
-  document.getElementById("discount-code").value = "";
-  document.getElementById("datos-error").textContent = "";
-  document.getElementById("puntos-info").textContent = "";
-  document.getElementById("subtotal-linea").textContent = "₡0";
-  document.getElementById("producto").value = "";
-  document.getElementById("peso").value = "";
-  document.getElementById("cantidad").value = 1;
-  document.getElementById("product-image-wrapper").style.display = "none";
+      if (data.success) {
+        const aa = Number(data.AA1);
+        const ac = Number(data.AC1);
 
-  const statusEl = document.getElementById("status");
-  statusEl.textContent = "";
-  statusEl.classList.remove("status-box-success");
-  document.getElementById("btn-nuevo-pedido").style.display = "none";
-
-  document.getElementById("chk-promos").checked = false;
-  document.getElementById("chk-promos").disabled = false;
-
-  document.getElementById("step-datos").classList.add("active");
-  document.getElementById("step-producto").classList.remove("active");
-  document.getElementById("step-cliente").classList.remove("active");
-
-  document.getElementById("label-descuento").style.display = "";
-  document.getElementById("discount-code").style.display = "";
-  document.getElementById("sinpe-box").style.display = "";
-  document.getElementById("btn-volver-productos").style.display = "";
-  document.getElementById("btn-confirmar").style.display = "";
-}
-
-/* ===================== RESUMEN FINAL ===================== */
-function updateResumenFinal() {
-  const total = cart.reduce((s, c) => s + c.lineTotal, 0);
-  const list = cart
-    .map(i =>
-      (i.quantity || 0) + " x " + i.productName +
-      " (" + i.packLabel + ") – " + formatCRC(i.lineTotal)
-    )
-    .join("<br>");
-
-  document.getElementById("resumen-final").innerHTML =
-    "<strong>Resumen de tu compra:</strong><br>" +
-    list +
-    "<br><br><strong>Total:</strong> " + formatCRC(total);
-}
-
-/* ===================== SETUP ===================== */
-function setup() {
-  const productoSelect = document.getElementById("producto");
-  const pesoSelect = document.getElementById("peso");
-  const telInput = document.getElementById("telefono");
-  const discountInput = document.getElementById("discount-code");
-  const chkPromos = document.getElementById("chk-promos");
-  const btnNuevo = document.getElementById("btn-nuevo-pedido");
-
-  CONFIG.products.forEach(p => {
-    const o = document.createElement("option");
-    o.value = p.id;
-    o.textContent = p.name;
-    productoSelect.appendChild(o);
-  });
-
-  CONFIG.weights.forEach(w => {
-    const o = document.createElement("option");
-    o.value = w.id;
-    o.textContent = w.label;
-    pesoSelect.appendChild(o);
-  });
-
-  let lastPointsPhone = "";
-  telInput.addEventListener("input", () => {
-    const raw   = telInput.value || "";
-    const clean = raw.replace(/\D/g, "").trim();
-    if (clean.length >= 8 && clean !== lastPointsPhone) {
-      lastPointsPhone = clean;
-      fetchPointsForPhone(clean);
-    } else if (clean.length < 8) {
-      document.getElementById("puntos-info").textContent = "";
-      lastPointsPhone = "";
+        if (!isNaN(aa) && aa > 0) {
+          pricePerGramChorizo = aa;
+        }
+        if (!isNaN(ac) && ac > 0) {
+          pricePerGramBacon = ac;
+        }
+      } else {
+        console.warn("getConfig sin éxito:", data.message);
+      }
+    } catch (err) {
+      console.error("Error en loadConfigFromSheet:", err);
     }
-  });
+  }
 
-  discountInput.addEventListener("input", () => {
-    discountInput.value = discountInput.value.toUpperCase();
-  });
-
-  chkPromos.addEventListener("change", () => {
-    state.wantsPromos = chkPromos.checked;
-  });
-
-  document.getElementById("btn-ir-productos").onclick = () => {
-    const n = document.getElementById("nombre").value.trim();
-    const t = telInput.value.trim();
-    const err = document.getElementById("datos-error");
-    if (!n) {
-      err.textContent = "Ingresá tu nombre.";
-      return;
-    }
-    if (!t || t.replace(/\D/g, "").length < 8) {
-      err.textContent = "Teléfono inválido.";
-      return;
-    }
-    state.nombre = n;
-    state.telefono = t;
-    document.getElementById("step-datos").classList.remove("active");
-    document.getElementById("step-producto").classList.add("active");
-  };
-
-  productoSelect.onchange = () => {
-    state.currentProductId = productoSelect.value;
-    const p = getSelectedProduct();
-    const imgWrap = document.getElementById("product-image-wrapper");
-    const img = document.getElementById("product-image");
-    const caption = document.getElementById("product-image-caption");
-    if (p) {
-      img.src = p.imageUrl;
-      caption.textContent = p.name;
-      imgWrap.style.display = "block";
-    } else {
-      imgWrap.style.display = "none";
-      img.src = "";
-    }
-    document.getElementById("subtotal-linea").textContent =
-      formatCRC(calculateSubtotal());
-  };
-
-  pesoSelect.onchange = () => {
-    state.currentWeightId = pesoSelect.value;
-    document.getElementById("subtotal-linea").textContent =
-      formatCRC(calculateSubtotal());
-  };
-
-  document.getElementById("cantidad").oninput = () => {
-    state.currentQuantity =
-      Number(document.getElementById("cantidad").value) || 1;
-    document.getElementById("subtotal-linea").textContent =
-      formatCRC(calculateSubtotal());
-  };
-
-  const btnAgregar = document.getElementById("btn-agregar-carrito");
-  btnAgregar.onclick = () => {
-    const p = getSelectedProduct();
-    const w = getSelectedWeight();
-    if (!p || !w) {
-      alert("Revisá que escogiste el chorizo/tocineta y el peso.");
-      return;
-    }
-    state.comentarios = document.getElementById("comentarios").value.trim();
-    const qty = state.currentQuantity;
-    const lineTotal = calculateLineTotal(p, w.grams, qty);
-    cart.push({
-      productId: p.id,
-      productName: p.name,
-      packLabel: w.label,
-      grams: w.grams,
-      quantity: qty,
-      lineTotal: lineTotal
-    });
-    updateCartUI();
-    burstConfettiSmallFromElement(btnAgregar);
-    state.currentProductId = "";
-    state.currentWeightId = "";
-    state.currentQuantity = 1;
-    document.getElementById("producto").value = "";
-    document.getElementById("peso").value = "";
-    document.getElementById("cantidad").value = 1;
-    document.getElementById("product-image-wrapper").style.display = "none";
-    document.getElementById("subtotal-linea").textContent = "₡0";
-  };
-
-  document.getElementById("btn-comprar-ya").onclick = () => {
-    if (cart.length === 0) {
-      alert("Agregá algo al carrito.");
-      return;
-    }
-    state.comentarios = document.getElementById("comentarios").value.trim();
-    document.getElementById("step-producto").classList.remove("active");
-    document.getElementById("step-cliente").classList.add("active");
-    updateResumenFinal();
-  };
-
-  document.getElementById("btn-volver-productos").onclick = () => {
-    document.getElementById("step-cliente").classList.remove("active");
-    document.getElementById("step-producto").classList.add("active");
-  };
-
-  document.getElementById("btn-confirmar").onclick = () => {
-    state.discountCode =
-      document.getElementById("discount-code").value.trim().toUpperCase();
-    sendOrder();
-  };
-
-  btnNuevo.onclick = resetForNewOrder;
-
-  document.getElementById("cart-icon").onclick = openCartDrawer;
-  document.getElementById("cart-backdrop").onclick = closeCartDrawer;
-  document.getElementById("btn-cart-close").onclick = closeCartDrawer;
-
-  document.getElementById("btn-go-confirm").onclick = () => {
+  /* ===================== CARRITO ===================== */
+  function openCartDrawer() {
     if (cart.length === 0) {
       alert("Tu carrito está vacío.");
       return;
     }
-    closeCartDrawer();
+    document.getElementById("cart-drawer").classList.add("open");
+    document.getElementById("cart-backdrop").style.display = "block";
+  }
+
+  function closeCartDrawer() {
+    document.getElementById("cart-drawer").classList.remove("open");
+    document.getElementById("cart-backdrop").style.display = "none";
+  }
+
+  function updateCartUI() {
+    const countEl = document.getElementById("cart-count");
+    const bodyEl  = document.getElementById("cart-drawer-body");
+    const totalEl = document.getElementById("cart-drawer-total");
+
+    countEl.textContent = cart.length.toString();
+    bodyEl.innerHTML = "";
+
+    if (cart.length === 0) {
+      bodyEl.innerHTML = '<p class="muted">Tu carrito está vacío.</p>';
+      totalEl.textContent = "₡0";
+      return;
+    }
+
+    cart.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "cart-item-row";
+      div.innerHTML =
+        "<div><strong>" + item.quantity + " x " + item.productName + "</strong></div>" +
+        '<div class="muted">' + item.packLabel + "</div>" +
+        "<div>" + formatCRC(item.lineTotal) + "</div>";
+      bodyEl.appendChild(div);
+    });
+
+    const total = cart.reduce((s, c) => s + c.lineTotal, 0);
+    totalEl.textContent = formatCRC(total);
+  }
+
+  /* ===================== SEND ORDER ===================== */
+  async function sendOrder() {
+    const statusEl = document.getElementById("status");
+    const btnNuevo = document.getElementById("btn-nuevo-pedido");
+    statusEl.classList.remove("status-box-success");
+    btnNuevo.style.display = "none";
+
+    const nombreSeguro = ((state && state.nombre) || "").trim() || "cliente";
+
+    try {
+      if (!Array.isArray(cart) || cart.length === 0) {
+        statusEl.textContent = "Agregá al menos un producto al carrito antes de confirmar.";
+        return;
+      }
+
+      statusEl.textContent = "Enviando tu pedido, " + nombreSeguro + "...";
+
+      const totalColones = cart.reduce(
+        (suma, item) => suma + Number(item.lineTotal || 0),
+        0
+      );
+
+      const cartLines = cart
+        .map(item => {
+          const qty = item.quantity || 0;
+          const name = item.productName || "Producto";
+          const pack = item.packLabel || "";
+          const lineTotal = Number(item.lineTotal || 0);
+          return qty + " x " + name + " (" + pack + ") – " + formatCRC(lineTotal);
+        })
+        .join("\n");
+
+      const presentacionResumen = cart
+        .map(item => (item.quantity || 0) + " x " + (item.packLabel || ""))
+        .join(", ");
+
+      const pesoTotalGramos = cart.reduce(
+        (suma, item) => suma + (Number(item.grams || 0) * Number(item.quantity || 0)),
+        0
+      );
+
+      const primerProducto = (cart[0] && cart[0].productName) || "Calculadora Monte Alto";
+
+      let comentariosBase = (state && state.comentarios) || "";
+      if (state.discountCode) {
+        comentariosBase += "\nCódigo de descuento: " + state.discountCode;
+      }
+      comentariosBase += "\nMétodo de pago: SINPE móvil BAC";
+
+      const comentariosFinal = comentariosBase + "\n" + cartLines;
+
+      const payload = {
+        action: "saveOrder",
+        sessionId: sessionId,
+        nombre: state.nombre || "",
+        telefono: state.telefono || "",
+        comentarios: comentariosFinal,
+        cantidad: cart.length,
+        totalColones: totalColones,
+        puntos: 0,
+        productoId: primerProducto,
+        presentacionResumen: presentacionResumen,
+        pesoTotalGramos: pesoTotalGramos,
+        discountCode: state.discountCode || "",
+        promoAccepted: state.wantsPromos ? "Si" : ""
+      };
+
+      const res = await fetch(CONFIG.SHEETS_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        statusEl.textContent =
+          "Error enviando el pedido (HTTP " + res.status + ": " + res.statusText + "). Verificá la URL del Apps Script.";
+        return;
+      }
+
+      try {
+        await res.text();
+      } catch (e) {
+        // ignorar
+      }
+
+      burstConfettiBigCenter();
+
+      const resumenHtml = cart
+        .map(item =>
+          (item.quantity || 0) + " x " + item.productName +
+          " (" + item.packLabel + ") – " + formatCRC(item.lineTotal)
+        )
+        .join("<br>");
+
+      const entregaDate = getNextSaturday(new Date());
+      const entregaStr = entregaDate.toLocaleDateString("es-CR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long"
+      });
+
+      statusEl.innerHTML =
+        "¡Gracias por tu compra, " + nombreSeguro + "! 🧡<br><br>" +
+        "<strong>Resumen de tu pedido:</strong><br>" +
+        resumenHtml + "<br><br>" +
+        "<strong>Total:</strong> " + formatCRC(totalColones) + "<br>" +
+        "<strong>Fecha estimada de entrega:</strong> " + entregaStr;
+
+      statusEl.classList.add("status-box-success");
+      btnNuevo.style.display = "inline-block";
+
+      document.getElementById("label-descuento").style.display = "none";
+      document.getElementById("discount-code").style.display = "none";
+      document.getElementById("sinpe-box").style.display = "none";
+      document.getElementById("chk-promos").disabled = true;
+      document.getElementById("btn-volver-productos").style.display = "none";
+      document.getElementById("btn-confirmar").style.display = "none";
+
+      cart = [];
+      updateCartUI();
+      document.getElementById("resumen-final").innerHTML = "";
+
+    } catch (err) {
+      console.error("Error en sendOrder():", err);
+      statusEl.textContent =
+        "Hubo un problema enviando tu pedido.\nDetalle técnico: " +
+        (err && err.message ? err.message : String(err));
+    }
+  }
+
+  /* ===================== RESET ===================== */
+  function resetForNewOrder() {
+    sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    state.nombre = "";
+    state.telefono = "";
+    state.comentarios = "";
+    state.discountCode = "";
+    state.currentProductId = "";
+    state.currentWeightId = "";
+    state.currentQuantity = 1;
+    state.wantsPromos = false;
+    state.pointsChecked = false;
+
+    cart = [];
+    updateCartUI();
+
+    document.getElementById("nombre").value = "";
+    document.getElementById("telefono").value = "";
+    document.getElementById("comentarios").value = "";
+    document.getElementById("discount-code").value = "";
+    document.getElementById("datos-error").textContent = "";
+    document.getElementById("puntos-info").textContent = "";
+    document.getElementById("puntos-info").classList.remove("has-points", "no-points");
+    document.getElementById("subtotal-linea").textContent = "₡0";
+    document.getElementById("producto").value = "";
+    document.getElementById("peso").value = "";
+    document.getElementById("cantidad").value = 1;
+    document.getElementById("product-image-wrapper").style.display = "none";
+
+    const statusEl = document.getElementById("status");
+    statusEl.textContent = "";
+    statusEl.classList.remove("status-box-success");
+    document.getElementById("btn-nuevo-pedido").style.display = "none";
+
+    document.getElementById("chk-promos").checked = false;
+    document.getElementById("chk-promos").disabled = false;
+
+    document.getElementById("step-datos").classList.add("active");
     document.getElementById("step-producto").classList.remove("active");
-    document.getElementById("step-cliente").classList.add("active");
-    updateResumenFinal();
-  };
+    document.getElementById("step-cliente").classList.remove("active");
 
-  updateCartUI();
-  loadConfigFromSheet();
-}
+    document.getElementById("label-descuento").style.display = "";
+    document.getElementById("discount-code").style.display = "";
+    document.getElementById("sinpe-box").style.display = "";
+    document.getElementById("btn-volver-productos").style.display = "";
+    document.getElementById("btn-confirmar").style.display = "";
 
-window.onload = () => setup();
-</script>
+    updateContinueButtonState();
+  }
 
+  /* ===================== RESUMEN FINAL ===================== */
+  function updateResumenFinal() {
+    const total = cart.reduce((s, c) => s + c.lineTotal, 0);
+    const list = cart
+      .map(i =>
+        (i.quantity || 0) + " x " + i.productName +
+        " (" + i.packLabel + ") – " + formatCRC(i.lineTotal)
+      )
+      .join("<br>");
+
+    document.getElementById("resumen-final").innerHTML =
+      "<strong>Resumen de tu compra:</strong><br>" +
+      list +
+      "<br><br><strong>Total:</strong> " + formatCRC(total);
+  }
+
+  /* ===================== BOTÓN CONTINUAR ===================== */
+  function updateContinueButtonState() {
+    const btn = document.getElementById("btn-ir-productos");
+    const nombreInput = document.getElementById("nombre");
+    const telInput = document.getElementById("telefono");
+
+    const n = (nombreInput.value || "").trim();
+    const t = (telInput.value || "").replace(/\D/g, "").trim();
+
+    const can =
+      n.length > 0 &&
+      t.length >= 8 &&
+      state.pointsChecked === true;
+
+    btn.disabled = !can;
+  }
+
+  /* ===================== SETUP ===================== */
+  function setup() {
+    const productoSelect = document.getElementById("producto");
+    const pesoSelect = document.getElementById("peso");
+    const telInput = document.getElementById("telefono");
+    const nombreInput = document.getElementById("nombre");
+    const discountInput = document.getElementById("discount-code");
+    const chkPromos = document.getElementById("chk-promos");
+    const btnNuevo = document.getElementById("btn-nuevo-pedido");
+
+    CONFIG.products.forEach(p => {
+      const o = document.createElement("option");
+      o.value = p.id;
+      o.textContent = p.name;
+      productoSelect.appendChild(o);
+    });
+
+    CONFIG.weights.forEach(w => {
+      const o = document.createElement("option");
+      o.value = w.id;
+      o.textContent = w.label;
+      pesoSelect.appendChild(o);
+    });
+
+    let lastPointsPhone = "";
+    telInput.addEventListener("input", () => {
+      const raw   = telInput.value || "";
+      const clean = raw.replace(/\D/g, "").trim();
+      if (clean.length >= 8 && clean !== lastPointsPhone) {
+        lastPointsPhone = clean;
+        fetchPointsForPhone(clean);
+      } else if (clean.length < 8) {
+        const infoEl = document.getElementById("puntos-info");
+        infoEl.textContent = "";
+        infoEl.classList.remove("has-points", "no-points");
+        lastPointsPhone = "";
+        state.pointsChecked = false;
+        updateContinueButtonState();
+      }
+    });
+
+    nombreInput.addEventListener("input", () => {
+      updateContinueButtonState();
+    });
+
+    discountInput.addEventListener("input", () => {
+      discountInput.value = discountInput.value.toUpperCase();
+    });
+
+    chkPromos.addEventListener("change", () => {
+      state.wantsPromos = chkPromos.checked;
+    });
+
+    document.getElementById("btn-ir-productos").onclick = () => {
+      const n = nombreInput.value.trim();
+      const t = telInput.value.trim();
+      const err = document.getElementById("datos-error");
+      if (!n) {
+        err.textContent = "Ingresá tu nombre.";
+        return;
+      }
+      if (!t || t.replace(/\D/g, "").length < 8) {
+        err.textContent = "Teléfono inválido.";
+        return;
+      }
+      if (!state.pointsChecked) {
+        err.textContent = "Esperá un momento mientras revisamos tus puntos.";
+        return;
+      }
+      err.textContent = "";
+      state.nombre = n;
+      state.telefono = t;
+      document.getElementById("step-datos").classList.remove("active");
+      document.getElementById("step-producto").classList.add("active");
+    };
+
+    productoSelect.onchange = () => {
+      state.currentProductId = productoSelect.value;
+      const p = getSelectedProduct();
+      const imgWrap = document.getElementById("product-image-wrapper");
+      const img = document.getElementById("product-image");
+      const caption = document.getElementById("product-image-caption");
+      if (p) {
+        img.src = p.imageUrl;
+        caption.textContent = p.name;
+        imgWrap.style.display = "block";
+      } else {
+        imgWrap.style.display = "none";
+        img.src = "";
+      }
+      document.getElementById("subtotal-linea").textContent =
+        formatCRC(calculateSubtotal());
+    };
+
+    pesoSelect.onchange = () => {
+      state.currentWeightId = pesoSelect.value;
+      document.getElementById("subtotal-linea").textContent =
+        formatCRC(calculateSubtotal());
+    };
+
+    document.getElementById("cantidad").oninput = () => {
+      state.currentQuantity =
+        Number(document.getElementById("cantidad").value) || 1;
+      document.getElementById("subtotal-linea").textContent =
+        formatCRC(calculateSubtotal());
+    };
+
+    const btnAgregar = document.getElementById("btn-agregar-carrito");
+    btnAgregar.onclick = () => {
+      const p = getSelectedProduct();
+      const w = getSelectedWeight();
+      if (!p || !w) {
+        alert("Revisá que escogiste el chorizo/tocineta y el peso.");
+        return;
+      }
+      state.comentarios = document.getElementById("comentarios").value.trim();
+      const qty = state.currentQuantity;
+      const lineTotal = calculateLineTotal(p, w.grams, qty);
+      cart.push({
+        productId: p.id,
+        productName: p.name,
+        packLabel: w.label,
+        grams: w.grams,
+        quantity: qty,
+        lineTotal: lineTotal
+      });
+      updateCartUI();
+      burstConfettiSmallFromElement(btnAgregar);
+      state.currentProductId = "";
+      state.currentWeightId = "";
+      state.currentQuantity = 1;
+      document.getElementById("producto").value = "";
+      document.getElementById("peso").value = "";
+      document.getElementById("cantidad").value = 1;
+      document.getElementById("product-image-wrapper").style.display = "none";
+      document.getElementById("subtotal-linea").textContent = "₡0";
+    };
+
+    document.getElementById("btn-comprar-ya").onclick = () => {
+      if (cart.length === 0) {
+        alert("Agregá algo al carrito.");
+        return;
+      }
+      state.comentarios = document.getElementById("comentarios").value.trim();
+      document.getElementById("step-producto").classList.remove("active");
+      document.getElementById("step-cliente").classList.add("active");
+      updateResumenFinal();
+    };
+
+    document.getElementById("btn-volver-productos").onclick = () => {
+      document.getElementById("step-cliente").classList.remove("active");
+      document.getElementById("step-producto").classList.add("active");
+    };
+
+    document.getElementById("btn-confirmar").onclick = () => {
+      state.discountCode =
+        document.getElementById("discount-code").value.trim().toUpperCase();
+      sendOrder();
+    };
+
+    btnNuevo.onclick = resetForNewOrder;
+
+    document.getElementById("cart-icon").onclick = openCartDrawer;
+    document.getElementById("cart-backdrop").onclick = closeCartDrawer;
+    document.getElementById("btn-cart-close").onclick = closeCartDrawer;
+
+    document.getElementById("btn-go-confirm").onclick = () => {
+      if (cart.length === 0) {
+        alert("Tu carrito está vacío.");
+        return;
+      }
+      closeCartDrawer();
+      document.getElementById("step-producto").classList.remove("active");
+      document.getElementById("step-cliente").classList.add("active");
+      updateResumenFinal();
+    };
+
+    updateCartUI();
+    updateContinueButtonState();
+    loadConfigFromSheet();
+  }
+
+  window.onload = () => setup();
+  </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
