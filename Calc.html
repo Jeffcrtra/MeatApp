@@ -277,7 +277,7 @@
 </head>
 
 <body>
-  <h1>Monte Alto – Calculadora  5:48</h1>
+  <h1>Monte Alto – Calculadora 6:01</h1>
 
   <div class="card">
 
@@ -405,7 +405,7 @@
 /* ===================== CONFIG BÁSICA ===================== */
 const CONFIG = {
   SHEETS_ENDPOINT:
-    "https://script.google.com/macros/s/AKfycbw1o9Dxl3UgK3lbsQJd8IReT4dVNqhgnAUf1TD4FCGCsbV-roRG1MsFPwj-MneRTvGR/exec",
+    "https://script.google.com/macros/s/AKfycbzdDA8ckkZGpatzFHQOqj875I2nZH8LvTF6gqdlMOxBuWk5O0tydzRncrGIx54UYFxZ/exec",
 
   products: [
     { id: "brat",    type: "chorizo", name: "Chorizo Bratwurst",    imageUrl: "Bratwurst.png" },
@@ -426,8 +426,8 @@ const CONFIG = {
    - Se inicializan con valores por defecto
    - Luego se sobre-escriben con AA1 y AC1 si vienen del Sheet
 */
-let pricePerGramChorizo = 7.8; // fallback: 7.8 col/gramo (= ₡7.800/kg)
-let pricePerGramBacon   = 12.0; // fallback: 12 col/gramo (= ₡12.000/kg)
+let pricePerGramChorizo = 7.8; // fallback: 7.8 col/gramo
+let pricePerGramBacon   = 12.0; // fallback: 12 col/gramo
 
 /* ===================== ESTADO ===================== */
 let sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -572,7 +572,6 @@ async function loadConfigFromSheet(){
     console.log("Config recibida de Sheets:", data);
 
     if (data.success) {
-      // Tomar AA1 y AC1 como precios por gramo, si son numéricos
       const aa = Number(data.AA1);
       const ac = Number(data.AC1);
 
@@ -671,7 +670,8 @@ async function sendOrder() {
         const lineTotal = Number(item.lineTotal || 0);
         return `${qty} x ${name} (${pack}) – ${formatCRC(lineTotal)}`;
       })
-      .join("\n");
+      .join("
+");
 
     const presentacionResumen = cart
       .map(item => `${item.quantity ?? 0} x ${item.packLabel ?? ""}`)
@@ -686,10 +686,13 @@ async function sendOrder() {
 
     let comentariosBase = (state && state.comentarios) || "";
     if (state.discountCode) {
-      comentariosBase += `\nCódigo de descuento: ${state.discountCode}`;
+      comentariosBase += `
+Código de descuento: ${state.discountCode}`;
     }
-    comentariosBase += `\nMétodo de pago: SINPE móvil BAC`;
-    const comentariosFinal = comentariosBase + "\n" + cartLines;
+    comentariosBase += `
+Método de pago: SINPE móvil BAC`;
+    const comentariosFinal = comentariosBase + "
+" + cartLines;
 
     const payload = {
       action: "saveOrder",
@@ -762,7 +765,8 @@ async function sendOrder() {
   } catch (err) {
     console.error("Error en sendOrder():", err);
     statusEl.textContent =
-      "Hubo un problema enviando tu pedido.\nDetalle técnico: " + (err && err.message ? err.message : String(err));
+      "Hubo un problema enviando tu pedido.
+Detalle técnico: " + (err && err.message ? err.message : String(err));
   }
 }
 
@@ -987,6 +991,3 @@ window.onload = ()=> setup();
 
 </body>
 </html>
-
-
-
