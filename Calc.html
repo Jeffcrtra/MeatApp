@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>9:25 Monte Alto – Calculadora de Embutidos</title>
+  <title>9:50 Monte Alto – Calculadora de Embutidos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
@@ -297,7 +297,7 @@
 </head>
 
 <body>
-  <h1>Monte Alto – Calculadora</h1>
+  <h1>Monte Alto – Calculadora 7:07</h1>
 
   <!-- Sonidos -->
   <audio id="sound-add" src="click-add.mp3" preload="auto"></audio>
@@ -374,7 +374,7 @@
 
       <div id="sinpe-box" class="summary-box">
         <strong>Pago por SINPE móvil (BAC):</strong><br>
-        Enviá el monto total al número <strong>6066-8322</strong> (Marianela Esquivel).<br>
+        Enviá el monto total al número <strong>6066-8322</strong> (Monte Alto).<br>
         En el detalle indicá tu nombre y “Monte Alto”.<br>
         Luego presioná <strong>Confirmar pedido</strong> para registrar tu orden.
       </div>
@@ -398,8 +398,6 @@
     </div>
 
   </div>
-
-  <!-- Quitamos la caja de debug de server-config -->
 
   <div id="cart-backdrop" class="cart-backdrop"></div>
 
@@ -497,6 +495,12 @@
     const diff = (6 - day + 7) % 7;
     d.setDate(d.getDate() + diff);
     return d;
+  }
+
+  function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent || ""
+    );
   }
 
   /* ===================== AUDIO + VIBRACIÓN ===================== */
@@ -807,6 +811,11 @@
         orderLine = "<br><strong>Número de pedido:</strong> " + orderId;
       }
 
+      const sinpeHtml =
+        "<br><br><strong>Pago por SINPE móvil (BAC):</strong><br>" +
+        "Enviá el monto total al número <strong>6066-8322</strong> (Marianela Esquivel).<br>" +
+        "En el detalle indicá tu pedido #" + (orderId || "(pendiente)") + ".";
+
       statusEl.innerHTML =
         "¡Gracias por tu compra, " + nombreSeguro + "! 🧡<br><br>" +
         "<strong>Resumen de tu pedido:</strong><br>" +
@@ -814,7 +823,8 @@
         "<strong>Total:</strong> " + formatCRC(totalColones) + "<br>" +
         "<strong>Fecha estimada de entrega:</strong> " + entregaStr +
         orderLine +
-        extraLoyalty;
+        extraLoyalty +
+        sinpeHtml;
 
       statusEl.classList.add("status-box-success");
       btnNuevo.style.display = "inline-block";
@@ -823,8 +833,45 @@
       document.getElementById("discount-code").style.display = "none";
       document.getElementById("sinpe-box").style.display = "none";
       document.getElementById("chk-promos").disabled = true;
+      const promoBox = document.querySelector(".promo-box");
+      if (promoBox) promoBox.style.display = "none";
       document.getElementById("btn-volver-productos").style.display = "none";
       document.getElementById("btn-confirmar").style.display = "none";
+
+      // Preparar mensaje para WhatsApp (solo móvil)
+      const waLines = [];
+      waLines.push("Hola, soy " + nombreSeguro + ".");
+      waLines.push("Quiero confirmar mi pedido en Monte Alto.");
+      waLines.push("");
+      if (orderId) {
+        waLines.push("Pedido #" + orderId);
+      }
+      waLines.push("Detalle:");
+      waLines.push(cartLines);
+      waLines.push("");
+      waLines.push("Total: " + formatCRC(totalColones));
+
+      if (!isNaN(puntosPedido)) {
+        waLines.push("Este pedido me da " + puntosPedido + " puntos.");
+      }
+      if (!isNaN(totalPointsAfter)) {
+        waLines.push("Con este pedido llegaré a " + totalPointsAfter + " puntos acumulados.");
+      }
+
+      waLines.push("");
+      waLines.push("Pago por SINPE móvil (BAC):");
+      waLines.push("Envío el monto total al número 6066-8322 (Marianela Esquivel).");
+      if (orderId) {
+        waLines.push("En el detalle indico mi pedido #" + orderId + ".");
+      }
+
+      const waMessage = waLines.join("\n");
+
+      if (isMobileDevice()) {
+        const waUrl =
+          "https://wa.me/50660668322?text=" + encodeURIComponent(waMessage);
+        window.location.href = waUrl;
+      }
 
       cart = [];
       updateCartUI();
@@ -832,6 +879,7 @@
 
     } catch (err) {
       console.error("Error en sendOrder():", err);
+      const statusEl = document.getElementById("status");
       statusEl.textContent =
         "Hubo un problema enviando tu pedido.\nDetalle técnico: " +
         (err && err.message ? err.message : String(err));
@@ -875,6 +923,8 @@
 
     document.getElementById("chk-promos").checked = false;
     document.getElementById("chk-promos").disabled = false;
+    const promoBox = document.querySelector(".promo-box");
+    if (promoBox) promoBox.style.display = "";
 
     document.getElementById("step-datos").classList.add("active");
     document.getElementById("step-producto").classList.remove("active");
