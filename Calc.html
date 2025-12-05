@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>10:20 Monte Alto – Calculadora de Embutidos</title>
+  <title>10:23 Monte Alto – Calculadora de Embutidos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
@@ -867,40 +867,57 @@
       document.getElementById("btn-confirmar").style.display = "none";
 
       // ===== MENSAJE WHATSAPP A TU TELÉFONO 6022-8322 =====
-      const waLines = [];
-      waLines.push("Hola, soy " + nombreSeguro + ".");
-      waLines.push("Quiero confirmar mi pedido en Monte Alto.");
-      waLines.push("");
-      if (orderId) {
-        waLines.push("Orden #" + orderId);
-      }
-      waLines.push("Detalle:");
-      waLines.push(cartLines);
-      waLines.push("");
-      waLines.push("Total: " + formatCRC(totalColones));
+const waLines = [];
+waLines.push("Hola, soy " + nombreSeguro + ".");
+waLines.push("Quiero confirmar mi pedido en Monte Alto.");
+waLines.push("");
+if (orderId) {
+  waLines.push("Orden #" + orderId);
+}
+waLines.push("Detalle:");
+waLines.push(cartLines);
+waLines.push("");
+waLines.push("Total: " + formatCRC(totalColones));
 
-      if (!isNaN(puntosPedido)) {
-        waLines.push("Este pedido me da " + puntosPedido + " puntos.");
-      }
-      if (!isNaN(totalPointsAfter)) {
-        waLines.push("Con este pedido llegaré a " + totalPointsAfter + " puntos acumulados.");
-      }
+// Fechas de entrega (mismo criterio que en la pantalla)
+waLines.push("");
+if (contieneBacon && cart.length > 1) {
+  waLines.push("Fechas de entrega:");
+  waLines.push("• Chorizos: " + fechaChorizosStr);
+  waLines.push("• Bacon: " + fechaBaconStr + " (el bacon requiere un proceso mínimo de 10 días).");
+} else if (contieneBacon) {
+  waLines.push("Fecha estimada de entrega: " + fechaBaconStr + " (el bacon requiere un proceso mínimo de 10 días).");
+} else {
+  waLines.push("Fecha estimada de entrega: " + fechaChorizosStr);
+}
 
-      waLines.push("");
-      waLines.push("Pago por SINPE móvil (BAC):");
-      waLines.push("Envío el monto total al número 6066-8322 (Marianela Esquivel).");
-      if (orderId) {
-        waLines.push("En el detalle indico mi orden #" + orderId + ".");
-      }
+// Puntos
+if (!isNaN(puntosPedido)) {
+  waLines.push("");
+  waLines.push("Puntos de fidelidad:");
+  waLines.push("Este pedido me da " + puntosPedido + " puntos.");
+}
+if (!isNaN(totalPointsAfter)) {
+  waLines.push("Con este pedido llegaré a " + totalPointsAfter + " puntos acumulados.");
+}
 
-      const waMessage = waLines.join("\n");
+// Datos de SINPE
+waLines.push("");
+waLines.push("Pago por SINPE móvil (BAC):");
+waLines.push("Envío el monto total al número 6066-8322 (Marianela Esquivel).");
+if (orderId) {
+  waLines.push("En el detalle indico mi orden #" + orderId + ".");
+}
 
-      if (isMobileDevice()) {
-        const waUrl =
-          "https://wa.me/50660228322?text=" + encodeURIComponent(waMessage);
-        window.location.href = waUrl;
-      }
-      // ============================================
+const waMessage = waLines.join("\n");
+
+if (isMobileDevice()) {
+  const waUrl =
+    "https://wa.me/50660228322?text=" + encodeURIComponent(waMessage);
+  window.location.href = waUrl;
+}
+// ============================================
+
 
       cart = [];
       updateCartUI();
@@ -1177,3 +1194,4 @@
 
 </body>
 </html>
+
