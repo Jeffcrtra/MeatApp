@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>10:40 Monte Alto – Calculadora de Embutidos</title>
+  <title>11:15 Monte Alto – Calculadora de Embutidos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
@@ -17,6 +17,7 @@
       color: #f9fafb;
       margin: 0;
       padding: 1rem;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
 
     h1 {
@@ -32,6 +33,7 @@
       padding: 1rem 1.25rem 1.5rem;
       box-shadow: 0 10px 25px rgba(0,0,0,0.3);
       position: relative;
+      overflow: hidden;
     }
 
     label {
@@ -51,6 +53,7 @@
       color: #f9fafb;
       margin-bottom: 0.75rem;
       font-size: 0.95rem;
+      transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
     }
 
     button {
@@ -172,6 +175,7 @@
       font-size:0.9rem;
       cursor:pointer;
       user-select:none;
+      z-index:20;
     }
     #cart-icon span.cart-emoji {
       font-size:1.1rem;
@@ -266,6 +270,29 @@
 
     .cart-item-row {
       margin-bottom:0.5rem;
+      padding-bottom:0.4rem;
+      border-bottom:1px dashed #1f2937;
+      display:flex;
+      gap:0.5rem;
+      align-items:flex-start;
+    }
+    .cart-item-icon {
+      font-size:1.1rem;
+      margin-top:0.1rem;
+    }
+    .cart-item-main {
+      flex:1;
+    }
+    .cart-item-name {
+      font-weight:600;
+    }
+    .cart-item-pack {
+      font-size:0.8rem;
+      color:#9ca3af;
+    }
+    .cart-item-price {
+      font-weight:600;
+      white-space:nowrap;
     }
 
     .cart-drawer-footer {
@@ -294,6 +321,111 @@
     #puntos-info.no-points {
       color: #9ca3af;
     }
+
+    #recom-info {
+      min-height: 1em;
+      margin-top: 0.25rem;
+      font-size: 0.85rem;
+      color:#9ca3af;
+    }
+
+    /* TOGGLE TEMA */
+    .theme-toggle {
+      position:absolute;
+      top:0.75rem;
+      left:0.75rem;
+      display:flex;
+      gap:0.4rem;
+      z-index:20;
+    }
+    .theme-pill {
+      display:flex;
+      align-items:center;
+      gap:0.25rem;
+      padding:0.15rem 0.55rem;
+      border-radius:999px;
+      border:1px solid #374151;
+      background:#020617;
+      font-size:0.75rem;
+      color:#9ca3af;
+      cursor:pointer;
+      box-shadow:none;
+    }
+    .theme-pill span.icon {
+      font-size:0.85rem;
+    }
+    .theme-pill.active {
+      background:#fbbf24;
+      color:#111827;
+      border-color:#fbbf24;
+      font-weight:600;
+    }
+
+    /* CREDITS */
+    .credits {
+      max-width:680px;
+      margin:0.5rem auto 0;
+      text-align:center;
+      font-size:0.75rem;
+      color:#6b7280;
+    }
+    .credits a {
+      color:#9ca3af;
+      text-decoration:none;
+    }
+    .credits a:hover {
+      text-decoration:underline;
+    }
+
+    /* LIGHT THEME OVERRIDES */
+    body.theme-light {
+      background:#e5e7eb;
+      color:#111827;
+    }
+    body.theme-light .card {
+      background:#ffffff;
+      box-shadow:0 6px 18px rgba(15,23,42,0.25);
+    }
+    body.theme-light select,
+    body.theme-light input,
+    body.theme-light textarea {
+      background:#f9fafb;
+      color:#111827;
+      border-color:#d1d5db;
+    }
+    body.theme-light .summary-box {
+      background:#f9fafb;
+      border-color:#d1d5db;
+    }
+    body.theme-light .muted {
+      color:#6b7280;
+    }
+    body.theme-light #status.status-box-success {
+      background:#ecfdf5;
+      border-color:#16a34a;
+      color:#14532d;
+    }
+    body.theme-light #cart-icon {
+      background:#f9fafb;
+      border-color:#d1d5db;
+    }
+    body.theme-light .cart-drawer {
+      background:#ffffff;
+    }
+    body.theme-light .cart-drawer-body {
+      border-top-color:#e5e7eb;
+      border-bottom-color:#e5e7eb;
+    }
+
+    /* CART ICON FLOATING ON MOBILE */
+    @media (max-width: 640px) {
+      #cart-icon {
+        position:fixed;
+        top:auto;
+        right:1rem;
+        bottom:1rem;
+      }
+    }
   </style>
 </head>
 
@@ -306,6 +438,17 @@
 
   <div class="card">
 
+    <!-- Toggle tema -->
+    <div class="theme-toggle">
+      <button class="theme-pill" data-theme="light">
+        <span class="icon">☀️</span><span>Claro</span>
+      </button>
+      <button class="theme-pill active" data-theme="dark">
+        <span class="icon">🌙</span><span>Oscuro</span>
+      </button>
+    </div>
+
+    <!-- Carrito -->
     <div id="cart-icon">
       <span class="cart-emoji">🛒</span>
       <span id="cart-count">0</span>
@@ -328,6 +471,7 @@
       </div>
 
       <div id="puntos-info"></div>
+      <div id="recom-info"></div>
       <div id="datos-error" class="error-text"></div>
 
       <button id="btn-ir-productos" class="primary" disabled>Continuar</button>
@@ -386,8 +530,6 @@
         </label>
       </div>
 
-      <!-- Se eliminó el div resumen-final para quitar la caja vacía -->
-
       <button id="btn-volver-productos" class="secondary">Volver</button>
       <button id="btn-confirmar" class="primary">Confirmar pedido</button>
 
@@ -410,12 +552,23 @@
       <p class="muted">Tu carrito está vacío.</p>
     </div>
     <div class="cart-drawer-footer">
-      <div class="muted">Total: <strong id="cart-drawer-total">₡0</strong></div>
+      <div class="muted">Subtotal: <strong id="cart-drawer-subtotal">₡0</strong></div>
+      <div class="muted" id="cart-drawer-discount" style="display:none;">
+        Descuento: <strong id="cart-drawer-discount-amount">₡0</strong>
+      </div>
+      <div class="muted"><strong>Total:</strong> <strong id="cart-drawer-total">₡0</strong></div>
       <button id="btn-go-confirm" class="primary w-full" style="margin-top:0.5rem;">
         Ir a confirmar pedido
       </button>
     </div>
   </div>
+
+  <p class="credits">
+    Calculadora web realizada por
+    <a href="https://www.linkedin.com/in/jeffrey-trigueros-371191123/" target="_blank" rel="noopener noreferrer">
+      Jeffrey Trigueros
+    </a>.
+  </p>
 
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
@@ -457,7 +610,18 @@
     currentWeightId: "",
     currentQuantity: 1,
     wantsPromos: false,
-    pointsChecked: false   // ← para controlar el botón Continuar
+    pointsChecked: false,
+    customerProfile: {
+      pointsBefore: 0,
+      totalOrders: 0,
+      usedFirstDiscount: false,
+      lastProduct: "",
+      lastPresentacion: ""
+    },
+    discount: {
+      percent: 0,
+      label: ""
+    }
   };
 
   /* ===================== UTILIDADES ===================== */
@@ -544,15 +708,56 @@
     });
   }
 
-  /* ===================== PUNTOS TELÉFONO ===================== */
+  /* ===================== TEMA CLARO/OSCURO ===================== */
+  function applyTheme(theme) {
+    const body = document.body;
+    const pills = document.querySelectorAll(".theme-pill");
+    if (theme === "light") {
+      body.classList.add("theme-light");
+    } else {
+      body.classList.remove("theme-light");
+      theme = "dark";
+    }
+    pills.forEach(p => {
+      p.classList.toggle("active", p.dataset.theme === theme);
+    });
+    try {
+      localStorage.setItem("ma_theme", theme);
+    } catch (e) {}
+  }
+
+  function initTheme() {
+    let saved = null;
+    try {
+      saved = localStorage.getItem("ma_theme");
+    } catch (e) {}
+    if (!saved) {
+      const prefersDark = window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches;
+      saved = prefersDark ? "dark" : "light";
+    }
+    applyTheme(saved);
+  }
+
+  /* ===================== PUNTOS + PERFIL CLIENTE ===================== */
   async function fetchPointsForPhone(phone) {
     const infoEl = document.getElementById("puntos-info");
+    const recomEl = document.getElementById("recom-info");
     const clean = (phone || "").trim();
+
+    recomEl.textContent = "";
 
     if (clean.length < 8) {
       infoEl.textContent = "";
       infoEl.classList.remove("has-points", "no-points");
       state.pointsChecked = false;
+      state.customerProfile = {
+        pointsBefore: 0,
+        totalOrders: 0,
+        usedFirstDiscount: false,
+        lastProduct: "",
+        lastPresentacion: ""
+      };
       updateContinueButtonState();
       return;
     }
@@ -562,13 +767,13 @@
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
-          action: "getPoints",
+          action: "getCustomerProfile",
           telefono: clean
         })
       });
 
       if (!res.ok) {
-        console.warn("Error HTTP getPoints:", res.status, res.statusText);
+        console.warn("Error HTTP getCustomerProfile:", res.status, res.statusText);
         infoEl.textContent = "";
         infoEl.classList.remove("has-points", "no-points");
         state.pointsChecked = false;
@@ -580,6 +785,19 @@
 
       if (data.success) {
         const pts = Number(data.points || 0);
+        const totalOrders = Number(data.totalOrders || 0);
+        const usedFirstDiscount = !!data.usedFirstDiscount;
+        const lastProduct = data.lastProduct || "";
+        const lastPresentacion = data.lastPresentacion || "";
+
+        state.customerProfile = {
+          pointsBefore: pts,
+          totalOrders,
+          usedFirstDiscount,
+          lastProduct,
+          lastPresentacion
+        };
+
         if (pts > 0) {
           infoEl.innerHTML = "🎉 <strong>Tenés " + pts + " puntos</strong> acumulados en Monte Alto 🧡";
           infoEl.classList.add("has-points");
@@ -589,6 +807,16 @@
           infoEl.classList.add("no-points");
           infoEl.classList.remove("has-points");
         }
+
+        if (totalOrders > 0 && lastProduct) {
+          let texto = "La última vez compraste " + lastProduct;
+          if (lastPresentacion) {
+            texto += " (" + lastPresentacion + ")";
+          }
+          texto += ". ¿Querés repetir algo similar?";
+          recomEl.textContent = texto;
+        }
+
         state.pointsChecked = true;
         updateContinueButtonState();
       } else {
@@ -641,6 +869,43 @@
     }
   }
 
+  /* ===================== DESCUENTOS ===================== */
+  function computeDiscount(subtotal) {
+    const profile = state.customerProfile;
+    let percent = 0;
+    let label = "";
+
+    if (profile.totalOrders === 0 && !profile.usedFirstDiscount) {
+      // Primera compra
+      percent = 15;
+      label = "PRIMERA15 (15%)";
+      state.discountCode = "PRIMERA15";
+    } else if (profile.totalOrders > 0) {
+      // Cliente recurrente
+      percent = 5;
+      if (cart.length > 1) {
+        percent = 10;
+      }
+      label = "Cliente frecuente (" + percent + "%)";
+    } else {
+      // nada
+      percent = 0;
+      label = "";
+    }
+
+    const discountAmount = Math.round(subtotal * (percent / 100));
+    const totalAfter = subtotal - discountAmount;
+
+    state.discount = { percent, label };
+
+    return {
+      percent,
+      label,
+      discountAmount,
+      totalAfter
+    };
+  }
+
   /* ===================== CARRITO ===================== */
   function openCartDrawer() {
     if (cart.length === 0) {
@@ -659,6 +924,9 @@
   function updateCartUI() {
     const countEl = document.getElementById("cart-count");
     const bodyEl  = document.getElementById("cart-drawer-body");
+    const subtotalEl = document.getElementById("cart-drawer-subtotal");
+    const discountBox = document.getElementById("cart-drawer-discount");
+    const discountAmountEl = document.getElementById("cart-drawer-discount-amount");
     const totalEl = document.getElementById("cart-drawer-total");
 
     countEl.textContent = cart.length.toString();
@@ -666,6 +934,8 @@
 
     if (cart.length === 0) {
       bodyEl.innerHTML = '<p class="muted">Tu carrito está vacío.</p>';
+      subtotalEl.textContent = "₡0";
+      discountBox.style.display = "none";
       totalEl.textContent = "₡0";
       return;
     }
@@ -673,15 +943,40 @@
     cart.forEach(item => {
       const div = document.createElement("div");
       div.className = "cart-item-row";
-      div.innerHTML =
-        "<div><strong>" + item.quantity + " x " + item.productName + "</strong></div>" +
-        '<div class="muted">' + item.packLabel + "</div>" +
-        "<div>" + formatCRC(item.lineTotal) + "</div>";
+      const icon = document.createElement("div");
+      icon.className = "cart-item-icon";
+      icon.textContent = item.icon || "🌭";
+      const main = document.createElement("div");
+      main.className = "cart-item-main";
+      const nameEl = document.createElement("div");
+      nameEl.className = "cart-item-name";
+      nameEl.textContent = item.quantity + " x " + item.productName;
+      const packEl = document.createElement("div");
+      packEl.className = "cart-item-pack";
+      packEl.textContent = item.packLabel;
+      main.appendChild(nameEl);
+      main.appendChild(packEl);
+      const priceEl = document.createElement("div");
+      priceEl.className = "cart-item-price";
+      priceEl.textContent = formatCRC(item.lineTotal);
+      div.appendChild(icon);
+      div.appendChild(main);
+      div.appendChild(priceEl);
       bodyEl.appendChild(div);
     });
 
-    const total = cart.reduce((s, c) => s + c.lineTotal, 0);
-    totalEl.textContent = formatCRC(total);
+    const subtotal = cart.reduce((s, c) => s + c.lineTotal, 0);
+    subtotalEl.textContent = formatCRC(subtotal);
+
+    const disc = computeDiscount(subtotal);
+    if (disc.percent > 0) {
+      discountBox.style.display = "block";
+      discountAmountEl.textContent = "- " + formatCRC(disc.discountAmount);
+      totalEl.textContent = formatCRC(disc.totalAfter);
+    } else {
+      discountBox.style.display = "none";
+      totalEl.textContent = formatCRC(subtotal);
+    }
   }
 
   /* ===================== SEND ORDER ===================== */
@@ -702,10 +997,16 @@
       statusEl.textContent = "Enviando tu pedido, " + nombreSeguro + "...";
       playFeedback("send");
 
-      const totalColones = cart.reduce(
+      const subtotalColones = cart.reduce(
         (suma, item) => suma + Number(item.lineTotal || 0),
         0
       );
+
+      const discountInfo = computeDiscount(subtotalColones);
+      const totalColones = discountInfo.totalAfter;
+      const discountAmount = discountInfo.discountAmount;
+      const discountLabel = discountInfo.label;
+      const discountPercent = discountInfo.percent;
 
       const cartLines = cart
         .map(item => {
@@ -729,8 +1030,13 @@
       const primerProducto = (cart[0] && cart[0].productName) || "Calculadora Monte Alto";
 
       let comentariosBase = (state && state.comentarios) || "";
-      if (state.discountCode) {
-        comentariosBase += "\nCódigo de descuento: " + state.discountCode;
+      if (discountPercent > 0) {
+        comentariosBase += "\nDescuento aplicado: " + discountLabel +
+          " (-" + formatCRC(discountAmount) + ")";
+        comentariosBase += "\nSubtotal sin descuento: " + formatCRC(subtotalColones);
+      }
+      if (state.discountCode && state.discountCode !== "PRIMERA15") {
+        comentariosBase += "\nCódigo de descuento adicional: " + state.discountCode;
       }
       comentariosBase += "\nMétodo de pago: SINPE móvil BAC";
 
@@ -743,12 +1049,12 @@
         telefono: state.telefono || "",
         comentarios: comentariosFinal,
         cantidad: cart.length,
-        totalColones: totalColones,
+        totalColones: totalColones, // total FINAL con descuento
         puntos: 0,
         productoId: primerProducto,
         presentacionResumen: presentacionResumen,
         pesoTotalGramos: pesoTotalGramos,
-        discountCode: state.discountCode || "",
+        discountCode: state.discountCode || state.discount.label || "",
         promoAccepted: state.wantsPromos ? "Si" : ""
       };
 
@@ -840,6 +1146,18 @@
         orderLine = "<br><strong>Número de orden:</strong> " + orderId;
       }
 
+      let descuentoHtml = "";
+      if (discountPercent > 0) {
+        descuentoHtml =
+          "<br><br><strong>Detalle de montos:</strong><br>" +
+          "Subtotal: " + formatCRC(subtotalColones) + "<br>" +
+          "Descuento " + discountLabel + ": - " + formatCRC(discountAmount) + "<br>" +
+          "<strong>Total a pagar:</strong> " + formatCRC(totalColones);
+      } else {
+        descuentoHtml =
+          "<br><br><strong>Total:</strong> " + formatCRC(totalColones);
+      }
+
       const sinpeHtml =
         "<br><br><strong>Pago por SINPE móvil (BAC):</strong><br>" +
         "Enviá el monto total al número <strong>6066-8322</strong> (Marianela Esquivel).<br>" +
@@ -848,10 +1166,11 @@
       statusEl.innerHTML =
         "¡Gracias por tu compra, " + nombreSeguro + "! 🧡<br><br>" +
         "<strong>Resumen de tu pedido:</strong><br>" +
-        resumenHtml + "<br><br>" +
-        "<strong>Total:</strong> " + formatCRC(totalColones) + "<br>" +
-        textoFechas +
+        resumenHtml +
         orderLine +
+        descuentoHtml +
+        "<br><br>" +
+        textoFechas +
         extraLoyalty +
         sinpeHtml;
 
@@ -868,65 +1187,68 @@
       document.getElementById("btn-confirmar").style.display = "none";
 
       // ===== MENSAJE WHATSAPP A TU TELÉFONO 6022-8322 =====
-const waLines = [];
-waLines.push("Hola, soy " + nombreSeguro + ".");
-waLines.push("Quiero confirmar mi pedido en Monte Alto.");
-waLines.push("");
-if (orderId) {
-  waLines.push("Orden #" + orderId);
-}
-waLines.push("Detalle:");
-waLines.push(cartLines);
-waLines.push("");
-waLines.push("Total: " + formatCRC(totalColones));
+      const waLines = [];
+      waLines.push("Hola, soy " + nombreSeguro + ".");
+      waLines.push("Quiero confirmar mi pedido en Monte Alto.");
+      waLines.push("");
+      if (orderId) {
+        waLines.push("Orden #" + orderId);
+      }
+      waLines.push("Detalle:");
+      waLines.push(cartLines);
+      waLines.push("");
+      if (discountPercent > 0) {
+        waLines.push("Subtotal: " + formatCRC(subtotalColones));
+        waLines.push("Descuento " + discountLabel + ": - " + formatCRC(discountAmount));
+      }
+      waLines.push("Total a pagar: " + formatCRC(totalColones));
 
-// Fechas de entrega (mismo criterio que en la pantalla)
-waLines.push("");
-if (contieneBacon && cart.length > 1) {
-  waLines.push("Fechas de entrega:");
-  waLines.push("• Chorizos: " + fechaChorizosStr);
-  waLines.push("• Bacon: " + fechaBaconStr + " (el bacon requiere un proceso mínimo de 10 días).");
-} else if (contieneBacon) {
-  waLines.push("Fecha estimada de entrega: " + fechaBaconStr + " (el bacon requiere un proceso mínimo de 10 días).");
-} else {
-  waLines.push("Fecha estimada de entrega: " + fechaChorizosStr);
-}
+      // Fechas de entrega (mismo criterio que en la pantalla)
+      waLines.push("");
+      if (contieneBacon && cart.length > 1) {
+        waLines.push("Fechas de entrega:");
+        waLines.push("• Chorizos: " + fechaChorizosStr);
+        waLines.push("• Bacon: " + fechaBaconStr + " (el bacon requiere un proceso mínimo de 10 días).");
+      } else if (contieneBacon) {
+        waLines.push("Fecha estimada de entrega: " + fechaBaconStr + " (el bacon requiere un proceso mínimo de 10 días).");
+      } else {
+        waLines.push("Fecha estimada de entrega: " + fechaChorizosStr);
+      }
 
-// Puntos
-if (!isNaN(puntosPedido)) {
-  waLines.push("");
-  waLines.push("Puntos de fidelidad:");
-  waLines.push("Este pedido me da " + puntosPedido + " puntos.");
-}
-if (!isNaN(totalPointsAfter)) {
-  waLines.push("Con este pedido llegaré a " + totalPointsAfter + " puntos acumulados.");
-}
+      // Puntos
+      if (!isNaN(puntosPedido)) {
+        waLines.push("");
+        waLines.push("Puntos de fidelidad:");
+        waLines.push("Este pedido me da " + puntosPedido + " puntos.");
+      }
+      if (!isNaN(totalPointsAfter)) {
+        waLines.push("Con este pedido llegaré a " + totalPointsAfter + " puntos acumulados.");
+      }
 
-// Datos de SINPE
-waLines.push("");
-waLines.push("Pago por SINPE móvil (BAC):");
-waLines.push("Envío el monto total al número 6066-8322 (Marianela Esquivel).");
-if (orderId) {
-  waLines.push("En el detalle indico mi orden #" + orderId + ".");
-}
+      // Datos de SINPE
+      waLines.push("");
+      waLines.push("Pago por SINPE móvil (BAC):");
+      waLines.push("Envío el monto total al número 6066-8322 (Marianela Esquivel).");
+      if (orderId) {
+        waLines.push("En el detalle indico mi orden #" + orderId + ".");
+      }
 
-const waMessage = waLines.join("\n");
+      const waMessage = waLines.join("\n");
 
-if (isMobileDevice()) {
-  const waUrl =
-    "https://wa.me/50660228322?text=" + encodeURIComponent(waMessage);
-  window.location.href = waUrl;
-}
-// ============================================
-
+      if (isMobileDevice()) {
+        const waUrl =
+          "https://wa.me/50660228322?text=" + encodeURIComponent(waMessage);
+        window.location.href = waUrl;
+      }
+      // ============================================
 
       cart = [];
       updateCartUI();
 
     } catch (err) {
       console.error("Error en sendOrder():", err);
-      const statusEl = document.getElementById("status");
-      statusEl.textContent =
+      const statusEl2 = document.getElementById("status");
+      statusEl2.textContent =
         "Hubo un problema enviando tu pedido.\nDetalle técnico: " +
         (err && err.message ? err.message : String(err));
     }
@@ -945,6 +1267,14 @@ if (isMobileDevice()) {
     state.currentQuantity = 1;
     state.wantsPromos = false;
     state.pointsChecked = false;
+    state.customerProfile = {
+      pointsBefore: 0,
+      totalOrders: 0,
+      usedFirstDiscount: false,
+      lastProduct: "",
+      lastPresentacion: ""
+    };
+    state.discount = { percent: 0, label: "" };
 
     cart = [];
     updateCartUI();
@@ -955,6 +1285,7 @@ if (isMobileDevice()) {
     document.getElementById("discount-code").value = "";
     document.getElementById("datos-error").textContent = "";
     document.getElementById("puntos-info").textContent = "";
+    document.getElementById("recom-info").textContent = "";
     document.getElementById("puntos-info").classList.remove("has-points", "no-points");
     document.getElementById("subtotal-linea").textContent = "₡0";
     document.getElementById("producto").value = "";
@@ -985,9 +1316,9 @@ if (isMobileDevice()) {
     updateContinueButtonState();
   }
 
-  /* ===================== RESUMEN FINAL (ya no se usa caja aparte) ===================== */
+  /* ===================== RESUMEN FINAL (no se usa caja aparte) ===================== */
   function updateResumenFinal() {
-    // Intencionalmente vacío: eliminamos el div resumen-final
+    // Intencionalmente vacío: usamos solo el status final y el drawer.
   }
 
   /* ===================== BOTÓN CONTINUAR ===================== */
@@ -1042,6 +1373,7 @@ if (isMobileDevice()) {
         const infoEl = document.getElementById("puntos-info");
         infoEl.textContent = "";
         infoEl.classList.remove("has-points", "no-points");
+        document.getElementById("recom-info").textContent = "";
         lastPointsPhone = "";
         state.pointsChecked = false;
         updateContinueButtonState();
@@ -1125,13 +1457,15 @@ if (isMobileDevice()) {
       state.comentarios = document.getElementById("comentarios").value.trim();
       const qty = state.currentQuantity;
       const lineTotal = calculateLineTotal(p, w.grams, qty);
+      const icon = p.type === "bacon" ? "🥓" : "🌭";
       cart.push({
         productId: p.id,
         productName: p.name,
         packLabel: w.label,
         grams: w.grams,
         quantity: qty,
-        lineTotal: lineTotal
+        lineTotal: lineTotal,
+        icon: icon
       });
       updateCartUI();
       burstConfettiSmallFromElement(btnAgregar);
@@ -1163,8 +1497,10 @@ if (isMobileDevice()) {
     };
 
     document.getElementById("btn-confirmar").onclick = () => {
-      state.discountCode =
-        document.getElementById("discount-code").value.trim().toUpperCase();
+      const manualCode = document.getElementById("discount-code").value.trim().toUpperCase();
+      if (manualCode) {
+        state.discountCode = manualCode;
+      }
       sendOrder();
     };
 
@@ -1185,6 +1521,14 @@ if (isMobileDevice()) {
       updateResumenFinal();
     };
 
+    // Toggle tema
+    document.querySelectorAll(".theme-pill").forEach(pill => {
+      pill.addEventListener("click", () => {
+        applyTheme(pill.dataset.theme);
+      });
+    });
+
+    initTheme();
     updateCartUI();
     updateContinueButtonState();
     loadConfigFromSheet();
@@ -1195,7 +1539,3 @@ if (isMobileDevice()) {
 
 </body>
 </html>
-
-
-
-
