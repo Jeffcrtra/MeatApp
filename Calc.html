@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>9:50 Monte Alto – Calculadora de Embutidos</title>
+  <title>10.03 Monte Alto – Calculadora de Embutidos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
@@ -297,7 +297,7 @@
 </head>
 
 <body>
-  <h1>Monte Alto – Calculadora 7:07</h1>
+  <h1>Monte Alto – Calculadora</h1>
 
   <!-- Sonidos -->
   <audio id="sound-add" src="click-add.mp3" preload="auto"></audio>
@@ -791,12 +791,45 @@
         )
         .join("<br>");
 
-      const entregaDate = getNextSaturday(new Date());
-      const entregaStr = entregaDate.toLocaleDateString("es-CR", {
-        weekday: "long",
-        day: "numeric",
-        month: "long"
-      });
+// Calcular fechas según el tipo de producto
+function formatDate(d) {
+  return d.toLocaleDateString("es-CR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long"
+  });
+}
+
+  // Detectar si el carrito tiene bacon
+  const contieneBacon = cart.some(i => i.productId === "bacon");
+  
+  // Fecha para chorizos → sábado siguiente
+  const fechaChorizos = getNextSaturday(new Date());
+  const fechaChorizosStr = formatDate(fechaChorizos);
+  
+  // Fecha para bacon → 10 días mínimo
+  let fechaBacon = new Date();
+  fechaBacon.setDate(fechaBacon.getDate() + 10);
+  const fechaBaconStr = formatDate(fechaBacon);
+  
+  // Construir mensaje final de fechas
+  let textoFechas = "";
+  if (contieneBacon && cart.length > 1) {
+    textoFechas =
+      "<strong>Fechas de entrega:</strong><br>" +
+      "• Chorizos: " + fechaChorizosStr + "<br>" +
+      "• Bacon: " + fechaBaconStr + "<br>" +
+      "<em>El bacon requiere un proceso mínimo de 10 días.</em>";
+  } else if (contieneBacon) {
+    textoFechas =
+      "<strong>Fecha estimada de entrega:</strong> " +
+      fechaBaconStr +
+      "<br><em>El bacon requiere un proceso mínimo de 10 días.</em>";
+  } else {
+    textoFechas =
+      "<strong>Fecha estimada de entrega:</strong> " + fechaChorizosStr;
+  }
+
 
       let extraLoyalty = "";
       if (!isNaN(puntosPedido) && !isNaN(totalPointsAfter)) {
@@ -821,7 +854,7 @@
         "<strong>Resumen de tu pedido:</strong><br>" +
         resumenHtml + "<br><br>" +
         "<strong>Total:</strong> " + formatCRC(totalColones) + "<br>" +
-        "<strong>Fecha estimada de entrega:</strong> " + entregaStr +
+        textoFechas + "<br>"
         orderLine +
         extraLoyalty +
         sinpeHtml;
@@ -869,7 +902,7 @@
 
       if (isMobileDevice()) {
         const waUrl =
-          "https://wa.me/50660668322?text=" + encodeURIComponent(waMessage);
+          "https://wa.me/50660228322?text=" + encodeURIComponent(waMessage);
         window.location.href = waUrl;
       }
 
@@ -1160,3 +1193,4 @@
 
 </body>
 </html>
+
